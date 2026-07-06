@@ -24,6 +24,7 @@ export type ContentRequest =
 
 export type PopupRequest =
 	| { type: "getTabState"; tabId: number }
+	| { type: "armEnable"; tabId: number }
 	| { type: "enableTab"; tabId: number }
 	| { type: "disableTab"; tabId: number }
 	| { type: "testConnection" };

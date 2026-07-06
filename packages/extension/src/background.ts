@@ -33,6 +33,14 @@ const FLUSH_ALARM = "claudback-flush";
 // on demand — never auto-registered — so nothing runs on a page until asked.
 const enabledTabs = new Set<number>();
 
+// Tabs waiting on a permission grant. The popup shows Chrome's native
+// permission dialog, and Chrome closes extension popups the moment that
+// dialog steals focus — killing the popup's JS before it can send the
+// follow-up "enableTab" message. Recording the origin here before the popup
+// requests the permission lets the onAdded listener below finish the job
+// from the background worker, which outlives the popup.
+const pendingEnables = new Map<number, string>();
+
 async function getToken(): Promise<string | null> {
 	const result = await chrome.storage.local.get(TOKEN_KEY);
 	const token = result[TOKEN_KEY];
@@ -284,30 +292,78 @@ async function handleSetMode(mode: StoreMode): Promise<SimpleResponse> {
 	}
 }
 
-async function handleEnableTab(tabId: number): Promise<TabStateResponse> {
+async function originPatternFor(tabId: number): Promise<string | null> {
 	const tab = await chrome.tabs.get(tabId);
 
 	if (!tab.url) {
-		return { enabled: false };
+		return null;
 	}
 
-	// The permission request itself must happen in the popup, where the
-	// click's user gesture actually lives; a gesture doesn't propagate across
-	// runtime.sendMessage into this worker. We only trust that it was granted
-	// after re-checking it ourselves, so a compromised popup can't force an
-	// injection without the origin having been granted.
-	const originPattern = `${new URL(tab.url).origin}/*`;
+	return `${new URL(tab.url).origin}/*`;
+}
+
+// Idempotent: safe to call both from the direct "enableTab" message (fast
+// path, when the popup survives) and from the onAdded listener (the reliable
+// path, when it doesn't) without double-injecting the content script.
+async function enableTabIfGranted(tabId: number, originPattern: string): Promise<boolean> {
+	if (enabledTabs.has(tabId)) {
+		return true;
+	}
+
+	// We only trust that the permission was granted after re-checking it
+	// ourselves, so a compromised popup can't force an injection without the
+	// origin having actually been granted.
 	const granted = await chrome.permissions.contains({ origins: [originPattern] });
 
 	if (!granted) {
-		return { enabled: false };
+		return false;
 	}
 
 	await chrome.scripting.executeScript({ target: { tabId }, files: ["content.js"] });
 	enabledTabs.add(tabId);
 
-	return { enabled: true };
+	return true;
 }
+
+async function handleArmEnable(tabId: number): Promise<void> {
+	const originPattern = await originPatternFor(tabId);
+
+	if (originPattern) {
+		pendingEnables.set(tabId, originPattern);
+	}
+}
+
+async function handleEnableTab(tabId: number): Promise<TabStateResponse> {
+	const originPattern = await originPatternFor(tabId);
+
+	if (!originPattern) {
+		return { enabled: false };
+	}
+
+	const enabled = await enableTabIfGranted(tabId, originPattern);
+
+	if (enabled) {
+		pendingEnables.delete(tabId);
+	}
+
+	return { enabled };
+}
+
+// The popup's own permissions.request() calls this before showing Chrome's
+// dialog, but if the popup gets closed by that dialog, this listener still
+// fires in the background worker and finishes enabling the tab.
+chrome.permissions.onAdded.addListener((permissions) => {
+	const origins = permissions.origins ?? [];
+
+	void (async () => {
+		for (const [tabId, originPattern] of pendingEnables) {
+			if (origins.includes(originPattern)) {
+				await enableTabIfGranted(tabId, originPattern);
+				pendingEnables.delete(tabId);
+			}
+		}
+	})();
+});
 
 async function handleDisableTab(tabId: number): Promise<TabStateResponse> {
 	enabledTabs.delete(tabId);
@@ -349,6 +405,9 @@ async function dispatch(message: ExtensionRequest): Promise<unknown> {
 		}
 		case "getTabState": {
 			return { enabled: enabledTabs.has(message.tabId) } satisfies TabStateResponse;
+		}
+		case "armEnable": {
+			return handleArmEnable(message.tabId);
 		}
 		case "enableTab": {
 			return handleEnableTab(message.tabId);
@@ -397,6 +456,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 
 chrome.tabs.onRemoved.addListener((tabId) => {
 	enabledTabs.delete(tabId);
+	pendingEnables.delete(tabId);
 });
 
 // Referenced only so PopupRequest/ContentRequest narrowing stays exhaustive if

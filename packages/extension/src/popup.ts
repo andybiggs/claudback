@@ -74,6 +74,21 @@ async function render(): Promise<void> {
 
 	const status = await send<StatusReport>({ type: "status" });
 	statusEl.textContent = statusText(status.state);
+	statusEl.className = `status ${statusClass(status.state)}`;
+	spinnerEl.hidden = status.state !== "pending";
+
+	const hint = statusHint(status.state);
+	hintTextEl.textContent = hint ?? "";
+	hintEl.hidden = hint === null;
+
+	copyBtn.hidden = status.state !== "offline";
+	copyBtn.onclick = async () => {
+		await navigator.clipboard.writeText(CLAUDE_START_SERVER_PROMPT);
+		copyBtn.textContent = "Copied!";
+		setTimeout(() => {
+			copyBtn.textContent = "Copy prompt for Claude";
+		}, 1500);
+	};
 
 	const list = await send<ListResponse>({ type: "list", origin });
 	count.textContent = String(list.comments.length);
