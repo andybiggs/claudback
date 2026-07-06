@@ -1,0 +1,75 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<style>
+			body {
+				font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+				max-width: 520px;
+				margin: 40px auto;
+				padding: 0 20px;
+				color: #111;
+				line-height: 1.5;
+			}
+			h1 {
+				font-size: 18px;
+			}
+			p {
+				font-size: 14px;
+				color: #444;
+			}
+			code {
+				background: #f3f3f3;
+				padding: 1px 5px;
+				border-radius: 4px;
+				font-size: 13px;
+			}
+			input {
+				width: 100%;
+				padding: 8px;
+				font-size: 13px;
+				border: 1px solid #d4d4d4;
+				border-radius: 6px;
+				box-sizing: border-box;
+			}
+			.row {
+				display: flex;
+				gap: 8px;
+				margin-top: 8px;
+			}
+			button {
+				border: none;
+				border-radius: 6px;
+				padding: 8px 14px;
+				font-size: 13px;
+				cursor: pointer;
+				background: #16a34a;
+				color: #fff;
+			}
+			button.ghost {
+				background: #f0f0f0;
+				color: #333;
+			}
+			.status {
+				margin-top: 12px;
+				font-size: 13px;
+				color: #666;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Claudback pairing</h1>
+		<p>
+			Paste the pairing token so this extension can talk to your local Claudback
+			collector. The token is generated on first run of the MCP server and printed
+			to its stderr; it is also stored at <code>~/.claudback/token</code>.
+		</p>
+		<input id="token" type="password" placeholder="Paste pairing token" autocomplete="off" />
+		<div class="row">
+			<button id="save">Save token</button>
+			<button id="test" class="ghost">Test connection</button>
+		</div>
+		<div id="status" class="status"></div>
+		<script type="module" src="options.js"></script>
+	</body>
+</html>

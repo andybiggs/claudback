@@ -1,8 +1,9 @@
 {
 	"extends": "../../tsconfig.base.json",
 	"compilerOptions": {
-		"outDir": "dist",
-		"rootDir": "src"
+		"outDir": "tsbuild",
+		"rootDir": "src",
+		"types": ["chrome"]
 	},
 	"include": ["src"],
 	"references": [{ "path": "../shared" }]
