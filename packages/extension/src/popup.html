@@ -25,6 +25,52 @@
 				font-size: 13px;
 				color: #666;
 			}
+			.status-synced {
+				color: #16a34a;
+			}
+			.status-pending {
+				color: #2563eb;
+			}
+			.status-offline {
+				color: #c0271b;
+			}
+			.status-unpaired {
+				color: #9ca3af;
+			}
+			.status-wrap {
+				display: flex;
+				align-items: center;
+				gap: 6px;
+			}
+			.spinner {
+				width: 10px;
+				height: 10px;
+				border: 2px solid #bfdbfe;
+				border-top-color: #2563eb;
+				border-radius: 50%;
+				animation: spin 0.6s linear infinite;
+			}
+			@keyframes spin {
+				to {
+					transform: rotate(360deg);
+				}
+			}
+			.hint {
+				font-size: 11px;
+				color: #888;
+				margin: -6px 0 10px;
+			}
+			.hint .copy-btn {
+				display: block;
+				border: none;
+				background: none;
+				padding: 0;
+				margin-top: 4px;
+				font-size: 11px;
+				color: #16a34a;
+				text-decoration: underline;
+				cursor: pointer;
+			}
 			.switch {
 				position: relative;
 				display: inline-block;
@@ -94,7 +140,14 @@
 		</div>
 		<div class="row">
 			<span>Status</span>
-			<span id="status" class="status">–</span>
+			<span class="status-wrap">
+				<span id="status-spinner" class="spinner" hidden></span>
+				<span id="status" class="status">–</span>
+			</span>
+		</div>
+		<div id="status-hint" class="hint" hidden>
+			<span id="status-hint-text"></span>
+			<button id="copy-prompt" class="copy-btn" hidden>Copy prompt for Claude</button>
 		</div>
 		<button id="options" class="secondary">Pairing &amp; options</button>
 		<script type="module" src="popup.js"></script>
