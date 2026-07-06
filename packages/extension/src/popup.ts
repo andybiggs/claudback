@@ -1,5 +1,3 @@
-import type { StoreMode } from "@claudback/shared";
-
 import type {
 	ListResponse,
 	PopupRequest,
@@ -8,7 +6,7 @@ import type {
 	TabStateResponse,
 } from "./messages.js";
 
-function send<T>(message: PopupRequest | { type: "status" } | { type: "list"; origin: string } | { type: "setMode"; mode: StoreMode }): Promise<T> {
+function send<T>(message: PopupRequest | { type: "status" } | { type: "list"; origin: string }): Promise<T> {
 	return chrome.runtime.sendMessage(message) as Promise<T>;
 }
 
@@ -36,10 +34,9 @@ async function activeTab(): Promise<chrome.tabs.Tab | undefined> {
 }
 
 async function render(): Promise<void> {
-	const toggle = document.getElementById("toggle") as HTMLButtonElement;
+	const toggle = document.getElementById("toggle") as HTMLInputElement;
 	const count = document.getElementById("count") as HTMLSpanElement;
 	const statusEl = document.getElementById("status") as HTMLSpanElement;
-	const modeSelect = document.getElementById("mode") as HTMLSelectElement;
 
 	const tab = await activeTab();
 
@@ -54,18 +51,22 @@ async function render(): Promise<void> {
 	const origin = new URL(tab.url).origin;
 
 	const tabState = await send<TabStateResponse>({ type: "getTabState", tabId });
-	toggle.textContent = tabState.enabled ? "Disable" : "Enable";
-	toggle.className = tabState.enabled ? "" : "off";
+	toggle.checked = tabState.enabled;
 
-	toggle.onclick = async () => {
-		if (tabState.enabled) {
+	toggle.onchange = async () => {
+		if (!toggle.checked) {
 			await send<TabStateResponse>({ type: "disableTab", tabId });
-		} else {
-			const granted = await chrome.permissions.request({ origins: [`${origin}/*`] });
+			await render();
 
-			if (granted) {
-				await send<TabStateResponse>({ type: "enableTab", tabId });
-			}
+			return;
+		}
+
+		const granted = await chrome.permissions.request({ origins: [`${origin}/*`] });
+
+		if (granted) {
+			await send<TabStateResponse>({ type: "enableTab", tabId });
+		} else {
+			toggle.checked = false;
 		}
 
 		await render();
@@ -76,12 +77,6 @@ async function render(): Promise<void> {
 
 	const list = await send<ListResponse>({ type: "list", origin });
 	count.textContent = String(list.comments.length);
-	modeSelect.value = list.mode;
-
-	modeSelect.onchange = async () => {
-		await send({ type: "setMode", mode: modeSelect.value as StoreMode });
-		await render();
-	};
 }
 
 document.getElementById("options")?.addEventListener("click", () => {
