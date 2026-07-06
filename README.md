@@ -37,6 +37,56 @@ node packages/mcp-server/dist/bin.js
 cat ~/.claudback/token
 ```
 
+#### Running the collector without an active Claude session
+
+The stdio MCP transport needs an MCP client (Claude) to spawn it, but the collector the extension talks to is just a plain HTTP server in the same process — so you can keep it running independently of Claude, and annotate any time. Everything reads/writes the same files under `~/.claudback/` (token, store), so it's safe to also let Claude spawn its own instance later via `claude mcp add` — token and comments stay in sync regardless of which process's collector actually handled a given request.
+
+**Manual background** — run it yourself when you want it up; stops on logout/reboot:
+
+```sh
+node ~/Documents/GitHub/Claudback/packages/mcp-server/dist/bin.js &
+disown
+```
+
+**Persistent (survives reboot/logout)** — a macOS LaunchAgent that starts the server at login and restarts it if it dies. Save this as `~/Library/LaunchAgents/dev.claudback.mcp-server.plist` (adjust the path to your clone):
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>dev.claudback.mcp-server</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/usr/bin/env</string>
+		<string>node</string>
+		<string>/Users/you/Documents/GitHub/Claudback/packages/mcp-server/dist/bin.js</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>KeepAlive</key>
+	<true/>
+	<key>StandardOutPath</key>
+	<string>/Users/you/.claudback/server.log</string>
+	<key>StandardErrorPath</key>
+	<string>/Users/you/.claudback/server.log</string>
+</dict>
+</plist>
+```
+
+Then load it (starts immediately, and on every future login):
+
+```sh
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/dev.claudback.mcp-server.plist
+```
+
+To stop it and remove the auto-start:
+
+```sh
+launchctl bootout gui/$(id -u)/dev.claudback.mcp-server
+```
+
 ### 3. Load the extension
 
 1. Open `chrome://extensions`, enable Developer mode, click **Load unpacked**, select `packages/extension/dist/`.
