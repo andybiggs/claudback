@@ -1,2 +1,4 @@
-// Placeholder for the stdio MCP server + embedded collector (Phase 2).
-export const placeholder = true;
+export * from "./main.js";
+export * from "./store.js";
+export * from "./store-api.js";
+export * from "./tools.js";

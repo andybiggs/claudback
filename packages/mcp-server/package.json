@@ -5,7 +5,15 @@
 	"type": "module",
 	"main": "./src/index.ts",
 	"types": "./src/index.ts",
+	"bin": {
+		"claudback-mcp": "./dist/bin.js"
+	},
+	"scripts": {
+		"build": "tsc -b"
+	},
 	"dependencies": {
-		"@claudback/shared": "*"
+		"@claudback/shared": "*",
+		"@modelcontextprotocol/sdk": "^1.12.0",
+		"zod": "^3.25.76"
 	}
 }
