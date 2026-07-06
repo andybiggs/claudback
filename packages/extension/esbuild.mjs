@@ -1,18 +1,29 @@
-import { existsSync } from "node:fs";
+import { copyFile, mkdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import esbuild from "esbuild";
 
-const entry = fileURLToPath(new URL("./src/index.ts", import.meta.url));
+const root = (path) => fileURLToPath(new URL(path, import.meta.url));
+const outdir = root("./dist");
 
-if (!existsSync(entry)) {
-	console.log("No src/index.ts found, skipping build.");
-	process.exit(0);
-}
+await mkdir(outdir, { recursive: true });
 
 await esbuild.build({
-	entryPoints: [entry],
-	outdir: fileURLToPath(new URL("./dist", import.meta.url)),
+	entryPoints: {
+		background: root("./src/background.ts"),
+		content: root("./src/content.ts"),
+		popup: root("./src/popup.ts"),
+		options: root("./src/options.ts"),
+	},
+	outdir,
 	bundle: true,
 	format: "esm",
-	target: "chrome110",
+	target: "chrome120",
 });
+
+await Promise.all(
+	["manifest.json", "src/popup.html", "src/options.html"].map(async (file) => {
+		const dest = `${outdir}/${file.split("/").pop()}`;
+
+		await copyFile(root(`./${file}`), dest);
+	}),
+);

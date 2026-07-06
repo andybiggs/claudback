@@ -1,0 +1,16 @@
+{
+	"manifest_version": 3,
+	"name": "Claudback",
+	"version": "0.0.1",
+	"description": "Pin visual-feedback comments to page elements for Claude to read via a local MCP server.",
+	"permissions": ["storage", "activeTab", "scripting", "alarms"],
+	"optional_host_permissions": ["*://*/*"],
+	"background": {
+		"service_worker": "background.js",
+		"type": "module"
+	},
+	"action": {
+		"default_popup": "popup.html"
+	},
+	"options_page": "options.html"
+}
