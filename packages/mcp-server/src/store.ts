@@ -154,6 +154,21 @@ export function createStore(filePath: string): StoreApi {
 		return "resolved";
 	}
 
+	async function unresolveComment(id: string): Promise<Comment | null> {
+		const store = await read();
+		const comment = store.comments.find((candidate) => candidate.id === id);
+
+		if (!comment) {
+			return null;
+		}
+
+		comment.resolved = false;
+		comment.updatedAt = new Date().toISOString();
+		await write(store);
+
+		return comment;
+	}
+
 	async function clearComments(origin?: string): Promise<number> {
 		const store = await read();
 		const remaining =
@@ -206,6 +221,7 @@ export function createStore(filePath: string): StoreApi {
 		getComments,
 		consumeComments,
 		resolveComment,
+		unresolveComment,
 		clearComments,
 		setMode,
 		listOrigins,

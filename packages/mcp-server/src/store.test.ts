@@ -195,6 +195,30 @@ describe("store", () => {
 		expect(await store.resolveComment("missing-id")).toBe("not_found");
 	});
 
+	it("unresolveComment reverses a keep-mode resolve", async () => {
+		const store = createStore(filePath);
+
+		await store.setMode("keep");
+
+		const added = await store.addComment(newCommentInput());
+
+		await store.resolveComment(added.id);
+
+		const unresolved = await store.unresolveComment(added.id);
+
+		expect(unresolved?.resolved).toBe(false);
+
+		const comments = await store.getComments();
+
+		expect(comments[0].resolved).toBe(false);
+	});
+
+	it("unresolveComment returns null for a missing id", async () => {
+		const store = createStore(filePath);
+
+		expect(await store.unresolveComment("missing-id")).toBeNull();
+	});
+
 	it("clearComments removes all comments and returns the count", async () => {
 		const store = createStore(filePath);
 

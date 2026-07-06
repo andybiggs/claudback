@@ -8,6 +8,7 @@ import {
 	listComments,
 	ping,
 	setMode,
+	unresolveComment,
 	updateComment,
 	type CollectorConfig,
 } from "./lib/collector.js";
@@ -229,6 +230,28 @@ async function handleDelete(id: string): Promise<SimpleResponse> {
 	}
 }
 
+async function handleUnresolve(id: string): Promise<SimpleResponse> {
+	if (isLocalId(id)) {
+		// Buffered/unsynced comments are never resolved, so there's nothing to
+		// reverse — the "unresolve" action never surfaces for them in the UI.
+		return { ok: false, state: "offline" };
+	}
+
+	const token = await getToken();
+
+	if (!token) {
+		return { ok: false, state: "unpaired" };
+	}
+
+	try {
+		await unresolveComment({ token }, id);
+
+		return { ok: true, state: "synced" };
+	} catch {
+		return { ok: false, state: "offline" };
+	}
+}
+
 async function handleClear(origin: string): Promise<SimpleResponse> {
 	const token = await getToken();
 
@@ -311,6 +334,9 @@ async function dispatch(message: ExtensionRequest): Promise<unknown> {
 		}
 		case "delete": {
 			return handleDelete(message.id);
+		}
+		case "unresolve": {
+			return handleUnresolve(message.id);
 		}
 		case "clear": {
 			return handleClear(message.origin);

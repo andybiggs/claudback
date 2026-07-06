@@ -47,6 +47,10 @@ export function deleteComment(config: CollectorConfig, id: string): Promise<void
 	return request<void>(config, `/comments/${id}`, { method: "DELETE" });
 }
 
+export function unresolveComment(config: CollectorConfig, id: string): Promise<Comment> {
+	return request<Comment>(config, `/comments/${id}/unresolve`, { method: "POST" });
+}
+
 export function clearComments(config: CollectorConfig, origin: string): Promise<void> {
 	return request<void>(config, "/clear", { method: "POST", body: JSON.stringify({ origin }) });
 }

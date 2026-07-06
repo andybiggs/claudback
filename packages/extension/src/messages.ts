@@ -17,6 +17,7 @@ export type ContentRequest =
 	| { type: "create"; payload: NewCommentInput }
 	| { type: "update"; id: string; text: string }
 	| { type: "delete"; id: string }
+	| { type: "unresolve"; id: string }
 	| { type: "clear"; origin: string }
 	| { type: "setMode"; mode: StoreMode }
 	| { type: "status" };

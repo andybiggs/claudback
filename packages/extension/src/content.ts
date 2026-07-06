@@ -85,11 +85,11 @@ button.btn:disabled { opacity: .5; cursor: default; }
 .panel .mode { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 10px 14px; border-bottom: 1px solid #eee; }
 .panel .mode select { font-size: 12px; padding: 3px 6px; border-radius: 5px; border: 1px solid #d4d4d4; }
 .item { padding: 10px 14px; border-bottom: 1px solid #f3f3f3; }
-.item.resolved { opacity: .6; }
 .item .num { display: inline-block; min-width: 18px; height: 18px; line-height: 18px; text-align: center; background: #16a34a; color: #fff; border-radius: 9px; font-size: 11px; font-weight: 700; margin-right: 6px; }
 .item.resolved .num { background: #9ca3af; }
 .item .txt { font-size: 13px; margin: 4px 0; }
 .item .ref { font-size: 11px; color: #888; word-break: break-all; }
+.item.resolved .txt, .item.resolved .ref { opacity: .6; }
 .item .acts { margin-top: 6px; display: flex; gap: 8px; }
 .item .acts a { font-size: 12px; color: #16a34a; cursor: pointer; }
 .item .acts a.del { color: #c0271b; }
@@ -453,7 +453,7 @@ function mountClaudback(): void {
 				<div class="txt">${escapeHtml(comment.text)}</div>
 				<div class="ref">${escapeHtml(comment.selector)}</div>
 				<div class="acts">
-					<a data-act="edit">Edit</a>
+					${comment.resolved ? `<a data-act="unresolve">Unresolve</a>` : `<a data-act="edit">Edit</a>`}
 					<a class="del" data-act="delete">Delete</a>
 				</div>`;
 			item.addEventListener("click", async (ev) => {
@@ -461,6 +461,11 @@ function mountClaudback(): void {
 
 				if (act === "delete") {
 					await send<SimpleResponse>({ type: "delete", id: comment.id });
+					await refresh();
+				}
+
+				if (act === "unresolve") {
+					await send<SimpleResponse>({ type: "unresolve", id: comment.id });
 					await refresh();
 				}
 

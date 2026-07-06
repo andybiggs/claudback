@@ -183,6 +183,16 @@ export function createCollector(store: StoreApi, token: string): Server {
 				return;
 			}
 
+			const unresolveMatch = path.match(/^\/comments\/([0-9a-f-]{36})\/unresolve$/);
+
+			if (unresolveMatch && method === "POST") {
+				const comment = await store.unresolveComment(unresolveMatch[1]);
+
+				send(res, comment ? 200 : 404, comment ?? { error: "not found" });
+
+				return;
+			}
+
 			if (idMatch && method === "DELETE") {
 				const deleted = await store.deleteComment(idMatch[1]);
 
