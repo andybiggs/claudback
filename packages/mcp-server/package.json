@@ -9,7 +9,7 @@
 		"claudback-mcp": "./dist/bin.js"
 	},
 	"scripts": {
-		"build": "tsc -b"
+		"build": "node esbuild.mjs"
 	},
 	"dependencies": {
 		"@claudback/shared": "*",

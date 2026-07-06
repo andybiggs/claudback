@@ -4,6 +4,6 @@ export default defineConfig({
 	test: {
 		name: "mcp-server",
 		environment: "node",
-		exclude: ["dist/**", "node_modules/**"],
+		exclude: ["dist/**", "tsbuild/**", "node_modules/**"],
 	},
 });
