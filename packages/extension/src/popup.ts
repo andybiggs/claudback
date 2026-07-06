@@ -61,7 +61,11 @@ async function render(): Promise<void> {
 		if (tabState.enabled) {
 			await send<TabStateResponse>({ type: "disableTab", tabId });
 		} else {
-			await send<TabStateResponse>({ type: "enableTab", tabId });
+			const granted = await chrome.permissions.request({ origins: [`${origin}/*`] });
+
+			if (granted) {
+				await send<TabStateResponse>({ type: "enableTab", tabId });
+			}
 		}
 
 		await render();

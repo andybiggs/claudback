@@ -268,8 +268,13 @@ async function handleEnableTab(tabId: number): Promise<TabStateResponse> {
 		return { enabled: false };
 	}
 
+	// The permission request itself must happen in the popup, where the
+	// click's user gesture actually lives; a gesture doesn't propagate across
+	// runtime.sendMessage into this worker. We only trust that it was granted
+	// after re-checking it ourselves, so a compromised popup can't force an
+	// injection without the origin having been granted.
 	const originPattern = `${new URL(tab.url).origin}/*`;
-	const granted = await chrome.permissions.request({ origins: [originPattern] });
+	const granted = await chrome.permissions.contains({ origins: [originPattern] });
 
 	if (!granted) {
 		return { enabled: false };
