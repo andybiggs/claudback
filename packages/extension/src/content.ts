@@ -20,6 +20,35 @@ interface Store {
 const STYLES = `
 :host { all: initial; }
 * { box-sizing: border-box; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; }
+:host {
+	--ink: #191c1f; --secondary-text: #5c6167; --faint-text: #8b9096; --selector-text: #9ba0a5;
+	--border: #e5e7e9; --hairline: #eff1f2; --divider: #f3f4f4;
+	--green: #0f8a46; --green-active: #0c6e38; --green-strong: #0c6e38; --green-tint: #eaf5ee;
+	--ghost-bg: #f3f4f4; --ghost-text: #43474c;
+	--danger: #c0271b; --danger-tint: #fbe9e7;
+	--warning-text: #8a5a00; --warning-dot: #c88a04; --warning-bg: #fbf3e0; --warning-border: #f2e4c4;
+	--surface: #fff; --shadow-alpha: .25;
+}
+@media (prefers-color-scheme: dark) {
+	:host {
+		--ink: #e9ecee; --secondary-text: #9aa1a8; --faint-text: #6e757c; --selector-text: #6e757c;
+		--border: #2b3036; --hairline: #2b3036; --divider: #2b3036;
+		--green: #0f8a46; --green-active: #0c6e38; --green-strong: #3fc479; --green-tint: rgba(63,196,121,.14);
+		--ghost-bg: #2b3036; --ghost-text: #c9ced3;
+		--danger: #f08578; --danger-tint: rgba(192,39,27,.18);
+		--surface: #1c1f23; --shadow-alpha: .4;
+	}
+}
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.mark {
+	background: var(--green); border-radius: 50% 50% 50% 3px;
+	display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+@media (prefers-color-scheme: dark) {
+	.mark { background: #3fc479; }
+	.mark::after { background: var(--surface); }
+}
+.mark::after { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #fff; }
 .fabs {
 	position: fixed; bottom: 20px; right: 20px; z-index: 2147483647;
 	display: flex; align-items: center; gap: 12px;
@@ -27,76 +56,106 @@ const STYLES = `
 .fab {
 	position: relative; width: 52px; height: 52px;
 	border-radius: 50%; border: none; cursor: pointer;
-	background: #16a34a; color: #fff; box-shadow: 0 4px 14px rgba(0,0,0,.25);
+	background: var(--green); color: #fff; box-shadow: 0 4px 14px rgba(0,0,0,.25);
 	display: flex; align-items: center; justify-content: center; transition: transform .12s ease;
 }
 .fab:hover { transform: scale(1.06); }
-.fab.active { background: #15803d; }
-.fab.secondary { width: 46px; height: 46px; background: #fff; color: #16a34a; border: 1px solid #e5e5e5; }
-.fab.secondary.active { background: #16a34a; color: #fff; border-color: #16a34a; }
+.fab.active { background: var(--green-active); }
+.fab.secondary { width: 46px; height: 46px; background: var(--surface); color: var(--green); border: 1px solid var(--border); }
+.fab.secondary.active { background: var(--green); color: #fff; border-color: var(--green); }
 .fab svg { width: 24px; height: 24px; }
 .fab.secondary svg { width: 20px; height: 20px; }
+.fab .waypoint-icon { width: 26px; height: 26px; background: #fff; border-radius: 50% 50% 50% 3px; display: flex; align-items: center; justify-content: center; }
 .count {
 	position: absolute; top: -4px; right: -4px; min-width: 20px; height: 20px;
-	padding: 0 5px; border-radius: 10px; background: #111; color: #fff;
+	padding: 0 5px; border-radius: 10px; background: var(--green); color: #fff; border: 2px solid transparent;
 	font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center;
 }
+.fab.secondary.active .count { background: #fff; color: var(--green); border-color: var(--green); }
 .hint {
 	position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 2147483647;
-	background: #111; color: #fff; padding: 8px 12px; border-radius: 8px;
-	font-size: 13px; box-shadow: 0 4px 14px rgba(0,0,0,.25);
+	background: var(--green); color: #fff; padding: 8px 14px; border-radius: 8px;
+	font-size: 13px; box-shadow: 0 4px 14px rgba(0,0,0,.25); display: flex; align-items: center; gap: 8px;
+}
+.hint .keycap {
+	font-size: 11px; color: rgba(255,255,255,.85); border: 1px solid rgba(255,255,255,.4);
+	border-radius: 4px; padding: 1px 5px;
 }
 .highlight {
 	position: fixed; pointer-events: none; z-index: 2147483646;
-	border: 2px solid #16a34a; background: rgba(22,163,74,.12); border-radius: 3px;
+	border: 2px solid var(--green); background: rgba(15,138,70,.10); border-radius: 4px;
 	transition: all .04s linear;
 }
 .pin {
 	position: fixed; z-index: 2147483646; width: 26px; height: 26px; border-radius: 50% 50% 50% 2px;
-	background: #16a34a; color: #fff; border: 2px solid #fff; cursor: pointer;
+	background: var(--green); color: #fff; border: 2px solid #fff; cursor: pointer;
 	font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center;
 	box-shadow: 0 2px 8px rgba(0,0,0,.3); transform: translate(-50%, -100%);
 }
 .pin.resolved { background: #9ca3af; }
 .popover {
-	position: fixed; z-index: 2147483647; width: 280px; background: #fff; color: #111;
-	border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,.25); padding: 12px;
-	border: 1px solid #e5e5e5;
+	position: fixed; z-index: 2147483647; width: 280px; background: var(--surface); color: var(--ink);
+	border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,var(--shadow-alpha)); padding: 12px;
+	border: 1px solid var(--border);
 }
 .popover textarea {
-	width: 100%; min-height: 64px; resize: vertical; border: 1px solid #d4d4d4;
-	border-radius: 6px; padding: 8px; font-size: 13px;
+	width: 100%; min-height: 56px; resize: vertical; border: 1.5px solid var(--border);
+	border-radius: 8px; padding: 8px 10px; font-size: 13px; color: var(--ink); background: var(--surface);
 }
-.popover .meta { font-size: 11px; color: #777; margin: 6px 0; word-break: break-all; }
-.row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
-button.btn { border: none; border-radius: 6px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
-.btn.primary { background: #16a34a; color: #fff; }
-.btn.ghost { background: #f0f0f0; color: #333; }
-.btn.danger { background: #fde7e7; color: #c0271b; }
+.popover textarea:focus { outline: none; border-color: var(--green); }
+@media (prefers-color-scheme: dark) {
+	.popover textarea:focus { border-color: #3fc479; }
+}
+.popover .tagchip {
+	font-size: 11px; font-weight: 700; background: var(--green-tint); color: var(--green-strong);
+	padding: 2px 7px; border-radius: 4px; flex-shrink: 0;
+}
+.popover .selector-line { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; min-width: 0; }
+.popover .selector-path {
+	font-size: 11px; color: var(--faint-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1;
+}
+.popover .meta { font-size: 11px; color: var(--faint-text); margin: 6px 0; word-break: break-all; }
+.row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
+button.btn { border: none; border-radius: 8px; padding: 7px 13px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.btn.primary { background: var(--green); color: #fff; }
+.btn.ghost { background: var(--ghost-bg); color: var(--ghost-text); }
+.btn.danger { background: var(--danger-tint); color: var(--danger); }
 button.btn:disabled { opacity: .5; cursor: default; }
 .panel {
-	position: fixed; bottom: 84px; right: 20px; width: 340px; max-height: 70vh; overflow-y: auto;
-	z-index: 2147483647; background: #fff; color: #111; border-radius: 12px;
-	box-shadow: 0 8px 30px rgba(0,0,0,.25); border: 1px solid #e5e5e5;
+	position: fixed; bottom: 84px; right: 20px; width: 330px; max-height: 70vh; overflow-y: auto;
+	z-index: 2147483647; background: var(--surface); color: var(--ink); border-radius: 12px;
+	box-shadow: 0 8px 30px rgba(0,0,0,var(--shadow-alpha)); border: 1px solid var(--border);
 }
-.panel header { padding: 12px 14px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; }
-.panel header h3 { margin: 0; font-size: 14px; font-weight: 700; }
-.panel .status { font-size: 11px; color: #888; padding: 8px 14px; border-bottom: 1px solid #eee; }
-.panel .mode { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 10px 14px; border-bottom: 1px solid #eee; }
-.panel .mode select { font-size: 12px; padding: 3px 6px; border-radius: 5px; border: 1px solid #d4d4d4; }
-.item { padding: 10px 14px; border-bottom: 1px solid #f3f3f3; }
-.item .num { display: inline-block; min-width: 18px; height: 18px; line-height: 18px; text-align: center; background: #16a34a; color: #fff; border-radius: 9px; font-size: 11px; font-weight: 700; margin-right: 6px; }
+.panel header { padding: 12px 14px; border-bottom: 1px solid var(--hairline); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.panel header .identity { display: flex; align-items: center; gap: 9px; min-width: 0; flex: 1; }
+.panel header .identity .mark { width: 30px; height: 30px; }
+.panel header .identity .mark::after { width: 9px; height: 9px; }
+.panel header .identity .text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.panel header .brand-name { font-family: "Space Grotesk", ui-sans-serif, sans-serif; font-weight: 600; font-size: 13.5px; white-space: nowrap; }
+.panel header .hostname { font-size: 11px; color: var(--faint-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.panel .clear-all { font-size: 12px; font-weight: 600; color: var(--danger); background: var(--danger-tint); border: none; border-radius: 6px; padding: 4px 10px; cursor: pointer; flex-shrink: 0; }
+.panel .clear-all:disabled { opacity: .5; cursor: default; }
+.panel .sync-strip { display: flex; align-items: center; gap: 7px; padding: 8px 14px; font-size: 12px; font-weight: 600; border-bottom: 1px solid var(--warning-border); background: var(--warning-bg); color: var(--warning-text); }
+.panel .sync-strip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--warning-dot); flex-shrink: 0; }
+.panel .mode { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 10px 14px; border-bottom: 1px solid var(--hairline); }
+.panel .mode select { font-size: 12px; padding: 3px 6px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); }
+.item { padding: 10px 14px; border-bottom: 1px solid var(--divider); }
+.item .top { display: flex; align-items: center; gap: 7px; }
+.item .num { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; background: var(--green); color: #fff; border-radius: 999px; font-size: 11px; font-weight: 700; flex-shrink: 0; }
 .item.resolved .num { background: #9ca3af; }
-.item .txt { font-size: 13px; margin: 4px 0; }
-.item .ref { font-size: 11px; color: #888; word-break: break-all; }
+.item .meta-line { font-size: 11px; color: var(--faint-text); }
+.item .txt { font-size: 13px; margin: 5px 0 3px; }
+.item .ref {
+	font-size: 10.5px; color: var(--selector-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 .item.resolved .txt, .item.resolved .ref { opacity: .6; }
-.item .acts { margin-top: 6px; display: flex; gap: 8px; }
-.item .acts a { font-size: 12px; color: #16a34a; cursor: pointer; }
-.item .acts a.del { color: #c0271b; }
-.empty { padding: 20px 14px; font-size: 13px; color: #888; text-align: center; }
+.item .acts { margin-top: 6px; display: flex; gap: 12px; }
+.item .acts a { font-size: 12px; font-weight: 600; color: var(--green); cursor: pointer; }
+.item .acts a.del { color: var(--danger); }
+.empty { padding: 20px 14px; font-size: 13px; color: var(--faint-text); text-align: center; }
 `;
 
-const ADD_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="12" y1="7" x2="12" y2="13"/><line x1="9" y1="10" x2="15" y2="10"/></svg>`;
+const ADD_ICON = `<span class="waypoint-icon"><svg width="14" height="14" viewBox="0 0 14 14"><line x1="7" y1="4" x2="7" y2="10" stroke="#0F8A46" stroke-width="2" stroke-linecap="round"/><line x1="4" y1="7" x2="10" y2="7" stroke="#0F8A46" stroke-width="2" stroke-linecap="round"/></svg></span>`;
 const CLOSE_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
 const LIST_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>`;
 
@@ -118,6 +177,10 @@ function mountClaudback(): void {
 	const host = document.createElement("div");
 	host.id = "claudback-root";
 	const shadow = host.attachShadow({ mode: "open" });
+	const fontLink = document.createElement("link");
+	fontLink.rel = "stylesheet";
+	fontLink.href = "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600&display=swap";
+	shadow.append(fontLink);
 	const style = document.createElement("style");
 	style.textContent = STYLES;
 	shadow.append(style);
@@ -214,9 +277,12 @@ function mountClaudback(): void {
 		pop.style.top = `${Math.min(y, window.innerHeight - 200)}px`;
 
 		const selector = buildSelector(el);
-		const meta = `<${el.tagName.toLowerCase()}> ${selector}`;
+		const tag = el.tagName.toLowerCase();
 		pop.innerHTML = `
-			<div class="meta">${escapeHtml(meta)}</div>
+			<div class="selector-line">
+				<span class="tagchip mono">&lt;${escapeHtml(tag)}&gt;</span>
+				<span class="selector-path mono" title="${escapeHtml(selector)}">${escapeHtml(selector)}</span>
+			</div>
 			<textarea placeholder="What needs fixing here?"></textarea>
 			<div class="row">
 				<button class="btn ghost" data-act="cancel">Cancel</button>
@@ -281,7 +347,7 @@ function mountClaudback(): void {
 		pop.style.left = `${Math.min(rect.left, window.innerWidth - 300)}px`;
 		pop.style.top = `${Math.min(rect.bottom + 6, window.innerHeight - 200)}px`;
 		pop.innerHTML = `
-			<div class="meta">${escapeHtml(comment.selector)}${comment.resolved ? " · resolved" : ""}</div>
+			<div class="meta mono">${escapeHtml(comment.selector)}${comment.resolved ? " · resolved" : ""}</div>
 			<textarea>${escapeHtml(comment.text)}</textarea>
 			<div class="row">
 				<button class="btn danger" data-act="delete">Delete</button>
@@ -332,25 +398,25 @@ function mountClaudback(): void {
 		render();
 	}
 
-	function statusLabel(): string {
+	function statusLabel(): string | null {
 		switch (syncState) {
 			case "unpaired": {
 				return "Not paired — set the token in the extension options.";
 			}
 			case "offline": {
-				return "Collector offline — comments are buffered locally.";
+				return "Collector offline — comments saved locally, retrying.";
 			}
 			case "pending": {
 				return "Syncing buffered comments…";
 			}
 			default: {
-				return "Synced with the local collector.";
+				return null;
 			}
 		}
 	}
 
 	function render(): void {
-		shadow.querySelectorAll(":not(style)").forEach((node) => {
+		shadow.querySelectorAll(":not(style):not(link)").forEach((node) => {
 			node.remove();
 		});
 		shadow.append(highlight);
@@ -405,9 +471,16 @@ function mountClaudback(): void {
 		panel.className = "panel";
 
 		const header = document.createElement("header");
-		header.innerHTML = `<h3>Claudback · ${escapeHtml(label)}</h3>`;
+		header.innerHTML = `
+			<div class="identity">
+				<span class="mark"></span>
+				<div class="text">
+					<span class="brand-name">Claudback</span>
+					<span class="hostname mono" title="${escapeHtml(label)}">${escapeHtml(label)}</span>
+				</div>
+			</div>`;
 		const clearAllBtn = document.createElement("button");
-		clearAllBtn.className = "btn danger";
+		clearAllBtn.className = "clear-all";
 		clearAllBtn.textContent = "Clear all";
 		clearAllBtn.disabled = store.comments.length === 0;
 		clearAllBtn.addEventListener("click", async () => {
@@ -417,10 +490,14 @@ function mountClaudback(): void {
 		header.append(clearAllBtn);
 		panel.append(header);
 
-		const status = document.createElement("div");
-		status.className = "status";
-		status.textContent = statusLabel();
-		panel.append(status);
+		const syncLabel = statusLabel();
+
+		if (syncLabel !== null) {
+			const status = document.createElement("div");
+			status.className = "sync-strip";
+			status.innerHTML = `<span class="dot"></span>${escapeHtml(syncLabel)}`;
+			panel.append(status);
+		}
 
 		const mode = document.createElement("div");
 		mode.className = "mode";
@@ -449,9 +526,12 @@ function mountClaudback(): void {
 			item.className = `item${comment.resolved ? " resolved" : ""}`;
 			const onThisPage = comment.url === window.location.href;
 			item.innerHTML = `
-				<div><span class="num">${index + 1}</span><span class="ref">${escapeHtml(comment.tag)} · ${onThisPage ? "this page" : escapeHtml(shortUrl(comment.url))}${comment.resolved ? " · resolved" : ""}</span></div>
+				<div class="top">
+					<span class="num">${index + 1}</span>
+					<span class="meta-line"><span class="mono">${escapeHtml(comment.tag)}</span> · ${onThisPage ? "this page" : escapeHtml(shortUrl(comment.url))}${comment.resolved ? " · resolved" : ""}</span>
+				</div>
 				<div class="txt">${escapeHtml(comment.text)}</div>
-				<div class="ref">${escapeHtml(comment.selector)}</div>
+				<div class="ref mono" title="${escapeHtml(comment.selector)}">${escapeHtml(comment.selector)}</div>
 				<div class="acts">
 					${comment.resolved ? `<a data-act="unresolve">Unresolve</a>` : `<a data-act="edit">Edit</a>`}
 					<a class="del" data-act="delete">Delete</a>

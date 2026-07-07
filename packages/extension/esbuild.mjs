@@ -8,14 +8,20 @@ const watch = process.argv.includes("--watch");
 
 await mkdir(outdir, { recursive: true });
 
+const ICON_SIZES = [16, 32, 48, 128];
+
 async function copyStaticFiles() {
-	await Promise.all(
-		["manifest.json", "src/popup.html", "src/options.html"].map(async (file) => {
+	await mkdir(`${outdir}/icons`, { recursive: true });
+	await Promise.all([
+		...["manifest.json", "src/popup.html", "src/options.html"].map(async (file) => {
 			const dest = `${outdir}/${file.split("/").pop()}`;
 
 			await copyFile(root(`./${file}`), dest);
 		}),
-	);
+		...ICON_SIZES.map(async (size) => {
+			await copyFile(root(`./icons/icon-${size}.png`), `${outdir}/icons/icon-${size}.png`);
+		}),
+	]);
 }
 
 const buildOptions = {

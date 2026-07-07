@@ -63,6 +63,7 @@ async function render(): Promise<void> {
 	const toggle = document.getElementById("toggle") as HTMLInputElement;
 	const count = document.getElementById("count") as HTMLSpanElement;
 	const statusEl = document.getElementById("status") as HTMLSpanElement;
+	const statusDotEl = document.getElementById("status-dot") as HTMLSpanElement;
 	const spinnerEl = document.getElementById("status-spinner") as HTMLSpanElement;
 	const hintEl = document.getElementById("status-hint") as HTMLDivElement;
 	const hintTextEl = document.getElementById("status-hint-text") as HTMLSpanElement;
@@ -111,7 +112,9 @@ async function render(): Promise<void> {
 	const status = await send<StatusReport>({ type: "status" });
 	statusEl.textContent = statusText(status.state);
 	statusEl.className = `status ${statusClass(status.state)}`;
+	statusDotEl.className = `status-dot ${statusClass(status.state)}`;
 	spinnerEl.hidden = status.state !== "pending";
+	statusDotEl.hidden = status.state === "pending";
 
 	const hint = statusHint(status.state);
 	hintTextEl.textContent = hint ?? "";

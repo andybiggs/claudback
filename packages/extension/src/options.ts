@@ -10,8 +10,8 @@ async function loadToken(): Promise<string> {
 }
 
 function setStatus(text: string): void {
-	const status = document.getElementById("status") as HTMLDivElement;
-	status.textContent = text;
+	const statusText = document.getElementById("status-text") as HTMLSpanElement;
+	statusText.textContent = text;
 }
 
 async function init(): Promise<void> {
