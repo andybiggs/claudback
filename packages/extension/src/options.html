@@ -140,6 +140,17 @@
 				background: var(--green-strong);
 				flex-shrink: 0;
 			}
+			.guide-link {
+				display: inline-block;
+				margin-top: 18px;
+				font-size: 13px;
+				color: var(--green-strong);
+				text-decoration: none;
+				font-weight: 600;
+			}
+			.guide-link:hover {
+				text-decoration: underline;
+			}
 		</style>
 	</head>
 	<body>
@@ -161,6 +172,7 @@
 			<span class="status-dot"></span>
 			<span id="status-text"></span>
 		</div>
+		<a class="guide-link" href="onboarding.html">Open setup guide</a>
 		<script type="module" src="options.js"></script>
 	</body>
 </html>

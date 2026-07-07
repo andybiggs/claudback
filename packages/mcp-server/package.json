@@ -1,19 +1,47 @@
 {
 	"name": "claudback-mcp",
-	"private": true,
-	"version": "0.0.1",
+	"version": "0.1.0",
+	"description": "Local MCP server that lets Claude read visual-feedback comments pinned to web pages with the Claudback Chrome extension.",
 	"type": "module",
-	"main": "./src/index.ts",
-	"types": "./src/index.ts",
 	"bin": {
 		"claudback-mcp": "./dist/bin.js"
 	},
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE"
+	],
 	"scripts": {
-		"build": "node esbuild.mjs"
+		"build": "node esbuild.mjs",
+		"prepack": "node esbuild.mjs"
+	},
+	"keywords": [
+		"mcp",
+		"model-context-protocol",
+		"claude",
+		"claude-code",
+		"feedback",
+		"annotations",
+		"chrome-extension"
+	],
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/andybiggs/Claudback.git",
+		"directory": "packages/mcp-server"
+	},
+	"homepage": "https://andybiggs.github.io/Claudback/",
+	"bugs": {
+		"url": "https://github.com/andybiggs/Claudback/issues"
+	},
+	"engines": {
+		"node": ">=20"
 	},
 	"dependencies": {
-		"@claudback/shared": "*",
 		"@modelcontextprotocol/sdk": "^1.12.0",
 		"zod": "^3.25.76"
+	},
+	"devDependencies": {
+		"@claudback/shared": "*"
 	}
 }

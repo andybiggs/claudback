@@ -1,7 +1,8 @@
 {
 	"manifest_version": 3,
 	"name": "Claudback",
-	"version": "0.0.1",
+	"version": "0.1.0",
+	"homepage_url": "https://andybiggs.github.io/Claudback/",
 	"description": "Pin visual-feedback comments to page elements for Claude to read via a local MCP server.",
 	"permissions": ["storage", "activeTab", "scripting", "alarms"],
 	"optional_host_permissions": ["*://*/*"],

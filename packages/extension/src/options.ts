@@ -27,40 +27,55 @@ async function init(): Promise<void> {
 		setStatus("No token saved yet.");
 	}
 
-	saveBtn.addEventListener("click", async () => {
-		const token = input.value.trim();
+	saveBtn.addEventListener("click", () => {
+		void (async () => {
+			const token = input.value.trim();
 
-		if (!token) {
-			setStatus("Enter a token first.");
+			if (!token) {
+				setStatus("Enter a token first.");
 
-			return;
-		}
+				return;
+			}
 
-		await chrome.storage.local.set({ [TOKEN_KEY]: token });
-		input.value = "";
-		setStatus("Token saved.");
+			await chrome.storage.local.set({ [TOKEN_KEY]: token });
+			input.value = "";
+			setStatus("Token saved.");
+		})().catch(reportError);
 	});
 
-	testBtn.addEventListener("click", async () => {
-		setStatus("Testing…");
-		const result = (await chrome.runtime.sendMessage({ type: "testConnection" })) as TestConnectionResponse;
+	testBtn.addEventListener("click", () => {
+		void (async () => {
+			setStatus("Testing…");
+			const result = (await chrome.runtime.sendMessage({ type: "testConnection" })) as TestConnectionResponse;
 
-		switch (result.state) {
-			case "unpaired": {
-				setStatus("Not paired — save a token first.");
+			switch (result.state) {
+				case "unpaired": {
+					setStatus("Not paired — save a token first.");
 
-				return;
-			}
-			case "offline": {
-				setStatus("Collector offline — is the MCP server running?");
+					return;
+				}
+				case "offline": {
+					setStatus("Collector offline — is the MCP server running?");
 
-				return;
+					return;
+				}
+				case "synced":
+				case "pending": {
+					setStatus("Connected to the local collector.");
+
+					return;
+				}
+				default: {
+					setStatus("Unexpected response from the extension — try again.");
+				}
 			}
-			default: {
-				setStatus("Connected to the local collector.");
-			}
-		}
+		})().catch(reportError);
 	});
 }
 
-void init();
+function reportError(error: unknown): void {
+	console.error("[claudback] options error:", error);
+	setStatus("Something went wrong — reload this page and try again.");
+}
+
+void init().catch(reportError);

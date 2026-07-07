@@ -1,0 +1,372 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>Welcome to Claudback</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600&display=swap" rel="stylesheet" />
+		<style>
+			:root {
+				--ink: #191c1f;
+				--secondary-text: #5c6167;
+				--faint-text: #8b9096;
+				--border: #e5e7e9;
+				--input-border: #d9dcde;
+				--green: #0f8a46;
+				--green-strong: #0c6e38;
+				--green-tint: #eaf5ee;
+				--green-tint-hover: #dff0e5;
+				--mark-bg: #0f8a46;
+				--mark-dot: #fff;
+				--ghost-bg: #f3f4f4;
+				--surface: #fff;
+			}
+			@media (prefers-color-scheme: dark) {
+				:root {
+					--ink: #e9ecee;
+					--secondary-text: #9aa1a8;
+					--faint-text: #6e757c;
+					--border: #2b3036;
+					--input-border: #2b3036;
+					--green: #0f8a46;
+					--green-strong: #3fc479;
+					--green-tint: rgba(63, 196, 121, 0.14);
+					--green-tint-hover: rgba(63, 196, 121, 0.2);
+					--mark-bg: #3fc479;
+					--mark-dot: #141619;
+					--ghost-bg: #2b3036;
+					--surface: #141619;
+				}
+			}
+			body {
+				font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+				max-width: 620px;
+				margin: 48px auto;
+				padding: 0 24px;
+				color: var(--ink);
+				background: var(--surface);
+				line-height: 1.5;
+			}
+			.brand {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				margin-bottom: 6px;
+			}
+			.mark {
+				width: 26px;
+				height: 26px;
+				flex-shrink: 0;
+				background: var(--mark-bg);
+				border-radius: 50% 50% 50% 3px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
+			.mark::after {
+				content: "";
+				width: 8px;
+				height: 8px;
+				border-radius: 50%;
+				background: var(--mark-dot);
+			}
+			h1 {
+				font-family: "Space Grotesk", ui-sans-serif, sans-serif;
+				font-weight: 600;
+				font-size: 22px;
+				letter-spacing: -0.01em;
+				margin: 0;
+			}
+			h2 {
+				font-family: "Space Grotesk", ui-sans-serif, sans-serif;
+				font-weight: 600;
+				font-size: 16px;
+				letter-spacing: -0.01em;
+				margin: 0 0 8px;
+			}
+			p,
+			li {
+				font-size: 13px;
+				color: var(--secondary-text);
+				line-height: 1.55;
+			}
+			code {
+				font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+				background: var(--ghost-bg);
+				padding: 1px 5px;
+				border-radius: 4px;
+				font-size: 12px;
+				color: var(--ink);
+			}
+			.steps {
+				display: flex;
+				gap: 6px;
+				margin: 24px 0 28px;
+			}
+			.step-dot {
+				height: 4px;
+				flex: 1;
+				border-radius: 2px;
+				background: var(--ghost-bg);
+			}
+			.step-dot.active {
+				background: var(--green);
+			}
+			.step {
+				display: none;
+			}
+			.step.active {
+				display: block;
+			}
+			.tabs {
+				display: flex;
+				gap: 6px;
+				margin: 14px 0 10px;
+			}
+			.tab {
+				border: 1px solid var(--border);
+				background: var(--surface);
+				color: var(--secondary-text);
+				border-radius: 8px;
+				padding: 6px 14px;
+				font-size: 13px;
+				font-weight: 600;
+				cursor: pointer;
+			}
+			.tab.active {
+				background: var(--green-tint);
+				border-color: var(--green);
+				color: var(--green-strong);
+			}
+			.tab-panel {
+				display: none;
+			}
+			.tab-panel.active {
+				display: block;
+			}
+			pre {
+				position: relative;
+				background: var(--ghost-bg);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 14px 16px;
+				overflow-x: auto;
+				font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+				font-size: 12px;
+				line-height: 1.5;
+				color: var(--ink);
+				margin: 10px 0;
+			}
+			.code-block {
+				position: relative;
+			}
+			.copy {
+				position: absolute;
+				top: 8px;
+				right: 8px;
+				border: none;
+				border-radius: 6px;
+				padding: 5px 10px;
+				font-size: 11px;
+				font-weight: 600;
+				cursor: pointer;
+				background: var(--green-tint);
+				color: var(--green-strong);
+			}
+			.copy:hover {
+				background: var(--green-tint-hover);
+			}
+			input {
+				width: 100%;
+				padding: 9px 12px;
+				font-size: 13px;
+				color: var(--ink);
+				background: var(--surface);
+				border: 1px solid var(--input-border);
+				border-radius: 8px;
+				box-sizing: border-box;
+			}
+			input::placeholder {
+				color: var(--faint-text);
+			}
+			.row {
+				display: flex;
+				gap: 8px;
+				margin-top: 10px;
+			}
+			button.primary {
+				border: none;
+				border-radius: 8px;
+				padding: 9px 16px;
+				font-size: 13px;
+				font-weight: 600;
+				cursor: pointer;
+				background: var(--green);
+				color: #fff;
+			}
+			button.ghost {
+				border: none;
+				border-radius: 8px;
+				padding: 9px 16px;
+				font-size: 13px;
+				font-weight: 600;
+				cursor: pointer;
+				background: var(--green-tint);
+				color: var(--green-strong);
+			}
+			button.ghost:hover {
+				background: var(--green-tint-hover);
+			}
+			button:disabled {
+				opacity: 0.45;
+				cursor: default;
+			}
+			.status {
+				display: flex;
+				align-items: center;
+				gap: 7px;
+				margin-top: 14px;
+				font-size: 13px;
+				color: var(--secondary-text);
+			}
+			.status-dot {
+				width: 7px;
+				height: 7px;
+				border-radius: 50%;
+				background: var(--faint-text);
+				flex-shrink: 0;
+			}
+			.status-dot.ok {
+				background: var(--green-strong);
+			}
+			.nav {
+				display: flex;
+				justify-content: space-between;
+				margin-top: 32px;
+				padding-top: 18px;
+				border-top: 1px solid var(--border);
+			}
+			.usecase {
+				background: var(--green-tint);
+				border-radius: 10px;
+				padding: 14px 16px;
+				margin-top: 14px;
+			}
+			.usecase p {
+				margin: 0;
+				color: var(--ink);
+			}
+			ol {
+				padding-left: 20px;
+				margin: 10px 0;
+			}
+			ol li {
+				margin-bottom: 8px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="brand">
+			<span class="mark"></span>
+			<h1>Welcome to Claudback</h1>
+		</div>
+
+		<div class="steps" id="step-dots">
+			<span class="step-dot active"></span>
+			<span class="step-dot"></span>
+			<span class="step-dot"></span>
+			<span class="step-dot"></span>
+		</div>
+
+		<section class="step active" data-step="0">
+			<h2>Point at your page. Claude reads it.</h2>
+			<p>
+				Claudback lets you pin comments to elements on any web page — a button that's the
+				wrong colour, a layout that breaks, copy that needs a rewrite. Claude reads your
+				comments through a local MCP server and makes the changes.
+			</p>
+			<div class="usecase">
+				<p>
+					<strong>The main use case:</strong> run your site or prototype locally, click the
+					things you want changed and say why, then ask Claude Code to check your Claudback
+					comments. No screenshots, no describing where things are — the comment carries the
+					exact element.
+				</p>
+			</div>
+			<p>Everything stays on your machine: comments go to a local collector on <code>127.0.0.1</code>, never to a remote server.</p>
+		</section>
+
+		<section class="step" data-step="1">
+			<h2>Install the server</h2>
+			<p>
+				Claude starts and stops the server itself — you just register it once. Pick your
+				client:
+			</p>
+			<div class="tabs">
+				<button class="tab active" data-tab="code">Claude Code</button>
+				<button class="tab" data-tab="desktop">Claude Desktop</button>
+			</div>
+			<div class="tab-panel active" data-panel="code">
+				<p>Run this in your terminal:</p>
+				<div class="code-block">
+					<pre id="cmd-code">claude mcp add claudback -- npx -y claudback-mcp</pre>
+					<button class="copy" data-copy="cmd-code">Copy</button>
+				</div>
+			</div>
+			<div class="tab-panel" data-panel="desktop">
+				<p>Add this to your <code>claude_desktop_config.json</code>:</p>
+				<div class="code-block">
+					<pre id="cmd-desktop">{
+  "mcpServers": {
+    "claudback": {
+      "command": "npx",
+      "args": ["-y", "claudback-mcp"]
+    }
+  }
+}</pre>
+					<button class="copy" data-copy="cmd-desktop">Copy</button>
+				</div>
+			</div>
+			<p>
+				On first run the server prints a pairing token and saves it to
+				<code>~/.claudback/token</code> — you'll paste that in the next step.
+			</p>
+		</section>
+
+		<section class="step" data-step="2">
+			<h2>Pair the extension</h2>
+			<p>
+				Start a Claude session (or run <code>npx claudback-mcp</code> once in a terminal),
+				then paste the token from <code>~/.claudback/token</code>:
+			</p>
+			<input id="token" type="password" placeholder="Paste pairing token" autocomplete="off" />
+			<div class="row">
+				<button id="save" class="primary">Save token</button>
+				<button id="test" class="ghost">Test connection</button>
+			</div>
+			<div class="status">
+				<span class="status-dot" id="status-dot"></span>
+				<span id="status-text">Waiting for a token…</span>
+			</div>
+		</section>
+
+		<section class="step" data-step="3">
+			<h2>You're set — here's the loop</h2>
+			<ol>
+				<li>Open the page you're working on and click the Claudback icon → <strong>Enable</strong> for this tab (grant the per-site permission when prompted).</li>
+				<li>Use the floating button to pin comments to elements — click the thing, say what you want.</li>
+				<li>Ask Claude: <code>check my claudback comments and make the changes</code>.</li>
+				<li>Resolved comments clear automatically as Claude works through them.</li>
+			</ol>
+			<p>You can reopen this guide any time from the extension's options page.</p>
+		</section>
+
+		<div class="nav">
+			<button id="back" class="ghost" disabled>Back</button>
+			<button id="next" class="primary">Next</button>
+		</div>
+
+		<script type="module" src="onboarding.js"></script>
+	</body>
+</html>

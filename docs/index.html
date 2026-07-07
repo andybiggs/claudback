@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Claudback — point at your page, Claude reads it</title>
+		<meta
+			name="description"
+			content="Pin comments to elements on any web page. Claude reads them via a local MCP server and makes the changes. Nothing leaves your machine."
+		/>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&display=swap"
+			rel="stylesheet"
+		/>
+		<style>
+			:root {
+				--ink: #191c1f;
+				--secondary-text: #5c6167;
+				--faint-text: #8b9096;
+				--border: #e5e7e9;
+				--green: #0f8a46;
+				--green-strong: #0c6e38;
+				--green-tint: #eaf5ee;
+				--mark-bg: #0f8a46;
+				--mark-dot: #fff;
+				--ghost-bg: #f3f4f4;
+				--surface: #fff;
+				--card: #fff;
+				--hairline: #eff1f2;
+			}
+			@media (prefers-color-scheme: dark) {
+				:root {
+					--ink: #e9ecee;
+					--secondary-text: #9aa1a8;
+					--faint-text: #6e757c;
+					--border: #2b3036;
+					--green: #3fc479;
+					--green-strong: #3fc479;
+					--green-tint: rgba(63, 196, 121, 0.14);
+					--mark-bg: #3fc479;
+					--mark-dot: #141619;
+					--ghost-bg: #1c1f23;
+					--surface: #141619;
+					--card: #1c1f23;
+					--hairline: #2b3036;
+				}
+			}
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				margin: 0;
+				font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+				color: var(--ink);
+				background: var(--surface);
+				line-height: 1.6;
+			}
+			main {
+				max-width: 720px;
+				margin: 0 auto;
+				padding: 0 24px 80px;
+			}
+			.brand-font {
+				font-family: "Space Grotesk", ui-sans-serif, sans-serif;
+				font-weight: 600;
+				letter-spacing: -0.02em;
+			}
+			.mark {
+				background: var(--mark-bg);
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				flex-shrink: 0;
+			}
+			.mark::after {
+				content: "";
+				border-radius: 50%;
+				background: var(--mark-dot);
+				width: 29%;
+				height: 29%;
+			}
+			header {
+				display: flex;
+				align-items: center;
+				gap: 12px;
+				padding: 28px 0;
+			}
+			header .mark {
+				width: 26px;
+				height: 26px;
+				border-radius: 50% 50% 50% 3px;
+			}
+			header .name {
+				font-size: 18px;
+			}
+			header nav {
+				margin-left: auto;
+				display: flex;
+				gap: 18px;
+			}
+			header nav a {
+				color: var(--secondary-text);
+				text-decoration: none;
+				font-size: 14px;
+				font-weight: 600;
+			}
+			header nav a:hover {
+				color: var(--green-strong);
+			}
+			.hero {
+				padding: 56px 0 40px;
+				text-align: center;
+			}
+			.hero .mark {
+				width: 60px;
+				height: 60px;
+				border-radius: 50% 50% 50% 5px;
+				margin-bottom: 22px;
+			}
+			h1 {
+				font-size: clamp(30px, 5.5vw, 44px);
+				margin: 0 0 14px;
+				line-height: 1.15;
+			}
+			.hero p {
+				font-size: 17px;
+				color: var(--secondary-text);
+				max-width: 540px;
+				margin: 0 auto 28px;
+			}
+			.cta-row {
+				display: flex;
+				gap: 10px;
+				justify-content: center;
+				flex-wrap: wrap;
+			}
+			.btn {
+				display: inline-block;
+				border-radius: 8px;
+				padding: 11px 20px;
+				font-size: 14px;
+				font-weight: 600;
+				text-decoration: none;
+			}
+			.btn.primary {
+				background: #0f8a46;
+				color: #fff;
+			}
+			.btn.primary:hover {
+				background: #0c6e38;
+			}
+			.btn.ghost {
+				background: var(--green-tint);
+				color: var(--green-strong);
+			}
+			h2 {
+				font-size: 22px;
+				margin: 64px 0 12px;
+			}
+			p,
+			li {
+				font-size: 15px;
+				color: var(--secondary-text);
+			}
+			strong {
+				color: var(--ink);
+			}
+			code {
+				font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+				background: var(--ghost-bg);
+				padding: 1px 6px;
+				border-radius: 4px;
+				font-size: 13px;
+				color: var(--ink);
+			}
+			pre {
+				background: var(--ghost-bg);
+				border: 1px solid var(--border);
+				border-radius: 10px;
+				padding: 16px 18px;
+				overflow-x: auto;
+				font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+				font-size: 13px;
+				line-height: 1.55;
+				color: var(--ink);
+			}
+			pre code {
+				background: none;
+				padding: 0;
+			}
+			.walkthrough {
+				counter-reset: step;
+				list-style: none;
+				padding: 0;
+				margin: 20px 0;
+			}
+			.walkthrough li {
+				position: relative;
+				padding: 0 0 22px 44px;
+			}
+			.walkthrough li::before {
+				counter-increment: step;
+				content: counter(step);
+				position: absolute;
+				left: 0;
+				top: 0;
+				width: 26px;
+				height: 26px;
+				border-radius: 50% 50% 50% 2px;
+				background: #0f8a46;
+				color: #fff;
+				font-size: 13px;
+				font-weight: 700;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
+			.diagram {
+				display: flex;
+				align-items: stretch;
+				gap: 0;
+				margin: 26px 0;
+			}
+			.diagram .node {
+				flex: 1;
+				background: var(--card);
+				border: 1px solid var(--border);
+				border-radius: 12px;
+				padding: 16px 14px;
+				text-align: center;
+			}
+			.diagram .node .t {
+				font-family: "Space Grotesk", ui-sans-serif, sans-serif;
+				font-weight: 600;
+				letter-spacing: -0.01em;
+				font-size: 14px;
+				display: block;
+				margin-bottom: 4px;
+			}
+			.diagram .node .d {
+				font-size: 12px;
+				color: var(--faint-text);
+				font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+			}
+			.diagram .arrow {
+				display: flex;
+				align-items: center;
+				padding: 0 8px;
+				color: var(--green-strong);
+				font-weight: 700;
+				font-size: 16px;
+				flex-shrink: 0;
+			}
+			@media (max-width: 560px) {
+				.diagram {
+					flex-direction: column;
+				}
+				.diagram .arrow {
+					justify-content: center;
+					padding: 6px 0;
+					transform: rotate(90deg);
+				}
+			}
+			.card {
+				background: var(--card);
+				border: 1px solid var(--border);
+				border-radius: 12px;
+				padding: 20px 22px;
+				margin: 16px 0;
+			}
+			.card h3 {
+				margin: 0 0 6px;
+				font-size: 15px;
+			}
+			.card p {
+				margin: 0;
+				font-size: 14px;
+			}
+			.tag {
+				display: inline-block;
+				background: var(--green-tint);
+				color: var(--green-strong);
+				border-radius: 999px;
+				padding: 2px 12px;
+				font-size: 12px;
+				font-weight: 700;
+				margin-bottom: 8px;
+			}
+			footer {
+				border-top: 1px solid var(--hairline);
+				margin-top: 72px;
+				padding: 26px 0 0;
+				display: flex;
+				gap: 20px;
+				align-items: center;
+				font-size: 13px;
+				color: var(--faint-text);
+			}
+			footer a {
+				color: var(--secondary-text);
+				text-decoration: none;
+				font-weight: 600;
+			}
+			footer a:hover {
+				color: var(--green-strong);
+			}
+			.note {
+				font-size: 13px;
+				color: var(--faint-text);
+			}
+		</style>
+	</head>
+	<body>
+		<main>
+			<header>
+				<span class="mark"></span>
+				<span class="name brand-font">Claudback</span>
+				<nav>
+					<a href="#how">How it works</a>
+					<a href="#start">Quick start</a>
+					<a href="https://github.com/andybiggs/Claudback">GitHub</a>
+				</nav>
+			</header>
+
+			<section class="hero">
+				<span class="mark"></span>
+				<h1 class="brand-font">Point at your page.<br />Claude reads it.</h1>
+				<p>
+					Claudback is a Chrome extension that lets you pin comments to elements on any web
+					page — and a local MCP server that lets Claude read them and make the changes.
+				</p>
+				<div class="cta-row">
+					<!-- TODO: replace with the Chrome Web Store listing URL once live -->
+					<a class="btn primary" href="#start">Get the extension</a>
+					<a class="btn ghost" href="https://www.npmjs.com/package/claudback-mcp">claudback-mcp on npm</a>
+				</div>
+			</section>
+
+			<section>
+				<h2 class="brand-font">Iterate on your build without describing it</h2>
+				<p>
+					The main use case: you're building a site or prototype locally and iterating with
+					Claude Code. Instead of screenshotting, or typing "the third button in the sidebar,
+					no, the other sidebar" — you click the thing and say what you want. Each comment
+					carries the exact element, so Claude knows precisely what you mean.
+				</p>
+				<ol class="walkthrough">
+					<li>
+						<strong>Run your app locally</strong> and open it in Chrome. Click the Claudback
+						icon and enable it for the tab.
+					</li>
+					<li>
+						<strong>Pin comments</strong> to anything on the page: "make this bigger", "wrong
+						green", "this overlaps on mobile".
+					</li>
+					<li>
+						<strong>Ask Claude Code</strong>: <code>check my claudback comments and make the changes</code>.
+						Claude reads each comment — with its element selector — through the MCP server.
+					</li>
+					<li>
+						<strong>Comments resolve as Claude works</strong> through them. Reload, look at
+						the result, drop the next round of comments.
+					</li>
+				</ol>
+				<p>
+					It's not just for local builds — annotate any site to collect structured,
+					element-anchored notes for Claude to work from: competitor teardowns, design reviews,
+					content audits.
+				</p>
+			</section>
+
+			<section id="how">
+				<h2 class="brand-font">How it works</h2>
+				<div class="diagram">
+					<div class="node">
+						<span class="t">Chrome extension</span>
+						<span class="d">pins + comments</span>
+					</div>
+					<div class="arrow">→</div>
+					<div class="node">
+						<span class="t">Local collector</span>
+						<span class="d">127.0.0.1:4319</span>
+					</div>
+					<div class="arrow">→</div>
+					<div class="node">
+						<span class="t">Claude</span>
+						<span class="d">MCP tools</span>
+					</div>
+				</div>
+				<p>
+					The <code>claudback-mcp</code> server runs on your machine, started and stopped by
+					Claude itself. It embeds a small HTTP collector that only listens on localhost. The
+					extension syncs your comments to it; Claude reads them through MCP tools
+					(<code>get_comments</code>, <code>list_origins</code>, <code>resolve_comment</code>,
+					<code>clear_comments</code>).
+				</p>
+			</section>
+
+			<section id="start">
+				<h2 class="brand-font">Quick start</h2>
+				<ol class="walkthrough">
+					<li>
+						<strong>Install the extension.</strong>
+						<!-- TODO: replace with the Chrome Web Store listing URL once live -->
+						Get Claudback from the Chrome Web Store (link coming soon). A setup guide opens
+						automatically on install.
+					</li>
+					<li>
+						<strong>Register the MCP server.</strong> For Claude Code:
+						<pre><code>claude mcp add claudback -- npx -y claudback-mcp</code></pre>
+						Or for Claude Desktop, add to <code>claude_desktop_config.json</code>:
+						<pre><code>{
+  "mcpServers": {
+    "claudback": {
+      "command": "npx",
+      "args": ["-y", "claudback-mcp"]
+    }
+  }
+}</code></pre>
+					</li>
+					<li>
+						<strong>Pair.</strong> The server saves a pairing token to
+						<code>~/.claudback/token</code> on first run — paste it into the extension's
+						setup page and you're connected.
+					</li>
+				</ol>
+				<p class="note">Requires Node 20+ and Claude Code or Claude Desktop.</p>
+			</section>
+
+			<section>
+				<h2 class="brand-font">Private by design</h2>
+				<div class="card">
+					<span class="tag">Local only</span>
+					<p>
+						The collector binds to <code>127.0.0.1</code> — it is never reachable from the
+						network. Your comments live in <code>~/.claudback/</code> on your own machine. No
+						remote servers, no accounts, no analytics.
+					</p>
+				</div>
+				<div class="card">
+					<span class="tag">Paired &amp; permissioned</span>
+					<p>
+						Every request needs the pairing token, and only the extension's own origin passes
+						CORS — a random web page can't write into your comment store. The extension is off
+						by default and enabled per tab, with per-site permissions granted only when you
+						ask.
+					</p>
+				</div>
+				<div class="card">
+					<span class="tag">Pull, not push</span>
+					<p>
+						Comments never enter Claude's context automatically — Claude reads them only when
+						you ask it to call the tools, and each comment is wrapped in an untrusted-data
+						envelope. Full threat model in the
+						<a href="https://github.com/andybiggs/Claudback">repo</a>.
+					</p>
+				</div>
+			</section>
+
+			<footer>
+				<span class="mark" style="width: 18px; height: 18px; border-radius: 50% 50% 50% 2px"></span>
+				<span>Claudback</span>
+				<a href="https://github.com/andybiggs/Claudback">GitHub</a>
+				<a href="https://www.npmjs.com/package/claudback-mcp">npm</a>
+				<a href="privacy.html">Privacy</a>
+			</footer>
+		</main>
+	</body>
+</html>

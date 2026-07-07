@@ -1,11 +1,12 @@
 {
 	"name": "@claudback/extension",
 	"private": true,
-	"version": "0.0.1",
+	"version": "0.1.0",
 	"type": "module",
 	"scripts": {
 		"build": "node esbuild.mjs",
-		"watch": "node esbuild.mjs --watch"
+		"watch": "node esbuild.mjs --watch",
+		"zip": "node esbuild.mjs && node scripts/zip.mjs"
 	},
 	"dependencies": {
 		"@claudback/shared": "*"
