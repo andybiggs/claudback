@@ -18,7 +18,7 @@ Draft copy for the Web Store submission form. Not shipped in the extension zip.
 
 ## Full description
 
-> **Point at your page. Claude reads it.**
+> **Comment on your page. Claude reads it.**
 >
 > Claudback lets you pin visual-feedback comments to elements on any web page — a button that's the wrong colour, a layout that breaks on mobile, copy that needs a rewrite. Claude reads your comments through a local MCP server and makes the changes.
 >

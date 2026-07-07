@@ -7,6 +7,9 @@ const POLL_INTERVAL_MS = 2000;
 
 let step = 0;
 let pollTimer: number | null = null;
+// Whether a saved token has successfully reached the collector this session.
+// The pairing step's Next button stays disabled until it has.
+let connected = false;
 
 function $(id: string): HTMLElement {
 	const el = document.getElementById(id);
@@ -49,6 +52,8 @@ function reportState(state: TestConnectionResponse["state"]): boolean {
 		case "synced":
 		case "pending": {
 			setStatus("Connected to the local collector.", true);
+			connected = true;
+			updateNav();
 
 			return true;
 		}
@@ -67,30 +72,47 @@ function stopPolling(): void {
 	}
 }
 
+function pollTick(): void {
+	void (async () => {
+		if ((await loadToken()) === "") {
+			return;
+		}
+
+		const result = await testConnection();
+
+		if (reportState(result.state)) {
+			stopPolling();
+		}
+	})().catch((error: unknown) => {
+		// A rejected sendMessage here means the extension context is gone
+		// (reloaded/updated), so further ticks can never succeed.
+		stopPolling();
+		console.error("[claudback] onboarding poll failed:", error);
+		setStatus("Lost contact with the extension — reload this page.");
+	});
+}
+
 // While the pairing step is visible, quietly re-test so the status flips to
 // "Connected" on its own once the user has saved a token and started the
 // server — no button mashing needed.
 function startPolling(): void {
 	stopPolling();
-	pollTimer = window.setInterval(() => {
-		void (async () => {
-			if ((await loadToken()) === "") {
-				return;
-			}
+	// Interval first, immediate tick second: if the first tick already reports
+	// connected, its stopPolling() must have a timer to clear.
+	pollTimer = window.setInterval(pollTick, POLL_INTERVAL_MS);
+	pollTick();
+}
 
-			const result = await testConnection();
+function updateNav(): void {
+	const back = $("back") as HTMLButtonElement;
+	const nextBtn = $("next") as HTMLButtonElement;
+	const hint = $("nav-hint");
+	const gated = step === PAIR_STEP && !connected;
 
-			if (reportState(result.state)) {
-				stopPolling();
-			}
-		})().catch((error: unknown) => {
-			// A rejected sendMessage here means the extension context is gone
-			// (reloaded/updated), so further ticks can never succeed.
-			stopPolling();
-			console.error("[claudback] onboarding poll failed:", error);
-			setStatus("Lost contact with the extension — reload this page.");
-		});
-	}, POLL_INTERVAL_MS);
+	back.disabled = step === 0;
+	nextBtn.textContent = step === STEP_COUNT - 1 ? "Done" : "Next";
+	nextBtn.disabled = gated;
+	hint.hidden = !gated;
 }
 
 function showStep(next: number): void {
@@ -103,11 +125,7 @@ function showStep(next: number): void {
 		dot.classList.toggle("active", index <= step);
 	});
 
-	const back = $("back") as HTMLButtonElement;
-	const nextBtn = $("next") as HTMLButtonElement;
-
-	back.disabled = step === 0;
-	nextBtn.textContent = step === STEP_COUNT - 1 ? "Done" : "Next";
+	updateNav();
 
 	if (step === PAIR_STEP) {
 		startPolling();

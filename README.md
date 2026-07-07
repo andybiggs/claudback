@@ -1,6 +1,6 @@
 # Claudback
 
-**Point at your page. Claude reads it.**
+**Comment on your page. Claude reads it.**
 
 Claudback is a Chrome extension for pinning visual-feedback comments to elements on any web page, plus a local MCP server (`claudback-mcp`) that lets Claude read them and make the changes. The main use case: iterate on a local build or prototype with Claude Code without screenshots or "the third button in the sidebar" descriptions — click the thing, say what you want, ask Claude to check your comments.
 

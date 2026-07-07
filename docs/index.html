@@ -3,10 +3,10 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>Claudback — point at your page, Claude reads it</title>
+		<title>Claudback — comment on your page, Claude reads it</title>
 		<meta
 			name="description"
-			content="Pin comments to elements on any web page. Claude reads them via a local MCP server and makes the changes. Nothing leaves your machine."
+			content="Comment on elements of any web page. Claude reads them via a local MCP server and makes the changes. Nothing leaves your machine."
 		/>
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -310,6 +310,18 @@
 				font-size: 13px;
 				color: var(--faint-text);
 			}
+			.illus {
+				display: block;
+				width: 100%;
+				height: auto;
+				margin: 22px 0 8px;
+			}
+			.illus text {
+				font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+			}
+			.illus .mono {
+				font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+			}
 		</style>
 	</head>
 	<body>
@@ -326,7 +338,7 @@
 
 			<section class="hero">
 				<span class="mark"></span>
-				<h1 class="brand-font">Point at your page.<br />Claude reads it.</h1>
+				<h1 class="brand-font">Comment on your page.<br />Claude reads it.</h1>
 				<p>
 					Claudback is a Chrome extension that lets you pin comments to elements on any web
 					page — and a local MCP server that lets Claude read them and make the changes.
@@ -340,6 +352,40 @@
 
 			<section>
 				<h2 class="brand-font">Iterate on your build without describing it</h2>
+				<svg class="illus" viewBox="0 0 640 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A comment pinned to a button in the browser flows into Claude, which reads it and resolves it">
+					<rect x="16" y="16" width="280" height="196" rx="12" fill="var(--card)" stroke="var(--border)" />
+					<line x1="16" y1="48" x2="296" y2="48" stroke="var(--border)" />
+					<circle cx="36" cy="32" r="4" fill="var(--border)" />
+					<circle cx="50" cy="32" r="4" fill="var(--border)" />
+					<circle cx="64" cy="32" r="4" fill="var(--border)" />
+					<text x="82" y="36" font-size="11" fill="var(--faint-text)">Chrome</text>
+					<rect x="36" y="66" width="150" height="12" rx="6" fill="var(--border)" />
+					<rect x="36" y="90" width="240" height="8" rx="4" fill="var(--border)" />
+					<rect x="36" y="106" width="200" height="8" rx="4" fill="var(--border)" />
+					<rect x="36" y="132" width="104" height="30" rx="8" fill="var(--green-tint)" stroke="var(--green)" />
+					<rect x="52" y="144" width="72" height="6" rx="3" fill="var(--green-strong)" opacity="0.55" />
+					<g transform="translate(140, 132)">
+						<circle cx="0" cy="0" r="11" fill="var(--mark-bg)" />
+						<rect x="-11" y="0" width="11" height="11" fill="var(--mark-bg)" />
+						<circle cx="0" cy="0" r="3.4" fill="var(--mark-dot)" />
+					</g>
+					<rect x="120" y="158" width="152" height="34" rx="10" fill="var(--card)" stroke="var(--green)" />
+					<text x="134" y="180" font-size="12" fill="var(--ink)">“Make this bigger”</text>
+					<path d="M 306 114 C 330 114, 336 114, 360 114" stroke="var(--green)" stroke-width="2" stroke-dasharray="5 5" fill="none" />
+					<path d="M 356 107 L 368 114 L 356 121 Z" fill="var(--green)" />
+					<rect x="378" y="16" width="246" height="196" rx="12" fill="var(--ghost-bg)" stroke="var(--border)" />
+					<line x1="378" y1="48" x2="624" y2="48" stroke="var(--border)" />
+					<circle cx="398" cy="32" r="4" fill="var(--border)" />
+					<circle cx="412" cy="32" r="4" fill="var(--border)" />
+					<circle cx="426" cy="32" r="4" fill="var(--border)" />
+					<text x="444" y="36" font-size="11" fill="var(--faint-text)">Claude</text>
+					<text x="398" y="78" font-size="12" class="mono" fill="var(--faint-text)">&gt; Hey Claude, check my</text>
+					<text x="398" y="94" font-size="12" class="mono" fill="var(--faint-text)">  Claudback comments</text>
+					<text x="398" y="122" font-size="12" class="mono" fill="var(--green-strong)">● get_comments</text>
+					<text x="398" y="146" font-size="12" class="mono" fill="var(--ink)">“Make this bigger”</text>
+					<text x="398" y="170" font-size="12" class="mono" fill="var(--secondary-text)">editing button.css…</text>
+					<text x="398" y="194" font-size="12" class="mono" fill="var(--green-strong)">✓ resolved</text>
+				</svg>
 				<p>
 					The main use case: you're building a site or prototype locally and iterating with
 					Claude Code. Instead of screenshotting, or typing "the third button in the sidebar,
