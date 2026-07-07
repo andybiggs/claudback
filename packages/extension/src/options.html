@@ -2,63 +2,151 @@
 <html>
 	<head>
 		<meta charset="utf-8" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600&display=swap" rel="stylesheet" />
 		<style>
+			:root {
+				--ink: #191c1f;
+				--secondary-text: #5c6167;
+				--faint-text: #8b9096;
+				--border: #e5e7e9;
+				--input-border: #d9dcde;
+				--green: #0f8a46;
+				--green-strong: #0c6e38;
+				--green-tint: #eaf5ee;
+				--green-tint-hover: #dff0e5;
+				--mark-bg: #0f8a46;
+				--mark-dot: #fff;
+				--ghost-bg: #f3f4f4;
+				--surface: #fff;
+			}
+			@media (prefers-color-scheme: dark) {
+				:root {
+					--ink: #e9ecee;
+					--secondary-text: #9aa1a8;
+					--faint-text: #6e757c;
+					--border: #2b3036;
+					--input-border: #2b3036;
+					--green: #0f8a46;
+					--green-strong: #3fc479;
+					--green-tint: rgba(63, 196, 121, 0.14);
+					--green-tint-hover: rgba(63, 196, 121, 0.2);
+					--mark-bg: #3fc479;
+					--mark-dot: #141619;
+					--ghost-bg: #2b3036;
+					--surface: #141619;
+				}
+			}
 			body {
 				font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
 				max-width: 520px;
 				margin: 40px auto;
 				padding: 0 20px;
-				color: #111;
+				color: var(--ink);
+				background: var(--surface);
 				line-height: 1.5;
 			}
+			.brand {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				margin-bottom: 12px;
+			}
+			.mark {
+				width: 22px;
+				height: 22px;
+				flex-shrink: 0;
+				background: var(--mark-bg);
+				border-radius: 50% 50% 50% 3px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
+			.mark::after {
+				content: "";
+				width: 7px;
+				height: 7px;
+				border-radius: 50%;
+				background: var(--mark-dot);
+			}
 			h1 {
-				font-size: 18px;
+				font-family: "Space Grotesk", ui-sans-serif, sans-serif;
+				font-weight: 600;
+				font-size: 19px;
+				letter-spacing: -0.01em;
+				margin: 0;
 			}
 			p {
-				font-size: 14px;
-				color: #444;
+				font-size: 13px;
+				color: var(--secondary-text);
+				line-height: 1.55;
 			}
 			code {
-				background: #f3f3f3;
+				font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+				background: var(--ghost-bg);
 				padding: 1px 5px;
 				border-radius: 4px;
-				font-size: 13px;
+				font-size: 12px;
+				color: var(--ink);
 			}
 			input {
 				width: 100%;
-				padding: 8px;
+				padding: 9px 12px;
 				font-size: 13px;
-				border: 1px solid #d4d4d4;
-				border-radius: 6px;
+				color: var(--ink);
+				background: var(--surface);
+				border: 1px solid var(--input-border);
+				border-radius: 8px;
 				box-sizing: border-box;
+			}
+			input::placeholder {
+				color: var(--faint-text);
 			}
 			.row {
 				display: flex;
 				gap: 8px;
-				margin-top: 8px;
+				margin-top: 10px;
 			}
 			button {
 				border: none;
-				border-radius: 6px;
-				padding: 8px 14px;
+				border-radius: 8px;
+				padding: 9px 16px;
 				font-size: 13px;
+				font-weight: 600;
 				cursor: pointer;
-				background: #16a34a;
+				background: var(--green);
 				color: #fff;
 			}
 			button.ghost {
-				background: #f0f0f0;
-				color: #333;
+				background: var(--green-tint);
+				color: var(--green-strong);
+			}
+			button.ghost:hover {
+				background: var(--green-tint-hover);
 			}
 			.status {
-				margin-top: 12px;
+				display: flex;
+				align-items: center;
+				gap: 7px;
+				margin-top: 14px;
 				font-size: 13px;
-				color: #666;
+				color: var(--secondary-text);
+			}
+			.status-dot {
+				width: 7px;
+				height: 7px;
+				border-radius: 50%;
+				background: var(--green-strong);
+				flex-shrink: 0;
 			}
 		</style>
 	</head>
 	<body>
-		<h1>Claudback pairing</h1>
+		<div class="brand">
+			<span class="mark"></span>
+			<h1>Claudback pairing</h1>
+		</div>
 		<p>
 			Paste the pairing token so this extension can talk to your local Claudback
 			collector. The token is generated on first run of the MCP server and printed
@@ -69,7 +157,10 @@
 			<button id="save">Save token</button>
 			<button id="test" class="ghost">Test connection</button>
 		</div>
-		<div id="status" class="status"></div>
+		<div id="status" class="status">
+			<span class="status-dot"></span>
+			<span id="status-text"></span>
+		</div>
 		<script type="module" src="options.js"></script>
 	</body>
 </html>

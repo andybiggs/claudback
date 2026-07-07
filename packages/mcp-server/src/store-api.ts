@@ -28,6 +28,9 @@ export interface StoreApi {
 	// "clear" mode removes the comment ("removed"); "keep" mode retains it
 	// flagged resolved ("resolved").
 	resolveComment(id: string): Promise<ResolveOutcome>;
+	// Reverses a keep-mode resolve. No-op (returns null) for a comment that was
+	// removed by a clear-mode resolve — there's nothing left to unresolve.
+	unresolveComment(id: string): Promise<Comment | null>;
 	clearComments(origin?: string): Promise<number>;
 	setMode(mode: StoreMode): Promise<Store>;
 	listOrigins(): Promise<OriginSummary[]>;

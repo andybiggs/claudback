@@ -17,12 +17,15 @@ export type ContentRequest =
 	| { type: "create"; payload: NewCommentInput }
 	| { type: "update"; id: string; text: string }
 	| { type: "delete"; id: string }
+	| { type: "unresolve"; id: string }
 	| { type: "clear"; origin: string }
 	| { type: "setMode"; mode: StoreMode }
 	| { type: "status" };
 
 export type PopupRequest =
 	| { type: "getTabState"; tabId: number }
+	| { type: "armEnable"; tabId: number }
+	| { type: "disarmEnable"; tabId: number }
 	| { type: "enableTab"; tabId: number }
 	| { type: "disableTab"; tabId: number }
 	| { type: "testConnection" };

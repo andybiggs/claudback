@@ -1,0 +1,11 @@
+{
+	"version": "0.0.1",
+	"configurations": [
+		{
+			"name": "extension-preview",
+			"runtimeExecutable": "npx",
+			"runtimeArgs": ["serve", "packages/extension/dist", "-l", "4400"],
+			"port": 4400
+		}
+	]
+}

@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; background: #EDEFF0; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; color: #191C1F; }
+  a { color: #0F8A46; }
+  a:hover { color: #0C6E38; }
+</style>
+</helmet>
+
+<section style="display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start; padding: 40px;">
+
+  <!-- ============ OPTION 1a — Callout mark ============ -->
+  <div id="1a" style="background: #FFFFFF; border: 1px solid #E5E7E9; border-radius: 16px; padding: 28px; width: 460px; box-shadow: 0 1px 3px rgba(0,0,0,.06); display: flex; flex-direction: column; gap: 24px;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <a href="#1a" style="text-decoration: none; background: #0F8A46; color: #fff; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px;">1a</a>
+      <div style="font-size: 15px; font-weight: 700;">Mark A — “Callout”</div>
+    </div>
+    <div style="font-size: 13px; color: #5C6167; line-height: 1.5; margin-top: -12px;">A speech bubble whose tail sharpens into a pin point — comment and anchor in one shape. Reads clearly at 16px.</div>
+
+    <!-- hero -->
+    <div style="display: flex; align-items: center; justify-content: center; background: #F6F7F7; border-radius: 12px; padding: 36px;">
+      <svg width="112" height="112" viewBox="0 0 24 24"><path d="M6.5 3 h11 A4.5 4.5 0 0 1 22 7.5 v5 A4.5 4.5 0 0 1 17.5 17 h-2.6 L12 22 l-2.9 -5 H6.5 A4.5 4.5 0 0 1 2 12.5 v-5 A4.5 4.5 0 0 1 6.5 3 Z" fill="#0F8A46"></path><circle cx="12" cy="10" r="2.6" fill="#FFFFFF"></circle></svg>
+    </div>
+
+    <!-- sizes -->
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div style="font-size: 11px; font-weight: 700; color: #8B9096; text-transform: uppercase; letter-spacing: .06em;">Icon sizes</div>
+      <div style="display: flex; align-items: flex-end; gap: 24px; background: #F6F7F7; border-radius: 12px; padding: 20px;">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;"><svg width="64" height="64" viewBox="0 0 24 24"><path d="M6.5 3 h11 A4.5 4.5 0 0 1 22 7.5 v5 A4.5 4.5 0 0 1 17.5 17 h-2.6 L12 22 l-2.9 -5 H6.5 A4.5 4.5 0 0 1 2 12.5 v-5 A4.5 4.5 0 0 1 6.5 3 Z" fill="#0F8A46"></path><circle cx="12" cy="10" r="2.6" fill="#FFFFFF"></circle></svg><span style="font-size: 10px; color: #8B9096;">128</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;"><svg width="48" height="48" viewBox="0 0 24 24"><path d="M6.5 3 h11 A4.5 4.5 0 0 1 22 7.5 v5 A4.5 4.5 0 0 1 17.5 17 h-2.6 L12 22 l-2.9 -5 H6.5 A4.5 4.5 0 0 1 2 12.5 v-5 A4.5 4.5 0 0 1 6.5 3 Z" fill="#0F8A46"></path><circle cx="12" cy="10" r="2.6" fill="#FFFFFF"></circle></svg><span style="font-size: 10px; color: #8B9096;">48</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;"><svg width="32" height="32" viewBox="0 0 24 24"><path d="M6.5 3 h11 A4.5 4.5 0 0 1 22 7.5 v5 A4.5 4.5 0 0 1 17.5 17 h-2.6 L12 22 l-2.9 -5 H6.5 A4.5 4.5 0 0 1 2 12.5 v-5 A4.5 4.5 0 0 1 6.5 3 Z" fill="#0F8A46"></path><circle cx="12" cy="10" r="2.6" fill="#FFFFFF"></circle></svg><span style="font-size: 10px; color: #8B9096;">32</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;"><svg width="16" height="16" viewBox="0 0 24 24"><path d="M6.5 3 h11 A4.5 4.5 0 0 1 22 7.5 v5 A4.5 4.5 0 0 1 17.5 17 h-2.6 L12 22 l-2.9 -5 H6.5 A4.5 4.5 0 0 1 2 12.5 v-5 A4.5 4.5 0 0 1 6.5 3 Z" fill="#0F8A46"></path><circle cx="12" cy="10" r="3" fill="#FFFFFF"></circle></svg><span style="font-size: 10px; color: #8B9096;">16</span></div>
+        <!-- toolbar context -->
+        <div style="flex: 1; display: flex; justify-content: flex-end;">
+          <div style="display: flex; align-items: center; gap: 12px; background: #FFFFFF; border: 1px solid #E5E7E9; border-radius: 999px; padding: 8px 14px;">
+            <div style="width: 16px; height: 16px; border-radius: 4px; background: #D8DADC;"></div>
+            <div style="width: 16px; height: 16px; border-radius: 50%; background: #D8DADC;"></div>
+            <svg width="16" height="16" viewBox="0 0 24 24"><path d="M6.5 3 h11 A4.5 4.5 0 0 1 22 7.5 v5 A4.5 4.5 0 0 1 17.5 17 h-2.6 L12 22 l-2.9 -5 H6.5 A4.5 4.5 0 0 1 2 12.5 v-5 A4.5 4.5 0 0 1 6.5 3 Z" fill="#0F8A46"></path><circle cx="12" cy="10" r="3" fill="#FFFFFF"></circle></svg>
+            <div style="width: 16px; height: 16px; border-radius: 4px; background: #D8DADC;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- lockups -->
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div style="font-size: 11px; font-weight: 700; color: #8B9096; text-transform: uppercase; letter-spacing: .06em;">Wordmark lockup</div>
+      <div style="display: flex; align-items: center; gap: 12px; background: #F6F7F7; border-radius: 12px; padding: 22px;">
+        <svg width="30" height="30" viewBox="0 0 24 24"><path d="M6.5 3 h11 A4.5 4.5 0 0 1 22 7.5 v5 A4.5 4.5 0 0 1 17.5 17 h-2.6 L12 22 l-2.9 -5 H6.5 A4.5 4.5 0 0 1 2 12.5 v-5 A4.5 4.5 0 0 1 6.5 3 Z" fill="#0F8A46"></path><circle cx="12" cy="10" r="2.6" fill="#FFFFFF"></circle></svg>
+        <span style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 26px; letter-spacing: -0.02em; color: #191C1F;">Claudback</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; background: #17191C; border-radius: 12px; padding: 22px;">
+        <svg width="30" height="30" viewBox="0 0 24 24"><path d="M6.5 3 h11 A4.5 4.5 0 0 1 22 7.5 v5 A4.5 4.5 0 0 1 17.5 17 h-2.6 L12 22 l-2.9 -5 H6.5 A4.5 4.5 0 0 1 2 12.5 v-5 A4.5 4.5 0 0 1 6.5 3 Z" fill="#3FC479"></path><circle cx="12" cy="10" r="2.6" fill="#17191C"></circle></svg>
+        <span style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 26px; letter-spacing: -0.02em; color: #E9ECEE;">Claudback</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ OPTION 1b — Waypoint mark ============ -->
+  <div id="1b" style="background: #FFFFFF; border: 1px solid #E5E7E9; border-radius: 16px; padding: 28px; width: 460px; box-shadow: 0 1px 3px rgba(0,0,0,.06); display: flex; flex-direction: column; gap: 24px;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <a href="#1b" style="text-decoration: none; background: #0F8A46; color: #fff; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px;">1b</a>
+      <div style="font-size: 15px; font-weight: 700;">Mark B — “Waypoint”</div>
+    </div>
+    <div style="font-size: 13px; color: #5C6167; line-height: 1.5; margin-top: -12px;">Your product’s own pin shape, promoted to logo: a circle with one sharp corner pointing at its anchor. Already in the UI — zero-cost brand consistency.</div>
+
+    <!-- hero -->
+    <div style="display: flex; align-items: center; justify-content: center; background: #F6F7F7; border-radius: 12px; padding: 36px;">
+      <div style="width: 104px; height: 104px; background: #0F8A46; border-radius: 50% 50% 50% 8px; display: flex; align-items: center; justify-content: center;">
+        <div style="width: 30px; height: 30px; border-radius: 50%; background: #FFFFFF;"></div>
+      </div>
+    </div>
+
+    <!-- sizes -->
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div style="font-size: 11px; font-weight: 700; color: #8B9096; text-transform: uppercase; letter-spacing: .06em;">Icon sizes</div>
+      <div style="display: flex; align-items: flex-end; gap: 24px; background: #F6F7F7; border-radius: 12px; padding: 20px;">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;"><div style="width: 60px; height: 60px; background: #0F8A46; border-radius: 50% 50% 50% 5px; display: flex; align-items: center; justify-content: center;"><div style="width: 17px; height: 17px; border-radius: 50%; background: #fff;"></div></div><span style="font-size: 10px; color: #8B9096;">128</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;"><div style="width: 44px; height: 44px; background: #0F8A46; border-radius: 50% 50% 50% 4px; display: flex; align-items: center; justify-content: center;"><div style="width: 13px; height: 13px; border-radius: 50%; background: #fff;"></div></div><span style="font-size: 10px; color: #8B9096;">48</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;"><div style="width: 30px; height: 30px; background: #0F8A46; border-radius: 50% 50% 50% 3px; display: flex; align-items: center; justify-content: center;"><div style="width: 9px; height: 9px; border-radius: 50%; background: #fff;"></div></div><span style="font-size: 10px; color: #8B9096;">32</span></div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;"><div style="width: 16px; height: 16px; background: #0F8A46; border-radius: 50% 50% 50% 2px; display: flex; align-items: center; justify-content: center;"><div style="width: 5px; height: 5px; border-radius: 50%; background: #fff;"></div></div><span style="font-size: 10px; color: #8B9096;">16</span></div>
+        <!-- toolbar context -->
+        <div style="flex: 1; display: flex; justify-content: flex-end;">
+          <div style="display: flex; align-items: center; gap: 12px; background: #FFFFFF; border: 1px solid #E5E7E9; border-radius: 999px; padding: 8px 14px;">
+            <div style="width: 16px; height: 16px; border-radius: 4px; background: #D8DADC;"></div>
+            <div style="width: 16px; height: 16px; border-radius: 50%; background: #D8DADC;"></div>
+            <div style="width: 16px; height: 16px; background: #0F8A46; border-radius: 50% 50% 50% 2px; display: flex; align-items: center; justify-content: center;"><div style="width: 5px; height: 5px; border-radius: 50%; background: #fff;"></div></div>
+            <div style="width: 16px; height: 16px; border-radius: 4px; background: #D8DADC;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- lockups -->
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div style="font-size: 11px; font-weight: 700; color: #8B9096; text-transform: uppercase; letter-spacing: .06em;">Wordmark lockup</div>
+      <div style="display: flex; align-items: center; gap: 12px; background: #F6F7F7; border-radius: 12px; padding: 22px;">
+        <div style="width: 28px; height: 28px; background: #0F8A46; border-radius: 50% 50% 50% 3px; display: flex; align-items: center; justify-content: center;"><div style="width: 8px; height: 8px; border-radius: 50%; background: #fff;"></div></div>
+        <span style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 26px; letter-spacing: -0.02em; color: #191C1F;">Claudback</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; background: #17191C; border-radius: 12px; padding: 22px;">
+        <div style="width: 28px; height: 28px; background: #3FC479; border-radius: 50% 50% 50% 3px; display: flex; align-items: center; justify-content: center;"><div style="width: 8px; height: 8px; border-radius: 50%; background: #17191C;"></div></div>
+        <span style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 26px; letter-spacing: -0.02em; color: #E9ECEE;">Claudback</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ OPTION 1c — Brand system + UI refresh ============ -->
+  <div id="1c" style="background: #FFFFFF; border: 1px solid #E5E7E9; border-radius: 16px; padding: 28px; width: 1180px; box-shadow: 0 1px 3px rgba(0,0,0,.06); display: flex; flex-direction: column; gap: 28px;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <a href="#1c" style="text-decoration: none; background: #0F8A46; color: #fff; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px;">1c</a>
+      <div style="font-size: 15px; font-weight: 700;">Brand system + UI refresh</div>
+      <div style="font-size: 13px; color: #5C6167;">Same layouts, tightened tokens. Shown with Mark B — “Waypoint”.</div>
+    </div>
+
+    <!-- palette + type -->
+    <div style="display: flex; gap: 24px; flex-wrap: wrap;">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="font-size: 11px; font-weight: 700; color: #8B9096; text-transform: uppercase; letter-spacing: .06em;">Palette — refined green</div>
+        <div style="display: flex; gap: 10px;">
+          <div style="display: flex; flex-direction: column; gap: 5px; align-items: center;"><div style="width: 76px; height: 56px; border-radius: 10px; background: #0F8A46;"></div><span style="font-size: 10px; font-family: ui-monospace, monospace; color: #5C6167;">#0F8A46</span><span style="font-size: 10px; color: #8B9096;">primary</span></div>
+          <div style="display: flex; flex-direction: column; gap: 5px; align-items: center;"><div style="width: 76px; height: 56px; border-radius: 10px; background: #0C6E38;"></div><span style="font-size: 10px; font-family: ui-monospace, monospace; color: #5C6167;">#0C6E38</span><span style="font-size: 10px; color: #8B9096;">active</span></div>
+          <div style="display: flex; flex-direction: column; gap: 5px; align-items: center;"><div style="width: 76px; height: 56px; border-radius: 10px; background: #EAF5EE; border: 1px solid #E5E7E9;"></div><span style="font-size: 10px; font-family: ui-monospace, monospace; color: #5C6167;">#EAF5EE</span><span style="font-size: 10px; color: #8B9096;">tint</span></div>
+          <div style="display: flex; flex-direction: column; gap: 5px; align-items: center;"><div style="width: 76px; height: 56px; border-radius: 10px; background: #3FC479;"></div><span style="font-size: 10px; font-family: ui-monospace, monospace; color: #5C6167;">#3FC479</span><span style="font-size: 10px; color: #8B9096;">dark accent</span></div>
+          <div style="display: flex; flex-direction: column; gap: 5px; align-items: center;"><div style="width: 76px; height: 56px; border-radius: 10px; background: #191C1F;"></div><span style="font-size: 10px; font-family: ui-monospace, monospace; color: #5C6167;">#191C1F</span><span style="font-size: 10px; color: #8B9096;">ink</span></div>
+          <div style="display: flex; flex-direction: column; gap: 5px; align-items: center;"><div style="width: 76px; height: 56px; border-radius: 10px; background: #C0271B;"></div><span style="font-size: 10px; font-family: ui-monospace, monospace; color: #5C6167;">#C0271B</span><span style="font-size: 10px; color: #8B9096;">danger</span></div>
+        </div>
+        <div style="font-size: 12px; color: #5C6167;">Was <span style="font-family: ui-monospace, monospace; background: #F3F4F4; padding: 1px 5px; border-radius: 4px;">#16a34a</span> → deeper, less neon, holds up on white and dark.</div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="font-size: 11px; font-weight: 700; color: #8B9096; text-transform: uppercase; letter-spacing: .06em;">Type</div>
+        <div style="background: #F6F7F7; border-radius: 10px; padding: 14px 18px; display: flex; flex-direction: column; gap: 6px;">
+          <span style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 18px; letter-spacing: -0.02em;">Space Grotesk — brand &amp; headings</span>
+          <span style="font-size: 13px;">System sans — UI body (fast, native)</span>
+          <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: #5C6167;">ui-monospace — selectors &amp; tokens</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- light surfaces row -->
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div style="font-size: 11px; font-weight: 700; color: #8B9096; text-transform: uppercase; letter-spacing: .06em;">Light — popup · pairing page · composer · offline state</div>
+      <div style="display: flex; gap: 24px; align-items: flex-start; background: #F6F7F7; border-radius: 12px; padding: 24px; flex-wrap: wrap;">
+
+        <!-- popup light -->
+        <div data-screen-label="Popup (light)" style="width: 260px; background: #FFFFFF; border: 1px solid #E5E7E9; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,.10); padding: 14px; box-sizing: border-box; display: flex; flex-direction: column; gap: 2px;">
+          <div style="display: flex; align-items: center; gap: 8px; padding-bottom: 10px; border-bottom: 1px solid #EFF1F2; margin-bottom: 4px;">
+            <div style="width: 18px; height: 18px; flex-shrink: 0; background: #0F8A46; border-radius: 50% 50% 50% 2px; display: flex; align-items: center; justify-content: center;"><div style="width: 6px; height: 6px; border-radius: 50%; background: #FFFFFF;"></div></div>
+            <span style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 15px; letter-spacing: -0.01em;">Claudback</span>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0; font-size: 13px;">
+            <span>Enabled</span>
+            <div style="width: 34px; height: 20px; border-radius: 20px; background: #0F8A46; position: relative;"><div style="position: absolute; width: 16px; height: 16px; border-radius: 50%; background: #fff; top: 2px; left: 16px;"></div></div>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0; font-size: 13px;">
+            <span>Comments</span>
+            <span style="font-size: 12px; font-weight: 700; background: #EAF5EE; color: #0C6E38; min-width: 18px; text-align: center; padding: 1px 6px; border-radius: 999px;">3</span>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0; font-size: 13px;">
+            <span>Status</span>
+            <span style="display: flex; align-items: center; gap: 6px; color: #0F8A46; font-weight: 600;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #0F8A46;"></span>Synced</span>
+          </div>
+          <div style="border: none; border-radius: 8px; padding: 9px 12px; font-size: 13px; font-weight: 600; background: #EAF5EE; color: #0C6E38; text-align: center; margin-top: 6px; cursor: pointer;">Pairing &amp; options</div>
+        </div>
+
+        <!-- options light -->
+        <div data-screen-label="Pairing page (light)" style="width: 470px; background: #FFFFFF; border: 1px solid #E5E7E9; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,.10); padding: 30px 34px; box-sizing: border-box;">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+            <div style="width: 22px; height: 22px; flex-shrink: 0; background: #0F8A46; border-radius: 50% 50% 50% 3px; display: flex; align-items: center; justify-content: center;"><div style="width: 7px; height: 7px; border-radius: 50%; background: #FFFFFF;"></div></div>
+            <span style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 19px; letter-spacing: -0.01em;">Claudback pairing</span>
+          </div>
+          <p style="font-size: 13px; color: #5C6167; line-height: 1.55; margin: 0 0 16px;">Paste the pairing token so this extension can talk to your local Claudback collector. The token is generated on first run of the MCP server; it is also stored at <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; background: #F3F4F4; padding: 1px 5px; border-radius: 4px; color: #191C1F;">~/.claudback/token</span>.</p>
+          <div style="border: 1px solid #D9DCDE; border-radius: 8px; padding: 9px 12px; font-size: 13px; color: #8B9096;">Paste pairing token</div>
+          <div style="display: flex; gap: 8px; margin-top: 10px;">
+            <div style="border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 600; background: #0F8A46; color: #fff; cursor: pointer;">Save token</div>
+            <div style="border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 600; background: #EAF5EE; color: #0C6E38; cursor: pointer;">Test connection</div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 7px; margin-top: 14px; font-size: 13px; color: #5C6167;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #0F8A46;"></span>A token is saved. Paste a new one to replace it.</div>
+        </div>
+
+        <!-- composer light -->
+        <div data-screen-label="Composer (light)" style="width: 280px; background: #FFFFFF; border: 1px solid #E5E7E9; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,.15); padding: 12px; box-sizing: border-box;">
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+            <span style="font-size: 11px; font-weight: 700; background: #EAF5EE; color: #0C6E38; padding: 2px 7px; border-radius: 4px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;">&lt;button&gt;</span>
+            <span style="font-size: 11px; color: #8B9096; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">#app › div › div:nth-of-type(2) › button</span>
+          </div>
+          <div style="border: 1.5px solid #0F8A46; border-radius: 8px; padding: 8px 10px; font-size: 13px; min-height: 56px; color: #191C1F;">Here is my comment</div>
+          <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px;">
+            <div style="border-radius: 8px; padding: 7px 13px; font-size: 13px; font-weight: 600; background: #F3F4F4; color: #43474C; cursor: pointer;">Cancel</div>
+            <div style="border-radius: 8px; padding: 7px 13px; font-size: 13px; font-weight: 600; background: #0F8A46; color: #fff; cursor: pointer;">Add comment</div>
+          </div>
+        </div>
+
+        <!-- panel offline state -->
+        <div data-screen-label="Panel (collector offline)" style="width: 300px; background: #FFFFFF; border: 1px solid #E5E7E9; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,.10); overflow: hidden;">
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid #EFF1F2;">
+            <div style="display: flex; align-items: center; gap: 9px; min-width: 0; flex: 1;">
+              <div style="width: 30px; height: 30px; flex-shrink: 0; background: #0F8A46; border-radius: 50% 50% 50% 3px; display: flex; align-items: center; justify-content: center;"><div style="width: 9px; height: 9px; border-radius: 50%; background: #FFFFFF;"></div></div>
+              <div style="display: flex; flex-direction: column; gap: 1px; min-width: 0;">
+                <span style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 13.5px; white-space: nowrap;">Claudback</span>
+                <span style="font-size: 11px; color: #8B9096; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">beerlabelizer.com</span>
+              </div>
+            </div>
+            <span style="font-size: 12px; font-weight: 600; color: #C0271B; background: #FBE9E7; padding: 4px 10px; border-radius: 6px; white-space: nowrap; cursor: pointer; flex-shrink: 0;">Clear all</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 7px; padding: 8px 14px; background: #FBF3E0; border-bottom: 1px solid #F2E4C4; font-size: 12px; color: #8A5A00; font-weight: 600;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #C88A04;"></span>Collector offline — comments saved locally, retrying</div>
+          <div style="padding: 16px 14px; font-size: 12px; color: #8B9096; line-height: 1.5;">Sync strip appears <strong style="color: #43474C;">only</strong> when not synced (offline / pending / unpaired). When everything is healthy it stays hidden.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- on-page overlay row -->
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div style="font-size: 11px; font-weight: 700; color: #8B9096; text-transform: uppercase; letter-spacing: .06em;">On-page overlay — FABs, pin, comment panel (over host page)</div>
+      <div data-screen-label="Overlay on host page" style="position: relative; border-radius: 12px; height: 460px; overflow: hidden; background: repeating-linear-gradient(-45deg, #DCDFE1 0 14px, #E4E7E9 14px 28px);">
+        <span style="position: absolute; top: 14px; left: 16px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; color: #7A8085;">host page</span>
+
+        <!-- highlight + pin -->
+        <div style="position: absolute; top: 64px; left: 120px; width: 190px; height: 54px; border: 2px solid #0F8A46; background: rgba(15,138,70,.10); border-radius: 4px;"></div>
+        <div style="position: absolute; top: 34px; left: 128px; width: 26px; height: 26px; background: #0F8A46; border: 2px solid #fff; border-radius: 50% 50% 50% 2px; box-shadow: 0 2px 8px rgba(0,0,0,.3); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: 700; box-sizing: border-box;">1</div>
+
+        <!-- panel -->
+        <div style="position: absolute; right: 96px; bottom: 88px; width: 330px; background: #FFFFFF; border: 1px solid #E5E7E9; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,.20); overflow: hidden;">
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid #EFF1F2;">
+            <div style="display: flex; align-items: center; gap: 9px; min-width: 0; flex: 1;">
+              <div style="width: 30px; height: 30px; flex-shrink: 0; background: #0F8A46; border-radius: 50% 50% 50% 3px; display: flex; align-items: center; justify-content: center;"><div style="width: 9px; height: 9px; border-radius: 50%; background: #FFFFFF;"></div></div>
+              <div style="display: flex; flex-direction: column; gap: 1px; min-width: 0;">
+                <span style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 13.5px; white-space: nowrap;">Claudback</span>
+                <span title="app.staging.internal-tools.beerlabelizer-example.co.uk" style="font-size: 11px; color: #8B9096; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">app.staging.internal-tools.beerlabelizer-example.co.uk</span>
+              </div>
+            </div>
+            <span style="font-size: 12px; font-weight: 600; color: #C0271B; background: #FBE9E7; padding: 4px 10px; border-radius: 6px; white-space: nowrap; cursor: pointer; flex-shrink: 0;">Clear all</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-bottom: 1px solid #EFF1F2; font-size: 12px; color: #43474C;">
+            <span>After Claude reads:</span>
+            <span style="font-size: 12px; border: 1px solid #D9DCDE; border-radius: 6px; padding: 3px 8px; background: #fff;">Keep comments ▾</span>
+          </div>
+          <div style="padding: 10px 14px; border-bottom: 1px solid #F3F4F4;">
+            <div style="display: flex; align-items: center; gap: 7px;">
+              <span style="width: 18px; height: 18px; border-radius: 999px; background: #0F8A46; color: #fff; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center;">1</span>
+              <span style="font-size: 11px; color: #8B9096;"><span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace;">button</span> · this page</span>
+            </div>
+            <div style="font-size: 13px; margin: 5px 0 3px;">Here is my comment</div>
+            <div style="font-size: 10.5px; color: #9BA0A5; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">#app › div › div:nth-of-type(1) › div › button:nth-of-type(2)</div>
+            <div style="display: flex; gap: 12px; margin-top: 6px; font-size: 12px; font-weight: 600;"><span style="color: #0F8A46; cursor: pointer;">Edit</span><span style="color: #C0271B; cursor: pointer;">Delete</span></div>
+          </div>
+          <div style="padding: 10px 14px;">
+            <div style="display: flex; align-items: center; gap: 7px;">
+              <span style="width: 18px; height: 18px; border-radius: 999px; background: #0F8A46; color: #fff; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center;">2</span>
+              <span style="font-size: 11px; color: #8B9096;"><span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace;">div</span> · this page</span>
+            </div>
+            <div style="font-size: 13px; margin: 5px 0 3px;">Make this label larger</div>
+            <div style="font-size: 10.5px; color: #9BA0A5; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">#app › div › div:nth-of-type(1) › label › div:nth-of-type(2)</div>
+            <div style="display: flex; gap: 12px; margin-top: 6px; font-size: 12px; font-weight: 600;"><span style="color: #0F8A46; cursor: pointer;">Edit</span><span style="color: #C0271B; cursor: pointer;">Delete</span></div>
+          </div>
+        </div>
+
+        <!-- FABs -->
+        <div style="position: absolute; right: 24px; bottom: 24px; display: flex; align-items: center; gap: 12px;">
+          <div style="position: relative; width: 46px; height: 46px; border-radius: 50%; background: #FFFFFF; border: 1px solid #E5E7E9; box-shadow: 0 4px 14px rgba(0,0,0,.18); display: flex; align-items: center; justify-content: center; color: #0F8A46; cursor: pointer;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+            <span style="position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; line-height: 18px; text-align: center; padding: 0 5px; border-radius: 10px; background: #191C1F; color: #fff; font-size: 11px; font-weight: 700; box-sizing: border-box;">2</span>
+          </div>
+          <div style="width: 56px; height: 56px; border-radius: 50%; background: #0F8A46; box-shadow: 0 4px 14px rgba(0,0,0,.25); display: flex; align-items: center; justify-content: center; color: #fff; cursor: pointer;">
+            <div style="width: 26px; height: 26px; background: #FFFFFF; border-radius: 50% 50% 50% 3px; display: flex; align-items: center; justify-content: center;"><svg width="14" height="14" viewBox="0 0 14 14"><line x1="7" y1="2.5" x2="7" y2="11.5" stroke="#0F8A46" stroke-width="2.2" stroke-linecap="round"></line><line x1="2.5" y1="7" x2="11.5" y2="7" stroke="#0F8A46" stroke-width="2.2" stroke-linecap="round"></line></svg></div>
+          </div>
+        </div>
+
+        <!-- hint toast -->
+        <div style="position: absolute; left: 50%; transform: translateX(-50%); bottom: 24px; background: #0F8A46; color: #fff; padding: 8px 14px; border-radius: 8px; font-size: 13px; box-shadow: 0 4px 14px rgba(0,0,0,.25); display: flex; align-items: center; gap: 8px;">Click any element to comment<span style="font-size: 11px; color: rgba(255,255,255,.85); border: 1px solid rgba(255,255,255,.4); border-radius: 4px; padding: 1px 5px;">esc</span></div>
+      </div>
+    </div>
+
+    <!-- dark surfaces row -->
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div style="font-size: 11px; font-weight: 700; color: #8B9096; text-transform: uppercase; letter-spacing: .06em;">Dark — popup · composer · panel</div>
+      <div style="display: flex; gap: 24px; align-items: flex-start; background: #141619; border-radius: 12px; padding: 24px; flex-wrap: wrap;">
+
+        <!-- popup dark -->
+        <div data-screen-label="Popup (dark)" style="width: 260px; background: #1C1F23; border: 1px solid #2B3036; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,.4); padding: 14px; box-sizing: border-box; display: flex; flex-direction: column; gap: 2px; color: #E9ECEE;">
+          <div style="display: flex; align-items: center; gap: 8px; padding-bottom: 10px; border-bottom: 1px solid #2B3036; margin-bottom: 4px;">
+            <div style="width: 18px; height: 18px; flex-shrink: 0; background: #3FC479; border-radius: 50% 50% 50% 2px; display: flex; align-items: center; justify-content: center;"><div style="width: 6px; height: 6px; border-radius: 50%; background: #1C1F23;"></div></div>
+            <span style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 15px; letter-spacing: -0.01em;">Claudback</span>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0; font-size: 13px;">
+            <span>Enabled</span>
+            <div style="width: 34px; height: 20px; border-radius: 20px; background: #0F8A46; position: relative;"><div style="position: absolute; width: 16px; height: 16px; border-radius: 50%; background: #fff; top: 2px; left: 16px;"></div></div>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0; font-size: 13px;">
+            <span>Comments</span>
+            <span style="font-size: 12px; font-weight: 700; background: rgba(63,196,121,.14); color: #3FC479; min-width: 18px; text-align: center; padding: 1px 6px; border-radius: 999px;">3</span>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0; font-size: 13px;">
+            <span>Status</span>
+            <span style="display: flex; align-items: center; gap: 6px; color: #3FC479; font-weight: 600;"><span style="width: 7px; height: 7px; border-radius: 50%; background: #3FC479;"></span>Synced</span>
+          </div>
+          <div style="border: none; border-radius: 8px; padding: 9px 12px; font-size: 13px; font-weight: 600; background: rgba(63,196,121,.14); color: #3FC479; text-align: center; margin-top: 6px; cursor: pointer;">Pairing &amp; options</div>
+        </div>
+
+        <!-- composer dark -->
+        <div data-screen-label="Composer (dark)" style="width: 280px; background: #1C1F23; border: 1px solid #2B3036; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,.4); padding: 12px; box-sizing: border-box; color: #E9ECEE;">
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+            <span style="font-size: 11px; font-weight: 700; background: rgba(63,196,121,.14); color: #3FC479; padding: 2px 7px; border-radius: 4px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;">&lt;button&gt;</span>
+            <span style="font-size: 11px; color: #9AA1A8; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">#app › div › div:nth-of-type(2) › button</span>
+          </div>
+          <div style="border: 1.5px solid #3FC479; border-radius: 8px; padding: 8px 10px; font-size: 13px; min-height: 56px; background: #141619;">Here is my comment</div>
+          <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px;">
+            <div style="border-radius: 8px; padding: 7px 13px; font-size: 13px; font-weight: 600; background: #2B3036; color: #C9CED3; cursor: pointer;">Cancel</div>
+            <div style="border-radius: 8px; padding: 7px 13px; font-size: 13px; font-weight: 600; background: #0F8A46; color: #fff; cursor: pointer;">Add comment</div>
+          </div>
+        </div>
+
+        <!-- panel dark -->
+        <div data-screen-label="Panel (dark)" style="width: 330px; background: #1C1F23; border: 1px solid #2B3036; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,.4); overflow: hidden; color: #E9ECEE;">
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid #2B3036;">
+            <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+              <div style="width: 16px; height: 16px; flex-shrink: 0; background: #3FC479; border-radius: 50% 50% 50% 2px; display: flex; align-items: center; justify-content: center;"><div style="width: 5px; height: 5px; border-radius: 50%; background: #1C1F23;"></div></div>
+              <span style="font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Claudback · beerlabelizer.com</span>
+            </div>
+            <span style="font-size: 12px; font-weight: 600; color: #F08578; background: rgba(192,39,27,.18); padding: 4px 10px; border-radius: 6px; white-space: nowrap; cursor: pointer;">Clear all</span>
+          </div>
+          <div style="padding: 10px 14px;">
+            <div style="display: flex; align-items: center; gap: 7px;">
+              <span style="width: 18px; height: 18px; border-radius: 999px; background: #0F8A46; color: #fff; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center;">1</span>
+              <span style="font-size: 11px; color: #9AA1A8;"><span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace;">button</span> · this page</span>
+            </div>
+            <div style="font-size: 13px; margin: 5px 0 3px;">Here is my comment</div>
+            <div style="font-size: 10.5px; color: #6E757C; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">#app › div › div:nth-of-type(1) › div › button:nth-of-type(2)</div>
+            <div style="display: flex; gap: 12px; margin-top: 6px; font-size: 12px; font-weight: 600;"><span style="color: #3FC479; cursor: pointer;">Edit</span><span style="color: #F08578; cursor: pointer;">Delete</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="font-size: 12px; color: #8B9096; line-height: 1.5;">Polish notes: unified 8px control radius / 12px surface radius · borders #E5E7E9 replace mixed greys · tinted-green secondary buttons replace flat #f0f0f0 · status gets a dot · selector paths move to monospace with a tag chip · panel header carries the mark · “Clear all” becomes a proper danger chip.</div>
+  </div>
+
+</section>
+
+</x-dc>
+</body>
+</html>

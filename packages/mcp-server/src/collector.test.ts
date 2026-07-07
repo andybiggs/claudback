@@ -145,6 +145,43 @@ describe("collector", () => {
 		expect(res.status).toBe(400);
 	});
 
+	it("reverses a keep-mode resolve via POST /comments/:id/unresolve", async () => {
+		await fetch(`${baseUrl}/mode`, {
+			method: "PUT",
+			headers: { [TOKEN_HEADER]: TOKEN, "content-type": "application/json" },
+			body: JSON.stringify({ mode: "keep" }),
+		});
+
+		const postRes = await fetch(`${baseUrl}/comments`, {
+			method: "POST",
+			headers: { [TOKEN_HEADER]: TOKEN, "content-type": "application/json" },
+			body: JSON.stringify(validCommentPayload()),
+		});
+		const created = (await postRes.json()) as { id: string };
+
+		await store.resolveComment(created.id);
+
+		const unresolveRes = await fetch(`${baseUrl}/comments/${created.id}/unresolve`, {
+			method: "POST",
+			headers: { [TOKEN_HEADER]: TOKEN },
+		});
+
+		expect(unresolveRes.status).toBe(200);
+
+		const body = (await unresolveRes.json()) as { resolved: boolean };
+
+		expect(body.resolved).toBe(false);
+	});
+
+	it("404s unresolving an id that doesn't exist", async () => {
+		const res = await fetch(`${baseUrl}/comments/${"0".repeat(36)}/unresolve`, {
+			method: "POST",
+			headers: { [TOKEN_HEADER]: TOKEN },
+		});
+
+		expect(res.status).toBe(404);
+	});
+
 	it("flips mode via PUT /mode", async () => {
 		const res = await fetch(`${baseUrl}/mode`, {
 			method: "PUT",

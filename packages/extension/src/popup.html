@@ -2,17 +2,83 @@
 <html>
 	<head>
 		<meta charset="utf-8" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600&display=swap" rel="stylesheet" />
 		<style>
+			:root {
+				--ink: #191c1f;
+				--secondary-text: #5c6167;
+				--faint-text: #8b9096;
+				--border: #e5e7e9;
+				--hairline: #eff1f2;
+				--green: #0f8a46;
+				--green-active: #0c6e38;
+				--green-strong: #0c6e38;
+				--green-tint: #eaf5ee;
+				--green-tint-hover: #dff0e5;
+				--mark-bg: #0f8a46;
+				--mark-dot: #fff;
+				--danger: #c0271b;
+				--surface: #fff;
+			}
+			@media (prefers-color-scheme: dark) {
+				:root {
+					--ink: #e9ecee;
+					--secondary-text: #9aa1a8;
+					--faint-text: #6e757c;
+					--border: #2b3036;
+					--hairline: #2b3036;
+					--green: #0f8a46;
+					--green-active: #0c6e38;
+					--green-strong: #3fc479;
+					--green-tint: rgba(63, 196, 121, 0.14);
+					--green-tint-hover: rgba(63, 196, 121, 0.2);
+					--mark-bg: #3fc479;
+					--mark-dot: #1c1f23;
+					--danger: #f08578;
+					--surface: #1c1f23;
+				}
+			}
 			body {
 				font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
 				width: 260px;
 				margin: 0;
 				padding: 14px;
-				color: #111;
+				color: var(--ink);
+				background: var(--surface);
+			}
+			.brand {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				padding-bottom: 10px;
+				margin-bottom: 4px;
+				border-bottom: 1px solid var(--hairline);
+			}
+			.mark {
+				width: 18px;
+				height: 18px;
+				flex-shrink: 0;
+				background: var(--mark-bg);
+				border-radius: 50% 50% 50% 2px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
+			.mark::after {
+				content: "";
+				width: 6px;
+				height: 6px;
+				border-radius: 50%;
+				background: var(--mark-dot);
 			}
 			h1 {
-				font-size: 14px;
-				margin: 0 0 10px;
+				font-family: "Space Grotesk", ui-sans-serif, sans-serif;
+				font-weight: 600;
+				font-size: 15px;
+				letter-spacing: -0.01em;
+				margin: 0;
 			}
 			.row {
 				display: flex;
@@ -21,60 +87,162 @@
 				margin: 10px 0;
 				font-size: 13px;
 			}
-			button {
-				border: none;
-				border-radius: 6px;
-				padding: 6px 12px;
-				font-size: 13px;
-				cursor: pointer;
-				background: #16a34a;
-				color: #fff;
-			}
-			button.off {
-				background: #f0f0f0;
-				color: #333;
+			.count-pill {
+				font-size: 12px;
+				font-weight: 700;
+				background: var(--green-tint);
+				color: var(--green-strong);
+				min-width: 18px;
+				text-align: center;
+				padding: 1px 6px;
+				border-radius: 999px;
 			}
 			.status {
-				font-size: 12px;
-				color: #666;
+				font-size: 13px;
+				color: var(--secondary-text);
+				font-weight: 600;
 			}
-			select {
-				font-size: 12px;
-				padding: 3px 6px;
-				border-radius: 5px;
-				border: 1px solid #d4d4d4;
+			.status-dot {
+				width: 7px;
+				height: 7px;
+				border-radius: 50%;
+				background: currentColor;
+				flex-shrink: 0;
 			}
-			a {
-				font-size: 12px;
-				color: #16a34a;
+			.status-synced {
+				color: var(--green-strong);
+			}
+			.status-pending {
+				color: #2563eb;
+			}
+			.status-offline {
+				color: var(--danger);
+			}
+			.status-unpaired {
+				color: #9ca3af;
+				font-weight: 400;
+			}
+			.status-wrap {
+				display: flex;
+				align-items: center;
+				gap: 6px;
+			}
+			.spinner {
+				width: 10px;
+				height: 10px;
+				border: 2px solid #bfdbfe;
+				border-top-color: #2563eb;
+				border-radius: 50%;
+				animation: spin 0.6s linear infinite;
+			}
+			@keyframes spin {
+				to {
+					transform: rotate(360deg);
+				}
+			}
+			.hint {
+				font-size: 11px;
+				color: var(--faint-text);
+				margin: -6px 0 10px;
+			}
+			.hint .copy-btn {
+				display: block;
+				border: none;
+				background: none;
+				padding: 0;
+				margin-top: 4px;
+				font-size: 11px;
+				color: var(--green-strong);
+				text-decoration: underline;
 				cursor: pointer;
+			}
+			.switch {
+				position: relative;
+				display: inline-block;
+				width: 34px;
+				height: 20px;
+				flex-shrink: 0;
+			}
+			.switch input {
+				opacity: 0;
+				width: 0;
+				height: 0;
+			}
+			.slider {
+				position: absolute;
+				inset: 0;
+				background: #d4d4d4;
+				border-radius: 20px;
+				cursor: pointer;
+				transition: background 0.15s;
+			}
+			.slider::before {
+				content: "";
+				position: absolute;
+				height: 16px;
+				width: 16px;
+				left: 2px;
+				top: 2px;
+				background: #fff;
+				border-radius: 50%;
+				transition: transform 0.15s;
+			}
+			.switch input:checked + .slider {
+				background: var(--green);
+			}
+			.switch input:checked + .slider::before {
+				transform: translateX(14px);
+			}
+			.switch input:disabled + .slider {
+				opacity: 0.5;
+				cursor: not-allowed;
+			}
+			button.secondary {
+				border: none;
+				border-radius: 8px;
+				padding: 9px 12px;
+				font-size: 13px;
+				font-weight: 600;
+				cursor: pointer;
+				background: var(--green-tint);
+				color: var(--green-strong);
+				width: 100%;
+				margin-top: 4px;
+			}
+			button.secondary:hover {
+				background: var(--green-tint-hover);
 			}
 		</style>
 	</head>
 	<body>
-		<h1>Claudback</h1>
-		<div class="row">
-			<span>This tab</span>
-			<button id="toggle" class="off">Enable</button>
+		<div class="brand">
+			<span class="mark"></span>
+			<h1>Claudback</h1>
 		</div>
 		<div class="row">
-			<span>Comments here</span>
-			<span id="count" class="status">–</span>
+			<span>Enabled</span>
+			<label class="switch">
+				<input type="checkbox" id="toggle" />
+				<span class="slider"></span>
+			</label>
+		</div>
+		<div class="row">
+			<span>Comments</span>
+			<span id="count" class="count-pill">–</span>
 		</div>
 		<div class="row">
 			<span>Status</span>
-			<span id="status" class="status">…</span>
+			<span class="status-wrap">
+				<span id="status-spinner" class="spinner" hidden></span>
+				<span id="status-dot" class="status-dot"></span>
+				<span id="status" class="status">–</span>
+			</span>
 		</div>
-		<div class="row">
-			<span>After Claude reads</span>
-			<select id="mode">
-				<option value="clear">Clear</option>
-				<option value="keep">Keep</option>
-			</select>
+		<div id="status-hint" class="hint" hidden>
+			<span id="status-hint-text"></span>
+			<button id="copy-prompt" class="copy-btn" hidden>Copy prompt for Claude</button>
 		</div>
-		<div class="row">
-			<a id="options">Pairing &amp; options</a>
-		</div>
+		<button id="options" class="secondary">Pairing &amp; options</button>
 		<script type="module" src="popup.js"></script>
 	</body>
 </html>
