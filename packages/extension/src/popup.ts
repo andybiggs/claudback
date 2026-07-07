@@ -103,6 +103,7 @@ async function render(): Promise<void> {
 		if (granted) {
 			await send<TabStateResponse>({ type: "enableTab", tabId });
 		} else {
+			await send<void>({ type: "disarmEnable", tabId });
 			toggle.checked = false;
 		}
 

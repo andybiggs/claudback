@@ -333,6 +333,14 @@ async function handleArmEnable(tabId: number): Promise<void> {
 	}
 }
 
+// Called when the user denies the permission dialog, so a later unrelated
+// grant for the same origin (e.g. enabling Claudback on another tab of the
+// same site) doesn't cause the onAdded listener to silently enable this tab
+// too, which the user never asked for.
+function handleDisarmEnable(tabId: number): void {
+	pendingEnables.delete(tabId);
+}
+
 async function handleEnableTab(tabId: number): Promise<TabStateResponse> {
 	const originPattern = await originPatternFor(tabId);
 
@@ -408,6 +416,9 @@ async function dispatch(message: ExtensionRequest): Promise<unknown> {
 		}
 		case "armEnable": {
 			return handleArmEnable(message.tabId);
+		}
+		case "disarmEnable": {
+			return handleDisarmEnable(message.tabId);
 		}
 		case "enableTab": {
 			return handleEnableTab(message.tabId);
