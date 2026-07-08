@@ -5,7 +5,7 @@ import type { Comment, NewCommentInput, StoreMode } from "@claudback/shared";
 // messages, and the worker owns all collector I/O, the pairing token, and the
 // offline buffer.
 
-export type SyncState = "synced" | "pending" | "offline" | "unpaired";
+export type SyncState = "synced" | "pending" | "offline" | "unpaired" | "unauthorized";
 
 export interface StatusReport {
 	state: SyncState;

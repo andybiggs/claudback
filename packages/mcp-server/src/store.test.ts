@@ -55,6 +55,35 @@ describe("store", () => {
 		expect(await store.read()).toEqual({ mode: "clear", comments: [] });
 	});
 
+	it("preserves a corrupt store file as .corrupt-* instead of overwriting it", async () => {
+		const corruptContent = "{ not json";
+
+		await writeFileWithMkdir(filePath, corruptContent);
+
+		const store = createStore(filePath);
+
+		await store.addComment(newCommentInput());
+
+		const { readdir } = await import("node:fs/promises");
+		const { dirname, basename } = await import("node:path");
+		const entries = await readdir(dirname(filePath));
+		const corruptFile = entries.find((entry) => entry.startsWith(`${basename(filePath)}.corrupt-`));
+
+		expect(corruptFile).toBeDefined();
+		expect(await readFile(join(dirname(filePath), corruptFile as string), "utf8")).toBe(corruptContent);
+		expect(await store.getComments()).toHaveLength(1);
+	});
+
+	it("does not lose comments under concurrent addComment calls", async () => {
+		const store = createStore(filePath);
+
+		await Promise.all(
+			Array.from({ length: 10 }, (_, index) => store.addComment(newCommentInput({ text: `comment ${index}` }))),
+		);
+
+		expect(await store.getComments()).toHaveLength(10);
+	});
+
 	it("parses a missing mode as clear", async () => {
 		await writeFileWithMkdir(filePath, JSON.stringify({ comments: [] }));
 		const store = createStore(filePath);

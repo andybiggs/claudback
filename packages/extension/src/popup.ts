@@ -23,6 +23,9 @@ function statusText(state: SyncState): string {
 		case "offline": {
 			return "Collector offline";
 		}
+		case "unauthorized": {
+			return "Token rejected";
+		}
 		case "pending": {
 			return "Syncing";
 		}
@@ -46,6 +49,9 @@ function statusHint(state: SyncState): string | null {
 		}
 		case "unpaired": {
 			return "Add the pairing token from claudback-mcp in Pairing & options.";
+		}
+		case "unauthorized": {
+			return "The collector rejected the pairing token — re-pair in Pairing & options.";
 		}
 		default: {
 			return null;

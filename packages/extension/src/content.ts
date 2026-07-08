@@ -77,6 +77,7 @@ const STYLES = `
 	background: var(--green); color: #fff; padding: 8px 14px; border-radius: 8px;
 	font-size: 13px; box-shadow: 0 4px 14px rgba(0,0,0,.25); display: flex; align-items: center; gap: 8px;
 }
+.hint.error-toast { background: var(--danger); }
 .hint .keycap {
 	font-size: 11px; color: rgba(255,255,255,.85); border: 1px solid rgba(255,255,255,.4);
 	border-radius: 4px; padding: 1px 5px;
@@ -131,7 +132,7 @@ button.btn:disabled { opacity: .5; cursor: default; }
 .panel header .identity .mark { width: 30px; height: 30px; }
 .panel header .identity .mark::after { width: 9px; height: 9px; }
 .panel header .identity .text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.panel header .brand-name { font-family: "Space Grotesk", ui-sans-serif, sans-serif; font-weight: 600; font-size: 13.5px; white-space: nowrap; }
+.panel header .brand-name { font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; font-weight: 600; font-size: 13.5px; white-space: nowrap; }
 .panel header .hostname { font-size: 11px; color: var(--faint-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .panel .clear-all { font-size: 12px; font-weight: 600; color: var(--danger); background: var(--danger-tint); border: none; border-radius: 6px; padding: 4px 10px; cursor: pointer; flex-shrink: 0; }
 .panel .clear-all:disabled { opacity: .5; cursor: default; }
@@ -177,10 +178,6 @@ function mountClaudback(): void {
 	const host = document.createElement("div");
 	host.id = "claudback-root";
 	const shadow = host.attachShadow({ mode: "open" });
-	const fontLink = document.createElement("link");
-	fontLink.rel = "stylesheet";
-	fontLink.href = "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600&display=swap";
-	shadow.append(fontLink);
 	const style = document.createElement("style");
 	style.textContent = STYLES;
 	shadow.append(style);
@@ -202,6 +199,23 @@ function mountClaudback(): void {
 		}
 
 		render();
+	}
+
+	// A short-lived toast for failed saves/deletes. render() tears down every
+	// non-style shadow node, so it also disappears on the next re-render —
+	// that's fine, it only needs to be seen once.
+	function showError(message: string): void {
+		shadow.querySelectorAll(".error-toast").forEach((node) => {
+			node.remove();
+		});
+
+		const toast = document.createElement("div");
+		toast.className = "hint error-toast";
+		toast.textContent = message;
+		shadow.append(toast);
+		setTimeout(() => {
+			toast.remove();
+		}, 4000);
 	}
 
 	// --- element capture ----------------------------------------------------
@@ -307,9 +321,23 @@ function mountClaudback(): void {
 					return;
 				}
 
-				await send<CreateResponse>({ type: "create", payload: buildPayload(el, selector, text) });
-				clearTransient();
-				await refresh();
+				// Keep the composer (and the typed text) open on failure — an
+				// "Extension context invalidated" rejection must not eat the comment.
+				try {
+					const res = await send<CreateResponse>({ type: "create", payload: buildPayload(el, selector, text) });
+
+					if (!res || !res.ok) {
+						showError("Couldn't save — comment not stored.");
+
+						return;
+					}
+
+					clearTransient();
+					await refresh();
+				} catch (error) {
+					console.error("[claudback] create failed:", error);
+					showError("Couldn't save — comment not stored.");
+				}
 			}
 		});
 	}
@@ -366,20 +394,47 @@ function mountClaudback(): void {
 			}
 
 			if (act === "delete") {
-				await send<SimpleResponse>({ type: "delete", id: comment.id });
-				clearTransient();
-				await refresh();
+				try {
+					const res = await send<SimpleResponse>({ type: "delete", id: comment.id });
+
+					if (!res || !res.ok) {
+						showError("Couldn't delete — change not stored.");
+
+						return;
+					}
+
+					clearTransient();
+					await refresh();
+				} catch (error) {
+					console.error("[claudback] delete failed:", error);
+					showError("Couldn't delete — change not stored.");
+				}
 			}
 
 			if (act === "save") {
 				const text = textarea.value.trim();
 
-				if (text) {
-					await send<SimpleResponse>({ type: "update", id: comment.id, text });
+				if (!text) {
+					clearTransient();
+
+					return;
 				}
 
-				clearTransient();
-				await refresh();
+				try {
+					const res = await send<SimpleResponse>({ type: "update", id: comment.id, text });
+
+					if (!res || !res.ok) {
+						showError("Couldn't save — change not stored.");
+
+						return;
+					}
+
+					clearTransient();
+					await refresh();
+				} catch (error) {
+					console.error("[claudback] update failed:", error);
+					showError("Couldn't save — change not stored.");
+				}
 			}
 		});
 	}
@@ -405,6 +460,9 @@ function mountClaudback(): void {
 			}
 			case "offline": {
 				return "Collector offline — comments saved locally, retrying.";
+			}
+			case "unauthorized": {
+				return "Pairing token rejected — re-pair from the extension options page.";
 			}
 			case "pending": {
 				return "Syncing buffered comments…";
@@ -484,8 +542,18 @@ function mountClaudback(): void {
 		clearAllBtn.textContent = "Clear all";
 		clearAllBtn.disabled = store.comments.length === 0;
 		clearAllBtn.addEventListener("click", async () => {
-			await send<SimpleResponse>({ type: "clear", origin: window.location.origin });
-			await refresh();
+			try {
+				const res = await send<SimpleResponse>({ type: "clear", origin: window.location.origin });
+
+				await refresh();
+
+				if (!res || !res.ok) {
+					showError("Couldn't clear — comments not removed.");
+				}
+			} catch (error) {
+				console.error("[claudback] clear failed:", error);
+				showError("Couldn't clear — comments not removed.");
+			}
 		});
 		header.append(clearAllBtn);
 		panel.append(header);
@@ -508,8 +576,18 @@ function mountClaudback(): void {
 			<option value="keep">Keep comments</option>`;
 		select.value = store.mode;
 		select.addEventListener("change", async () => {
-			await send<SimpleResponse>({ type: "setMode", mode: select.value as StoreMode });
-			await refresh();
+			try {
+				const res = await send<SimpleResponse>({ type: "setMode", mode: select.value as StoreMode });
+
+				await refresh();
+
+				if (!res || !res.ok) {
+					showError("Couldn't change mode — change not stored.");
+				}
+			} catch (error) {
+				console.error("[claudback] setMode failed:", error);
+				showError("Couldn't change mode — change not stored.");
+			}
 		});
 		mode.append(select);
 		panel.append(mode);
@@ -540,13 +618,33 @@ function mountClaudback(): void {
 				const act = (ev.target as HTMLElement).dataset?.act;
 
 				if (act === "delete") {
-					await send<SimpleResponse>({ type: "delete", id: comment.id });
-					await refresh();
+					try {
+						const res = await send<SimpleResponse>({ type: "delete", id: comment.id });
+
+						await refresh();
+
+						if (!res || !res.ok) {
+							showError("Couldn't delete — change not stored.");
+						}
+					} catch (error) {
+						console.error("[claudback] delete failed:", error);
+						showError("Couldn't delete — change not stored.");
+					}
 				}
 
 				if (act === "unresolve") {
-					await send<SimpleResponse>({ type: "unresolve", id: comment.id });
-					await refresh();
+					try {
+						const res = await send<SimpleResponse>({ type: "unresolve", id: comment.id });
+
+						await refresh();
+
+						if (!res || !res.ok) {
+							showError("Couldn't unresolve — change not stored.");
+						}
+					} catch (error) {
+						console.error("[claudback] unresolve failed:", error);
+						showError("Couldn't unresolve — change not stored.");
+					}
 				}
 
 				if (act === "edit") {

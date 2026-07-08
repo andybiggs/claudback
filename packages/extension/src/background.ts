@@ -3,10 +3,10 @@ import type { Comment, NewCommentInput, Store, StoreMode } from "@claudback/shar
 import { flushBuffer } from "./lib/buffer.js";
 import {
 	clearComments,
+	CollectorHttpError,
 	createComment,
 	deleteComment,
 	listComments,
-	ping,
 	setMode,
 	unresolveComment,
 	updateComment,
@@ -48,44 +48,74 @@ async function getToken(): Promise<string | null> {
 	return typeof token === "string" && token.length > 0 ? token : null;
 }
 
-async function readBuffer(): Promise<NewCommentInput[]> {
+interface BufferedComment {
+	localId: string;
+	input: NewCommentInput;
+}
+
+async function readBuffer(): Promise<BufferedComment[]> {
 	const result = await chrome.storage.local.get(BUFFER_KEY);
 	const buffer = result[BUFFER_KEY];
 
-	return Array.isArray(buffer) ? (buffer as NewCommentInput[]) : [];
+	if (!Array.isArray(buffer)) {
+		return [];
+	}
+
+	// Older versions stored bare NewCommentInput entries with array-index IDs;
+	// wrap them with stable IDs on read.
+	return buffer.map((entry: BufferedComment | NewCommentInput) => {
+		if ("localId" in entry && "input" in entry) {
+			return entry;
+		}
+
+		return { localId: crypto.randomUUID(), input: entry };
+	});
 }
 
-async function writeBuffer(items: NewCommentInput[]): Promise<void> {
+async function writeBuffer(items: BufferedComment[]): Promise<void> {
 	await chrome.storage.local.set({ [BUFFER_KEY]: items });
 }
 
-async function appendBuffer(input: NewCommentInput): Promise<void> {
+async function appendBuffer(input: NewCommentInput): Promise<BufferedComment> {
 	const buffer = await readBuffer();
+	const item: BufferedComment = { localId: crypto.randomUUID(), input };
 
-	buffer.push(input);
+	buffer.push(item);
 	await writeBuffer(buffer);
+
+	return item;
 }
 
-function localComment(input: NewCommentInput, index: number): Comment {
+function localComment(item: BufferedComment): Comment {
 	const now = new Date().toISOString();
 
 	return {
-		...input,
-		rect: input.rect ?? null,
-		viewport: input.viewport ?? null,
-		id: `local:${index}`,
+		...item.input,
+		rect: item.input.rect ?? null,
+		viewport: item.input.viewport ?? null,
+		id: `local:${item.localId}`,
 		resolved: false,
 		createdAt: now,
 		updatedAt: now,
 	};
 }
 
+// A 401 means the collector is up but rejected the pairing token — a very
+// different fix for the user than the collector being unreachable.
+function failureState(error: unknown): SyncState {
+	if (error instanceof CollectorHttpError && error.status === 401) {
+		return "unauthorized";
+	}
+
+	return "offline";
+}
+
 async function tryFlush(config: CollectorConfig): Promise<void> {
 	await flushBuffer({
 		read: readBuffer,
 		write: writeBuffer,
-		post: async (input) => {
-			await createComment(config, input);
+		post: async (item) => {
+			await createComment(config, item.input);
 		},
 	});
 }
@@ -100,11 +130,14 @@ async function computeStatus(): Promise<StatusReport> {
 	}
 
 	const config: CollectorConfig = { token };
-	const online = await ping(config);
-	const buffer = await readBuffer();
 
-	if (!online) {
-		return { state: "offline", pending: buffer.length };
+	try {
+		await listComments(config, "");
+	} catch (error) {
+		console.debug("[claudback] status check failed:", error);
+		const buffer = await readBuffer();
+
+		return { state: failureState(error), pending: buffer.length };
 	}
 
 	await tryFlush(config);
@@ -120,10 +153,7 @@ async function computeStatus(): Promise<StatusReport> {
 async function localsForOrigin(origin: string): Promise<Comment[]> {
 	const buffer = await readBuffer();
 
-	return buffer
-		.map((input, index) => ({ input, index }))
-		.filter((entry) => entry.input.origin === origin)
-		.map((entry) => localComment(entry.input, entry.index));
+	return buffer.filter((item) => item.input.origin === origin).map(localComment);
 }
 
 async function handleList(origin: string): Promise<ListResponse> {
@@ -143,8 +173,10 @@ async function handleList(origin: string): Promise<ListResponse> {
 		const state: SyncState = locals.length > 0 ? "pending" : "synced";
 
 		return { ok: true, state, mode: store.mode, comments: [...store.comments, ...locals] };
-	} catch {
-		return { ok: true, state: "offline", mode: "clear", comments: await localsForOrigin(origin) };
+	} catch (error) {
+		console.debug("[claudback] list failed:", error);
+
+		return { ok: true, state: failureState(error), mode: "clear", comments: await localsForOrigin(origin) };
 	}
 }
 
@@ -152,11 +184,9 @@ async function handleCreate(payload: NewCommentInput): Promise<CreateResponse> {
 	const token = await getToken();
 
 	if (!token) {
-		const index = (await readBuffer()).length;
+		const item = await appendBuffer(payload);
 
-		await appendBuffer(payload);
-
-		return { ok: true, buffered: true, comment: localComment(payload, index), state: "unpaired" };
+		return { ok: true, buffered: true, comment: localComment(item), state: "unpaired" };
 	}
 
 	const config: CollectorConfig = { token };
@@ -165,12 +195,11 @@ async function handleCreate(payload: NewCommentInput): Promise<CreateResponse> {
 		const comment = await createComment(config, payload);
 
 		return { ok: true, buffered: false, comment, state: "synced" };
-	} catch {
-		const index = (await readBuffer()).length;
+	} catch (error) {
+		console.error("[claudback] create failed, buffering comment:", error);
+		const item = await appendBuffer(payload);
 
-		await appendBuffer(payload);
-
-		return { ok: true, buffered: true, comment: localComment(payload, index), state: "offline" };
+		return { ok: true, buffered: true, comment: localComment(item), state: failureState(error) };
 	}
 }
 
@@ -178,19 +207,21 @@ function isLocalId(id: string): boolean {
 	return id.startsWith("local:");
 }
 
-function localIndex(id: string): number {
-	return Number(id.slice("local:".length));
+function localId(id: string): string {
+	return id.slice("local:".length);
 }
 
 async function handleUpdate(id: string, text: string): Promise<SimpleResponse> {
 	if (isLocalId(id)) {
 		const buffer = await readBuffer();
-		const index = localIndex(id);
+		const index = buffer.findIndex((item) => item.localId === localId(id));
 
-		if (index >= 0 && index < buffer.length) {
-			buffer[index] = { ...buffer[index], text };
-			await writeBuffer(buffer);
+		if (index < 0) {
+			return { ok: false, state: "offline" };
 		}
+
+		buffer[index] = { ...buffer[index], input: { ...buffer[index].input, text } };
+		await writeBuffer(buffer);
 
 		return { ok: true, state: "offline" };
 	}
@@ -205,20 +236,24 @@ async function handleUpdate(id: string, text: string): Promise<SimpleResponse> {
 		await updateComment({ token }, id, text);
 
 		return { ok: true, state: "synced" };
-	} catch {
-		return { ok: false, state: "offline" };
+	} catch (error) {
+		console.error("[claudback] update failed:", error);
+
+		return { ok: false, state: failureState(error) };
 	}
 }
 
 async function handleDelete(id: string): Promise<SimpleResponse> {
 	if (isLocalId(id)) {
 		const buffer = await readBuffer();
-		const index = localIndex(id);
+		const index = buffer.findIndex((item) => item.localId === localId(id));
 
-		if (index >= 0 && index < buffer.length) {
-			buffer.splice(index, 1);
-			await writeBuffer(buffer);
+		if (index < 0) {
+			return { ok: false, state: "offline" };
 		}
+
+		buffer.splice(index, 1);
+		await writeBuffer(buffer);
 
 		return { ok: true, state: "offline" };
 	}
@@ -233,8 +268,10 @@ async function handleDelete(id: string): Promise<SimpleResponse> {
 		await deleteComment({ token }, id);
 
 		return { ok: true, state: "synced" };
-	} catch {
-		return { ok: false, state: "offline" };
+	} catch (error) {
+		console.error("[claudback] delete failed:", error);
+
+		return { ok: false, state: failureState(error) };
 	}
 }
 
@@ -255,8 +292,10 @@ async function handleUnresolve(id: string): Promise<SimpleResponse> {
 		await unresolveComment({ token }, id);
 
 		return { ok: true, state: "synced" };
-	} catch {
-		return { ok: false, state: "offline" };
+	} catch (error) {
+		console.error("[claudback] unresolve failed:", error);
+
+		return { ok: false, state: failureState(error) };
 	}
 }
 
@@ -271,8 +310,10 @@ async function handleClear(origin: string): Promise<SimpleResponse> {
 		await clearComments({ token }, origin);
 
 		return { ok: true, state: "synced" };
-	} catch {
-		return { ok: false, state: "offline" };
+	} catch (error) {
+		console.error("[claudback] clear failed:", error);
+
+		return { ok: false, state: failureState(error) };
 	}
 }
 
@@ -287,8 +328,10 @@ async function handleSetMode(mode: StoreMode): Promise<SimpleResponse> {
 		await setMode({ token }, mode);
 
 		return { ok: true, state: "synced" };
-	} catch {
-		return { ok: false, state: "offline" };
+	} catch (error) {
+		console.error("[claudback] setMode failed:", error);
+
+		return { ok: false, state: failureState(error) };
 	}
 }
 

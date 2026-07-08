@@ -12,7 +12,9 @@ const ICON_SIZES = [16, 32, 48, 128];
 
 async function copyStaticFiles() {
 	await mkdir(`${outdir}/icons`, { recursive: true });
+	await mkdir(`${outdir}/fonts`, { recursive: true });
 	await Promise.all([
+		copyFile(root("./src/fonts/space-grotesk-600-latin.woff2"), `${outdir}/fonts/space-grotesk-600-latin.woff2`),
 		...["manifest.json", "src/popup.html", "src/options.html", "src/onboarding.html"].map(async (file) => {
 			const dest = `${outdir}/${file.split("/").pop()}`;
 
