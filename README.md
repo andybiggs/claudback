@@ -30,7 +30,7 @@ Everything stays on your machine: comments sync to a loopback-only collector and
    }
    ```
 
-3. **Pair** — the server saves a pairing token to `~/.claudback/token` on first run (also printed to stderr). Paste it into the extension's setup page.
+3. **Pair** — ask Claude for a pairing code ("Give me a Claudback pairing code") and type it into the extension's setup page. Codes expire in 10 minutes and work once. Fallback: paste the long-lived token from `~/.claudback/token` (saved on the server's first run, also printed to stderr) instead.
 4. **Annotate** — click the Claudback icon on any tab → **Enable**, grant the per-site permission, and pin comments with the floating button.
 5. **Ask Claude** — "check my claudback comments and make the changes." Claude reads them via the `get_comments` tool; `list_origins`, `resolve_comment`, and `clear_comments` are also available.
 
@@ -68,7 +68,7 @@ npm run build --workspace=claudback-mcp
 claude mcp add claudback -- node /absolute/path/to/Claudback/packages/mcp-server/dist/bin.js
 ```
 
-To generate the pairing token without waiting on an MCP client, run it directly once and stop it:
+Pairing normally happens by asking Claude for a code, but to grab the long-lived token manually without an MCP client, run the server directly once and stop it:
 
 ```sh
 node packages/mcp-server/dist/bin.js
@@ -77,54 +77,16 @@ cat ~/.claudback/token
 ```
 
 <details>
-<summary><strong>Advanced: run the collector without an active Claude session</strong></summary>
+<summary><strong>Advanced: annotating while Claude isn't running</strong></summary>
 
-The stdio MCP transport needs an MCP client (Claude) to spawn it, but the collector the extension talks to is just a plain HTTP server in the same process — so you can keep it running independently of Claude, and annotate any time. Everything reads/writes the same files under `~/.claudback/` (token, store), so it's safe to also let Claude spawn its own instance later — token and comments stay in sync regardless of which process's collector actually handled a given request.
+You don't need the server running to annotate: the extension buffers comments in `chrome.storage.local` and flushes them automatically once a collector is reachable, so nothing is lost between Claude sessions.
 
-**Manual background** — run it yourself when you want it up; stops on logout/reboot:
-
-```sh
-node ~/Documents/GitHub/Claudback/packages/mcp-server/dist/bin.js &
-disown
-```
-
-**Persistent (survives reboot/logout)** — a macOS LaunchAgent that starts the server at login and restarts it if it dies. Save this as `~/Library/LaunchAgents/dev.claudback.mcp-server.plist` (adjust the path to your clone):
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-	<key>Label</key>
-	<string>dev.claudback.mcp-server</string>
-	<key>ProgramArguments</key>
-	<array>
-		<string>/usr/bin/env</string>
-		<string>node</string>
-		<string>/Users/you/Documents/GitHub/Claudback/packages/mcp-server/dist/bin.js</string>
-	</array>
-	<key>RunAtLoad</key>
-	<true/>
-	<key>KeepAlive</key>
-	<true/>
-	<key>StandardOutPath</key>
-	<string>/Users/you/.claudback/server.log</string>
-	<key>StandardErrorPath</key>
-	<string>/Users/you/.claudback/server.log</string>
-</dict>
-</plist>
-```
-
-Then load it (starts immediately, and on every future login):
+If you want *live* sync to `~/.claudback/` while Claude is closed, you can run the server standalone — the collector is a plain HTTP server in the same process:
 
 ```sh
-launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/dev.claudback.mcp-server.plist
+node packages/mcp-server/dist/bin.js
 ```
 
-To stop it and remove the auto-start:
-
-```sh
-launchctl bootout gui/$(id -u)/dev.claudback.mcp-server
-```
+One caveat: the collector binds port 4319 exclusively, so while a standalone instance is running, a Claude session **cannot spawn its own** — the Claudback MCP tools (including `get_pairing_code`) will be unavailable in that session. Stop the standalone instance before working with Claude. For this reason, don't run it under a keep-alive supervisor (LaunchAgent/systemd): it will permanently starve Claude's own instance of the port.
 
 </details>

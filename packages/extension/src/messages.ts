@@ -28,7 +28,8 @@ export type PopupRequest =
 	| { type: "disarmEnable"; tabId: number }
 	| { type: "enableTab"; tabId: number }
 	| { type: "disableTab"; tabId: number }
-	| { type: "testConnection" };
+	| { type: "testConnection" }
+	| { type: "pairWithCode"; code: string };
 
 export type ExtensionRequest = ContentRequest | PopupRequest;
 
@@ -57,4 +58,10 @@ export interface TabStateResponse {
 
 export interface TestConnectionResponse {
 	state: SyncState;
+}
+
+export interface PairResponse {
+	ok: boolean;
+	state: SyncState;
+	error?: "invalid_code" | "offline";
 }

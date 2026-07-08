@@ -1,4 +1,4 @@
-import type { TestConnectionResponse } from "./messages.js";
+import type { PairResponse, TestConnectionResponse } from "./messages.js";
 
 const TOKEN_KEY = "claudback_token";
 
@@ -14,7 +14,90 @@ function setStatus(text: string): void {
 	statusText.textContent = text;
 }
 
+function reportState(state: TestConnectionResponse["state"]): void {
+	switch (state) {
+		case "unpaired": {
+			setStatus("Not paired yet — ask Claude for a pairing code, or paste the token from ~/.claudback/token.");
+
+			return;
+		}
+		case "offline": {
+			setStatus("Collector offline — is the MCP server running?");
+
+			return;
+		}
+		case "unauthorized": {
+			setStatus("Token rejected by the collector — ask Claude for a fresh pairing code.");
+
+			return;
+		}
+		case "synced":
+		case "pending": {
+			setStatus("Connected to the local collector.");
+
+			return;
+		}
+		default: {
+			setStatus("Unexpected response from the extension — try again.");
+		}
+	}
+}
+
+async function pairWithCode(input: HTMLInputElement): Promise<void> {
+	const code = input.value.trim();
+
+	if (!code) {
+		setStatus("Enter the pairing code Claude gave you.");
+
+		return;
+	}
+
+	setStatus("Pairing…");
+
+	const response = (await chrome.runtime.sendMessage({ type: "pairWithCode", code })) as PairResponse;
+
+	if (response.ok) {
+		input.value = "";
+		reportState(response.state);
+
+		return;
+	}
+
+	if (response.error === "invalid_code") {
+		setStatus("That code didn't work — it may have expired. Ask Claude for a fresh one.");
+
+		return;
+	}
+
+	setStatus("Collector offline — is the MCP server running?");
+}
+
+function initCopyPrompt(): void {
+	const button = document.getElementById("copy-prompt") as HTMLButtonElement;
+	const prompt = document.getElementById("pair-prompt") as HTMLPreElement;
+
+	button.addEventListener("click", () => {
+		void navigator.clipboard
+			.writeText(prompt.textContent ?? "")
+			.then(() => {
+				button.textContent = "Copied";
+			})
+			.catch(() => {
+				// Rejects when the document loses focus mid-click; make the
+				// failure visible so stale clipboard contents don't get pasted.
+				button.textContent = "Copy failed — select it manually";
+			})
+			.finally(() => {
+				setTimeout(() => {
+					button.textContent = "Copy";
+				}, 2000);
+			});
+	});
+}
+
 async function init(): Promise<void> {
+	const codeInput = document.getElementById("pair-code") as HTMLInputElement;
+	const pairBtn = document.getElementById("pair") as HTMLButtonElement;
 	const input = document.getElementById("token") as HTMLInputElement;
 	const saveBtn = document.getElementById("save") as HTMLButtonElement;
 	const testBtn = document.getElementById("test") as HTMLButtonElement;
@@ -22,10 +105,20 @@ async function init(): Promise<void> {
 	const existing = await loadToken();
 
 	if (existing) {
-		setStatus("A token is saved. Paste a new one to replace it.");
+		setStatus("A token is saved. Pair again to replace it.");
 	} else {
-		setStatus("No token saved yet.");
+		setStatus("Not paired yet.");
 	}
+
+	initCopyPrompt();
+	pairBtn.addEventListener("click", () => {
+		void pairWithCode(codeInput).catch(reportError);
+	});
+	codeInput.addEventListener("keydown", (event) => {
+		if (event.key === "Enter") {
+			void pairWithCode(codeInput).catch(reportError);
+		}
+	});
 
 	// Both buttons save whatever is in the input (if anything), then test —
 	// users shouldn't have to know save and test are separate operations.
@@ -47,32 +140,7 @@ async function init(): Promise<void> {
 
 			const result = (await chrome.runtime.sendMessage({ type: "testConnection" })) as TestConnectionResponse;
 
-			switch (result.state) {
-				case "unpaired": {
-					setStatus("No token saved yet — paste the one from ~/.claudback/token.");
-
-					return;
-				}
-				case "offline": {
-					setStatus("Collector offline — is the MCP server running?");
-
-					return;
-				}
-				case "unauthorized": {
-					setStatus("Token rejected by the collector — paste the current one from ~/.claudback/token.");
-
-					return;
-				}
-				case "synced":
-				case "pending": {
-					setStatus("Connected to the local collector.");
-
-					return;
-				}
-				default: {
-					setStatus("Unexpected response from the extension — try again.");
-				}
-			}
+			reportState(result.state);
 		})().catch(reportError);
 	};
 

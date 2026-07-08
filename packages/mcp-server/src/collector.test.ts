@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { TOKEN_HEADER } from "@claudback/shared";
 
 import { createCollector } from "./collector.js";
+import { createPairingManager, type PairingManager } from "./pairing.js";
 import { createStore } from "./store.js";
 import type { StoreApi } from "./store-api.js";
 
@@ -34,11 +35,13 @@ describe("collector", () => {
 	let store: StoreApi;
 	let server: Server;
 	let baseUrl: string;
+	let pairing: PairingManager;
 
 	beforeEach(async () => {
 		dir = await mkdtemp(join(tmpdir(), "claudback-collector-"));
 		store = createStore(join(dir, "comments.json"));
-		server = createCollector(store, TOKEN);
+		pairing = createPairingManager(TOKEN, { delayMs: 0 });
+		server = createCollector(store, TOKEN, pairing);
 
 		await new Promise<void>((resolve) => {
 			server.listen(0, "127.0.0.1", resolve);
@@ -344,6 +347,78 @@ describe("collector", () => {
 		});
 
 		expect(res.status).toBe(400);
+	});
+
+	it("exchanges a valid pairing code for the token with no token header", async () => {
+		const { code } = pairing.mint();
+		const res = await fetch(`${baseUrl}/pair`, {
+			method: "POST",
+			headers: { "content-type": "application/json", origin: VALID_EXTENSION_ORIGIN },
+			body: JSON.stringify({ code }),
+		});
+
+		expect(res.status).toBe(200);
+		expect((await res.json()) as { token: string }).toEqual({ token: TOKEN });
+	});
+
+	it("401s a wrong pairing code with the uniform error and CORS headers", async () => {
+		pairing.mint();
+
+		const res = await fetch(`${baseUrl}/pair`, {
+			method: "POST",
+			headers: { "content-type": "application/json", origin: VALID_EXTENSION_ORIGIN },
+			body: JSON.stringify({ code: "WRONGONE" }),
+		});
+
+		expect(res.status).toBe(401);
+		expect((await res.json()) as { error: string }).toEqual({ error: "invalid or expired pairing code" });
+		expect(res.headers.get("access-control-allow-origin")).toBe(VALID_EXTENSION_ORIGIN);
+	});
+
+	it("403s /pair from a disallowed origin without touching the pairing code", async () => {
+		const { code } = pairing.mint();
+		const res = await fetch(`${baseUrl}/pair`, {
+			method: "POST",
+			headers: { "content-type": "application/json", origin: "https://evil.example" },
+			body: JSON.stringify({ code }),
+		});
+
+		expect(res.status).toBe(403);
+		expect(res.headers.get("access-control-allow-origin")).toBeNull();
+		// The origin gate ran before the exchange, so the code is still valid.
+		expect(await pairing.exchange(code)).toBe(TOKEN);
+	});
+
+	it("400s /pair with a malformed or missing code", async () => {
+		for (const body of ["{ not json", JSON.stringify({}), JSON.stringify({ code: 5 }), JSON.stringify({ code: "x".repeat(65) })]) {
+			const res = await fetch(`${baseUrl}/pair`, {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body,
+			});
+
+			expect(res.status).toBe(400);
+		}
+	});
+
+	it("401s even the correct code after too many failed attempts", async () => {
+		const { code } = pairing.mint();
+
+		for (let i = 0; i < 5; i += 1) {
+			await fetch(`${baseUrl}/pair`, {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({ code: "WRONGONE" }),
+			});
+		}
+
+		const res = await fetch(`${baseUrl}/pair`, {
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({ code }),
+		});
+
+		expect(res.status).toBe(401);
 	});
 
 	it("strips control characters from posted text", async () => {

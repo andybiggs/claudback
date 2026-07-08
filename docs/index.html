@@ -567,9 +567,10 @@
 }</code></pre>
 					</li>
 					<li>
-						<strong>Pair.</strong> The server saves a pairing token to
-						<code>~/.claudback/token</code> on first run — paste it into the extension's
-						setup page and you're connected.
+						<strong>Pair.</strong> Ask Claude for a pairing code —
+						<em>"Give me a Claudback pairing code"</em> — and type it into the extension's
+						setup page. Codes expire in 10 minutes and work once. (Prefer doing it by hand?
+						Paste the token from <code>~/.claudback/token</code> instead.)
 					</li>
 				</ol>
 			</section>
@@ -588,9 +589,10 @@
 					<span class="tag">Paired &amp; permissioned</span>
 					<p>
 						Every request needs the pairing token, and only the extension's own origin passes
-						CORS — a random web page can't write into your comment store. The extension is off
-						by default and enabled per tab, with per-site permissions granted only when you
-						ask.
+						CORS — a random web page can't write into your comment store. Pairing itself uses a
+						short-lived, single-use code (10-minute expiry, five-attempt cap), so the long-lived
+						token never appears in a chat. The extension is off by default and enabled per tab,
+						with per-site permissions granted only when you ask.
 					</p>
 				</div>
 				<div class="card">

@@ -8,6 +8,8 @@ The security-auditor review of the token, origin/CORS, collector, and extension 
 
 One condition remains for **distribution** (steps 3–4): at Web Store listing time, pin the published extension ID in the origin allowlist (`packages/mcp-server/src/security.ts` currently accepts any `chrome-extension://` origin) — see step 4.
 
+**Scope note:** the pairing-code flow (`get_pairing_code` tool, `POST /pair` endpoint, `packages/mcp-server/src/pairing.ts`) was added after the 2026-07-08 GO and is not covered by that audit. Include it in the next security-audit pass before distribution.
+
 ## 1. Make the repo public
 
 GitHub → Settings → change visibility. Check first that no secrets or personal paths are committed (`git log -p` spot check, `~/.claudback` is never referenced with real tokens).

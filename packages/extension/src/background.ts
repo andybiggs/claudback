@@ -6,6 +6,7 @@ import {
 	CollectorHttpError,
 	createComment,
 	deleteComment,
+	exchangePairingCode,
 	listComments,
 	setMode,
 	unresolveComment,
@@ -17,6 +18,7 @@ import type {
 	CreateResponse,
 	ExtensionRequest,
 	ListResponse,
+	PairResponse,
 	PopupRequest,
 	SimpleResponse,
 	StatusReport,
@@ -428,6 +430,32 @@ async function handleDisableTab(tabId: number): Promise<TabStateResponse> {
 	return { enabled: false };
 }
 
+// Trade a short-lived pairing code for the bearer token, store it, and report
+// the resulting connection state. computeStatus() afterwards also flushes any
+// comments buffered while unpaired.
+async function handlePairWithCode(code: string): Promise<PairResponse> {
+	let token: string;
+
+	try {
+		token = await exchangePairingCode(code);
+	} catch (error) {
+		if (error instanceof CollectorHttpError && error.status === 401) {
+			const status = await computeStatus();
+
+			return { ok: false, state: status.state, error: "invalid_code" };
+		}
+
+		console.debug("[claudback] pairing exchange failed:", error);
+
+		return { ok: false, state: "offline", error: "offline" };
+	}
+
+	await chrome.storage.local.set({ [TOKEN_KEY]: token });
+	const status = await computeStatus();
+
+	return { ok: true, state: status.state };
+}
+
 async function dispatch(message: ExtensionRequest): Promise<unknown> {
 	switch (message.type) {
 		case "list": {
@@ -473,6 +501,9 @@ async function dispatch(message: ExtensionRequest): Promise<unknown> {
 			const status = await computeStatus();
 
 			return { state: status.state } satisfies TestConnectionResponse;
+		}
+		case "pairWithCode": {
+			return handlePairWithCode(message.code);
 		}
 		default: {
 			return { ok: false };
