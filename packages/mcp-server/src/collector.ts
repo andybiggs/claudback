@@ -69,6 +69,12 @@ function readBody(req: IncomingMessage): Promise<unknown | undefined> {
 	});
 }
 
+function asObjectBody(body: unknown): Record<string, unknown> | undefined {
+	return body !== undefined && typeof body === "object" && body !== null
+		? (body as Record<string, unknown>)
+		: undefined;
+}
+
 function sanitizeCommentFields<T extends Record<string, unknown>>(body: T): T {
 	const cleaned: Record<string, unknown> = { ...body };
 
@@ -113,9 +119,7 @@ export function createCollector(store: StoreApi, token: string, pairing: Pairing
 		// apply, and the server only listens on loopback.
 		if (path === PAIR_PATH && method === "POST") {
 			const body = await readBody(req);
-			const code = body !== undefined && typeof body === "object" && body !== null
-				? (body as Record<string, unknown>).code
-				: undefined;
+			const code = asObjectBody(body)?.code;
 
 			if (typeof code !== "string" || code.length === 0 || code.length > 64) {
 				send(res, 400, { error: "invalid body" });
@@ -161,15 +165,15 @@ export function createCollector(store: StoreApi, token: string, pairing: Pairing
 			}
 
 			if (path === "/comments" && method === "POST") {
-				const body = await readBody(req);
+				const body = asObjectBody(await readBody(req));
 
-				if (body === undefined || typeof body !== "object" || body === null) {
+				if (body === undefined) {
 					send(res, 400, { error: "invalid or oversized body" });
 
 					return;
 				}
 
-				const parsed = newCommentInputSchema.safeParse(sanitizeCommentFields(body as Record<string, unknown>));
+				const parsed = newCommentInputSchema.safeParse(sanitizeCommentFields(body));
 
 				if (!parsed.success) {
 					send(res, 400, { error: "comment failed validation", issues: parsed.error.issues });
@@ -187,15 +191,15 @@ export function createCollector(store: StoreApi, token: string, pairing: Pairing
 			const idMatch = path.match(/^\/comments\/([0-9a-f-]{36})$/);
 
 			if (idMatch && method === "PUT") {
-				const body = await readBody(req);
+				const body = asObjectBody(await readBody(req));
 
-				if (body === undefined || typeof body !== "object" || body === null) {
+				if (body === undefined) {
 					send(res, 400, { error: "invalid or oversized body" });
 
 					return;
 				}
 
-				const text = (body as Record<string, unknown>).text;
+				const text = body.text;
 
 				if (typeof text !== "string" || text.length === 0 || text.length > COMMENT_TEXT_MAX_LENGTH) {
 					send(res, 400, { error: `text must be a non-empty string of at most ${COMMENT_TEXT_MAX_LENGTH} chars` });
@@ -235,18 +239,18 @@ export function createCollector(store: StoreApi, token: string, pairing: Pairing
 			}
 
 			if (path === "/clear" && method === "POST") {
-				const body = await readBody(req);
-
 				// A bodyless request is a legitimate "clear everything", but a
 				// malformed body must not silently widen an origin-scoped clear
 				// into a global one.
-				if (body === undefined || typeof body !== "object" || body === null) {
+				const body = asObjectBody(await readBody(req));
+
+				if (body === undefined) {
 					send(res, 400, { error: "invalid or oversized body" });
 
 					return;
 				}
 
-				const clearOrigin = (body as Record<string, unknown>).origin;
+				const clearOrigin = body.origin;
 				const removed = await store.clearComments(typeof clearOrigin === "string" ? clearOrigin : undefined);
 
 				send(res, 200, { removed });
@@ -255,9 +259,9 @@ export function createCollector(store: StoreApi, token: string, pairing: Pairing
 			}
 
 			if (path === "/mode" && method === "PUT") {
-				const body = await readBody(req);
+				const body = asObjectBody(await readBody(req));
 
-				if (body === undefined || typeof body !== "object" || body === null) {
+				if (body === undefined) {
 					send(res, 400, { error: "invalid or oversized body" });
 
 					return;
@@ -265,7 +269,7 @@ export function createCollector(store: StoreApi, token: string, pairing: Pairing
 
 				// storeModeSchema coerces unknown values to "clear" (lenient for
 				// store reads); the HTTP API must reject them instead.
-				const mode = (body as Record<string, unknown>).mode;
+				const mode = body.mode;
 
 				if (mode !== "clear" && mode !== "keep") {
 					send(res, 400, { error: "mode must be 'clear' or 'keep'" });

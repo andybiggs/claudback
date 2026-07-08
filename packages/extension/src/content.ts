@@ -164,6 +164,37 @@ function send<T>(message: ContentRequest): Promise<T> {
 	return chrome.runtime.sendMessage(message) as Promise<T>;
 }
 
+interface OkResponse {
+	ok: boolean;
+}
+
+// Sends a message and reports failure (rejected ok, or a thrown "extension
+// context invalidated" error) uniformly via onError, without ever throwing.
+// Returns whether the call succeeded, so callers can decide what to do next.
+async function sendGuarded<T extends OkResponse>(
+	message: ContentRequest,
+	label: string,
+	errorMessage: string,
+	onError: (message: string) => void,
+): Promise<boolean> {
+	try {
+		const res = await send<T>(message);
+
+		if (!res || !res.ok) {
+			onError(errorMessage);
+
+			return false;
+		}
+
+		return true;
+	} catch (error) {
+		console.error(`[claudback] ${label} failed:`, error);
+		onError(errorMessage);
+
+		return false;
+	}
+}
+
 function mountClaudback(): void {
 	if (typeof window === "undefined" || typeof document === "undefined") {
 		return;
@@ -323,20 +354,16 @@ function mountClaudback(): void {
 
 				// Keep the composer (and the typed text) open on failure — an
 				// "Extension context invalidated" rejection must not eat the comment.
-				try {
-					const res = await send<CreateResponse>({ type: "create", payload: buildPayload(el, selector, text) });
+				const ok = await sendGuarded<CreateResponse>(
+					{ type: "create", payload: buildPayload(el, selector, text) },
+					"create",
+					"Couldn't save — comment not stored.",
+					showError,
+				);
 
-					if (!res || !res.ok) {
-						showError("Couldn't save — comment not stored.");
-
-						return;
-					}
-
+				if (ok) {
 					clearTransient();
 					await refresh();
-				} catch (error) {
-					console.error("[claudback] create failed:", error);
-					showError("Couldn't save — comment not stored.");
 				}
 			}
 		});
@@ -394,20 +421,16 @@ function mountClaudback(): void {
 			}
 
 			if (act === "delete") {
-				try {
-					const res = await send<SimpleResponse>({ type: "delete", id: comment.id });
+				const ok = await sendGuarded<SimpleResponse>(
+					{ type: "delete", id: comment.id },
+					"delete",
+					"Couldn't delete — change not stored.",
+					showError,
+				);
 
-					if (!res || !res.ok) {
-						showError("Couldn't delete — change not stored.");
-
-						return;
-					}
-
+				if (ok) {
 					clearTransient();
 					await refresh();
-				} catch (error) {
-					console.error("[claudback] delete failed:", error);
-					showError("Couldn't delete — change not stored.");
 				}
 			}
 
@@ -420,20 +443,16 @@ function mountClaudback(): void {
 					return;
 				}
 
-				try {
-					const res = await send<SimpleResponse>({ type: "update", id: comment.id, text });
+				const ok = await sendGuarded<SimpleResponse>(
+					{ type: "update", id: comment.id, text },
+					"update",
+					"Couldn't save — change not stored.",
+					showError,
+				);
 
-					if (!res || !res.ok) {
-						showError("Couldn't save — change not stored.");
-
-						return;
-					}
-
+				if (ok) {
 					clearTransient();
 					await refresh();
-				} catch (error) {
-					console.error("[claudback] update failed:", error);
-					showError("Couldn't save — change not stored.");
 				}
 			}
 		});

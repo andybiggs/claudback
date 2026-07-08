@@ -213,6 +213,26 @@ function localId(id: string): string {
 	return id.slice("local:".length);
 }
 
+// Shared shape for remote actions that require a token: run `action` with it,
+// map a thrown error to the right SyncState, and log with the given label.
+async function withToken(label: string, action: (token: string) => Promise<unknown>): Promise<SimpleResponse> {
+	const token = await getToken();
+
+	if (!token) {
+		return { ok: false, state: "unpaired" };
+	}
+
+	try {
+		await action(token);
+
+		return { ok: true, state: "synced" };
+	} catch (error) {
+		console.error(`[claudback] ${label} failed:`, error);
+
+		return { ok: false, state: failureState(error) };
+	}
+}
+
 async function handleUpdate(id: string, text: string): Promise<SimpleResponse> {
 	if (isLocalId(id)) {
 		const buffer = await readBuffer();
@@ -228,21 +248,7 @@ async function handleUpdate(id: string, text: string): Promise<SimpleResponse> {
 		return { ok: true, state: "offline" };
 	}
 
-	const token = await getToken();
-
-	if (!token) {
-		return { ok: false, state: "unpaired" };
-	}
-
-	try {
-		await updateComment({ token }, id, text);
-
-		return { ok: true, state: "synced" };
-	} catch (error) {
-		console.error("[claudback] update failed:", error);
-
-		return { ok: false, state: failureState(error) };
-	}
+	return withToken("update", (token) => updateComment({ token }, id, text));
 }
 
 async function handleDelete(id: string): Promise<SimpleResponse> {
@@ -260,21 +266,7 @@ async function handleDelete(id: string): Promise<SimpleResponse> {
 		return { ok: true, state: "offline" };
 	}
 
-	const token = await getToken();
-
-	if (!token) {
-		return { ok: false, state: "unpaired" };
-	}
-
-	try {
-		await deleteComment({ token }, id);
-
-		return { ok: true, state: "synced" };
-	} catch (error) {
-		console.error("[claudback] delete failed:", error);
-
-		return { ok: false, state: failureState(error) };
-	}
+	return withToken("delete", (token) => deleteComment({ token }, id));
 }
 
 async function handleUnresolve(id: string): Promise<SimpleResponse> {
@@ -284,57 +276,15 @@ async function handleUnresolve(id: string): Promise<SimpleResponse> {
 		return { ok: false, state: "offline" };
 	}
 
-	const token = await getToken();
-
-	if (!token) {
-		return { ok: false, state: "unpaired" };
-	}
-
-	try {
-		await unresolveComment({ token }, id);
-
-		return { ok: true, state: "synced" };
-	} catch (error) {
-		console.error("[claudback] unresolve failed:", error);
-
-		return { ok: false, state: failureState(error) };
-	}
+	return withToken("unresolve", (token) => unresolveComment({ token }, id));
 }
 
 async function handleClear(origin: string): Promise<SimpleResponse> {
-	const token = await getToken();
-
-	if (!token) {
-		return { ok: false, state: "unpaired" };
-	}
-
-	try {
-		await clearComments({ token }, origin);
-
-		return { ok: true, state: "synced" };
-	} catch (error) {
-		console.error("[claudback] clear failed:", error);
-
-		return { ok: false, state: failureState(error) };
-	}
+	return withToken("clear", (token) => clearComments({ token }, origin));
 }
 
 async function handleSetMode(mode: StoreMode): Promise<SimpleResponse> {
-	const token = await getToken();
-
-	if (!token) {
-		return { ok: false, state: "unpaired" };
-	}
-
-	try {
-		await setMode({ token }, mode);
-
-		return { ok: true, state: "synced" };
-	} catch (error) {
-		console.error("[claudback] setMode failed:", error);
-
-		return { ok: false, state: failureState(error) };
-	}
+	return withToken("setMode", (token) => setMode({ token }, mode));
 }
 
 async function originPatternFor(tabId: number): Promise<string | null> {
