@@ -27,30 +27,29 @@ async function init(): Promise<void> {
 		setStatus("No token saved yet.");
 	}
 
-	saveBtn.addEventListener("click", () => {
+	// Both buttons save whatever is in the input (if anything), then test —
+	// users shouldn't have to know save and test are separate operations.
+	const onClick = () => {
 		void (async () => {
-			const token = input.value.trim();
+			const typed = input.value.trim();
 
-			if (!token) {
-				setStatus("Enter a token first.");
+			if (typed) {
+				await chrome.storage.local.set({ [TOKEN_KEY]: typed });
+				input.value = "";
+				setStatus("Token saved — testing…");
+			} else if ((await loadToken()) === "") {
+				setStatus("Paste your token first.");
 
 				return;
+			} else {
+				setStatus("Testing…");
 			}
 
-			await chrome.storage.local.set({ [TOKEN_KEY]: token });
-			input.value = "";
-			setStatus("Token saved.");
-		})().catch(reportError);
-	});
-
-	testBtn.addEventListener("click", () => {
-		void (async () => {
-			setStatus("Testing…");
 			const result = (await chrome.runtime.sendMessage({ type: "testConnection" })) as TestConnectionResponse;
 
 			switch (result.state) {
 				case "unpaired": {
-					setStatus("Not paired — save a token first.");
+					setStatus("No token saved yet — paste the one from ~/.claudback/token.");
 
 					return;
 				}
@@ -70,7 +69,10 @@ async function init(): Promise<void> {
 				}
 			}
 		})().catch(reportError);
-	});
+	};
+
+	saveBtn.addEventListener("click", onClick);
+	testBtn.addEventListener("click", onClick);
 }
 
 function reportError(error: unknown): void {

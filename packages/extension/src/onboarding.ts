@@ -40,7 +40,7 @@ async function testConnection(): Promise<TestConnectionResponse> {
 function reportState(state: TestConnectionResponse["state"]): boolean {
 	switch (state) {
 		case "unpaired": {
-			setStatus("Not paired — save a token first.");
+			setStatus("No token saved yet — paste the one from ~/.claudback/token.");
 
 			return false;
 		}
@@ -181,34 +181,37 @@ function pairingError(error: unknown): void {
 	setStatus("Something went wrong — reload this page and try again.");
 }
 
+// Both pairing buttons behave the same: save whatever is in the input (if
+// anything), then test. Users shouldn't have to know that "save" and "test"
+// are separate operations.
+async function saveAndTest(input: HTMLInputElement): Promise<void> {
+	const typed = input.value.trim();
+
+	if (typed) {
+		await chrome.storage.local.set({ [TOKEN_KEY]: typed });
+		input.value = "";
+		setStatus("Token saved — testing…");
+	} else if ((await loadToken()) === "") {
+		setStatus("Paste your token first.");
+
+		return;
+	} else {
+		setStatus("Testing…");
+	}
+
+	reportState((await testConnection()).state);
+}
+
 function initPairing(): void {
 	const input = $("token") as HTMLInputElement;
 	const saveBtn = $("save") as HTMLButtonElement;
 	const testBtn = $("test") as HTMLButtonElement;
+	const onClick = () => {
+		void saveAndTest(input).catch(pairingError);
+	};
 
-	saveBtn.addEventListener("click", () => {
-		void (async () => {
-			const token = input.value.trim();
-
-			if (!token) {
-				setStatus("Enter a token first.");
-
-				return;
-			}
-
-			await chrome.storage.local.set({ [TOKEN_KEY]: token });
-			input.value = "";
-			setStatus("Token saved — testing…");
-			reportState((await testConnection()).state);
-		})().catch(pairingError);
-	});
-
-	testBtn.addEventListener("click", () => {
-		void (async () => {
-			setStatus("Testing…");
-			reportState((await testConnection()).state);
-		})().catch(pairingError);
-	});
+	saveBtn.addEventListener("click", onClick);
+	testBtn.addEventListener("click", onClick);
 
 	void loadToken()
 		.then((token) => {

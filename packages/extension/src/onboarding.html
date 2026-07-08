@@ -247,22 +247,25 @@
 				padding-top: 18px;
 				border-top: 1px solid var(--border);
 			}
-			.usecase {
-				background: var(--green-tint);
-				border-radius: 10px;
-				padding: 14px 16px;
-				margin-top: 14px;
-			}
-			.usecase p {
-				margin: 0;
-				color: var(--ink);
-			}
 			ol {
 				padding-left: 20px;
 				margin: 10px 0;
 			}
 			ol li {
 				margin-bottom: 8px;
+			}
+			.tip {
+				background: var(--green-tint);
+				border-radius: 12px;
+				padding: 16px 18px 10px;
+				margin-top: 22px;
+			}
+			.tip p {
+				margin: 0;
+				color: var(--ink);
+			}
+			.tip .illus {
+				margin: 14px 0 4px;
 			}
 			.illus {
 				display: block;
@@ -302,8 +305,8 @@
 			<h2>Comment on your page. Claude reads it.</h2>
 			<p>
 				Claudback lets you pin comments to elements on any web page — a button that's the
-				wrong colour, a layout that breaks, copy that needs a rewrite. Claude reads your
-				comments through a local MCP server and makes the changes.
+				wrong colour, a layout that breaks, copy that needs a rewrite. Claude reads them
+				through a local MCP server and makes the changes.
 			</p>
 			<svg class="illus" viewBox="0 0 640 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A comment pinned to a button in the browser flows into Claude, which reads it and resolves it">
 				<!-- browser window -->
@@ -312,7 +315,7 @@
 				<circle cx="36" cy="32" r="4" fill="var(--border)" />
 				<circle cx="50" cy="32" r="4" fill="var(--border)" />
 				<circle cx="64" cy="32" r="4" fill="var(--border)" />
-				<text x="82" y="36" font-size="11" fill="var(--faint-text)">Chrome</text>
+				<text x="156" y="36" font-size="11" text-anchor="middle" fill="var(--faint-text)">Chrome</text>
 				<!-- page wireframe -->
 				<rect x="36" y="66" width="150" height="12" rx="6" fill="var(--ghost-bg)" />
 				<rect x="36" y="90" width="240" height="8" rx="4" fill="var(--ghost-bg)" />
@@ -338,7 +341,7 @@
 				<circle cx="398" cy="32" r="4" fill="var(--border)" />
 				<circle cx="412" cy="32" r="4" fill="var(--border)" />
 				<circle cx="426" cy="32" r="4" fill="var(--border)" />
-				<text x="444" y="36" font-size="11" fill="var(--faint-text)">Claude</text>
+				<text x="501" y="36" font-size="11" text-anchor="middle" fill="var(--faint-text)">Claude</text>
 				<text x="398" y="78" font-size="12" class="mono" fill="var(--faint-text)">&gt; Hey Claude, check my</text>
 				<text x="398" y="94" font-size="12" class="mono" fill="var(--faint-text)">  Claudback comments</text>
 				<text x="398" y="122" font-size="12" class="mono" fill="var(--green-strong)">● get_comments</text>
@@ -346,14 +349,11 @@
 				<text x="398" y="170" font-size="12" class="mono" fill="var(--secondary-text)">editing button.css…</text>
 				<text x="398" y="194" font-size="12" class="mono" fill="var(--green-strong)">✓ resolved</text>
 			</svg>
-			<div class="usecase">
-				<p>
-					<strong>The main use case:</strong> run your site or prototype locally, click the
-					things you want changed and say why, then ask Claude Code to check your Claudback
-					comments. No screenshots, no describing where things are — the comment carries the
-					exact element.
-				</p>
-			</div>
+			<p>
+				It shines when you're iterating on a local build with Claude Code: click the things
+				you want changed and say why — no screenshots, no describing where things are. The
+				comment carries the exact element.
+			</p>
 			<p>Everything stays on your machine: comments go to a local collector on <code>127.0.0.1</code>, never to a remote server.</p>
 		</section>
 
@@ -407,19 +407,25 @@
 			</div>
 			<div class="status">
 				<span class="status-dot" id="status-dot"></span>
-				<span id="status-text">Waiting for a token…</span>
+				<span id="status-text">Paste your token to connect.</span>
 			</div>
 		</section>
 
 		<section class="step" data-step="3">
 			<h2>You're set — here's the loop</h2>
-			<div class="usecase">
+			<ol>
+				<li>Open the page you're working on and click the Claudback icon → <strong>Enable</strong> for this tab (grant the per-site permission when prompted).</li>
+				<li>Use the floating button to pin comments to elements — click the thing, say what you want.</li>
+				<li>Ask Claude: <code>check my claudback comments and make the changes</code>.</li>
+				<li>Resolved comments clear automatically as Claude works through them.</li>
+			</ol>
+			<p>You can reopen this guide any time from the extension's options page.</p>
+			<div class="tip">
 				<p>
-					<strong>First, pin Claudback to your toolbar</strong> so it's one click away: click
-					the puzzle-piece icon next to the address bar, find Claudback, and click the pin.
+					<strong>One last tip:</strong> pin Claudback to your toolbar so it's one click away —
+					click the puzzle-piece icon next to the address bar, find Claudback, and click the pin.
 				</p>
-			</div>
-			<svg class="illus" viewBox="0 0 640 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Chrome's toolbar with the puzzle-piece extensions menu open, showing the pin next to Claudback">
+				<svg class="illus" viewBox="0 0 640 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Chrome's toolbar with the puzzle-piece extensions menu open, showing the pin next to Claudback">
 				<!-- browser toolbar -->
 				<rect x="16" y="16" width="608" height="44" rx="12" fill="var(--surface)" stroke="var(--border)" />
 				<rect x="34" y="27" width="420" height="22" rx="11" fill="var(--ghost-bg)" />
@@ -445,14 +451,8 @@
 					<circle cx="12" cy="12" r="14" fill="var(--green-tint)" />
 					<path d="M 9 5 h 6 l 1 6 l 3 3 h -14 l 3 -3 z M 12 14 v 6" stroke="var(--green-strong)" stroke-width="1.8" fill="none" stroke-linejoin="round" stroke-linecap="round" />
 				</g>
-			</svg>
-			<ol>
-				<li>Open the page you're working on and click the Claudback icon → <strong>Enable</strong> for this tab (grant the per-site permission when prompted).</li>
-				<li>Use the floating button to pin comments to elements — click the thing, say what you want.</li>
-				<li>Ask Claude: <code>check my claudback comments and make the changes</code>.</li>
-				<li>Resolved comments clear automatically as Claude works through them.</li>
-			</ol>
-			<p>You can reopen this guide any time from the extension's options page.</p>
+				</svg>
+			</div>
 		</section>
 
 		<div class="nav">
