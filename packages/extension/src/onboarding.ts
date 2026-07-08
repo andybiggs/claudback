@@ -1,4 +1,4 @@
-import type { TestConnectionResponse } from "./messages.js";
+import type { PairResponse, TestConnectionResponse } from "./messages.js";
 
 const TOKEN_KEY = "claudback_token";
 const STEP_COUNT = 4;
@@ -40,7 +40,7 @@ async function testConnection(): Promise<TestConnectionResponse> {
 function reportState(state: TestConnectionResponse["state"]): boolean {
 	switch (state) {
 		case "unpaired": {
-			setStatus("No token saved yet — paste the one from ~/.claudback/token.");
+			setStatus("Not paired yet — ask Claude for a pairing code.");
 
 			return false;
 		}
@@ -50,7 +50,7 @@ function reportState(state: TestConnectionResponse["state"]): boolean {
 			return false;
 		}
 		case "unauthorized": {
-			setStatus("Token rejected by the collector — paste the current one from ~/.claudback/token.");
+			setStatus("Token rejected by the collector — ask Claude for a fresh pairing code.");
 
 			return false;
 		}
@@ -186,42 +186,52 @@ function pairingError(error: unknown): void {
 	setStatus("Something went wrong — reload this page and try again.");
 }
 
-// Both pairing buttons behave the same: save whatever is in the input (if
-// anything), then test. Users shouldn't have to know that "save" and "test"
-// are separate operations.
-async function saveAndTest(input: HTMLInputElement): Promise<void> {
-	const typed = input.value.trim();
+async function pairWithCode(input: HTMLInputElement): Promise<void> {
+	const code = input.value.trim();
 
-	if (typed) {
-		await chrome.storage.local.set({ [TOKEN_KEY]: typed });
-		input.value = "";
-		setStatus("Token saved — testing…");
-	} else if ((await loadToken()) === "") {
-		setStatus("Paste your token first.");
+	if (!code) {
+		setStatus("Enter the pairing code Claude gave you.");
 
 		return;
-	} else {
-		setStatus("Testing…");
 	}
 
-	reportState((await testConnection()).state);
+	setStatus("Pairing…");
+
+	const response = (await chrome.runtime.sendMessage({ type: "pairWithCode", code })) as PairResponse;
+
+	if (response.ok) {
+		input.value = "";
+		reportState(response.state);
+
+		return;
+	}
+
+	if (response.error === "invalid_code") {
+		setStatus("That code didn't work — it may have expired. Ask Claude for a fresh one.");
+
+		return;
+	}
+
+	setStatus("Collector offline — is the MCP server running?");
 }
 
 function initPairing(): void {
-	const input = $("token") as HTMLInputElement;
-	const saveBtn = $("save") as HTMLButtonElement;
-	const testBtn = $("test") as HTMLButtonElement;
-	const onClick = () => {
-		void saveAndTest(input).catch(pairingError);
-	};
+	const codeInput = $("pair-code") as HTMLInputElement;
+	const pairBtn = $("pair") as HTMLButtonElement;
 
-	saveBtn.addEventListener("click", onClick);
-	testBtn.addEventListener("click", onClick);
+	pairBtn.addEventListener("click", () => {
+		void pairWithCode(codeInput).catch(pairingError);
+	});
+	codeInput.addEventListener("keydown", (event) => {
+		if (event.key === "Enter") {
+			void pairWithCode(codeInput).catch(pairingError);
+		}
+	});
 
 	void loadToken()
 		.then((token) => {
 			if (token !== "") {
-				setStatus("A token is saved. Paste a new one to replace it.");
+				setStatus("A token is saved. Pair again to replace it.");
 			}
 		})
 		.catch(pairingError);

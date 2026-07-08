@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { TOKEN_HEADER, type NewCommentInput } from "@claudback/shared";
 
-import { createComment, listComments, ping, setMode, updateComment } from "./collector.js";
+import { CollectorHttpError, createComment, exchangePairingCode, listComments, ping, setMode, updateComment } from "./collector.js";
 
 function jsonResponse(body: unknown, ok = true, status = 200): Response {
 	return {
@@ -74,6 +74,31 @@ describe("collector client", () => {
 		const fetchImpl = fetchMock(() => jsonResponse({ error: "nope" }, false, 401));
 
 		await expect(listComments({ token: "wrong", fetchImpl }, "")).rejects.toThrow("401");
+	});
+
+	it("exchangePairingCode posts the code to /pair without the token header", async () => {
+		const fetchImpl = fetchMock(() => jsonResponse({ token: "the-token" }));
+
+		expect(await exchangePairingCode("ABCD-2345", { fetchImpl })).toBe("the-token");
+
+		const [url, init] = fetchImpl.mock.calls[0];
+
+		expect(url).toBe("http://127.0.0.1:4319/pair");
+		expect(init?.method).toBe("POST");
+		expect(JSON.parse(init?.body as string)).toEqual({ code: "ABCD-2345" });
+		expect(init?.headers).not.toHaveProperty(TOKEN_HEADER);
+	});
+
+	it("exchangePairingCode throws CollectorHttpError on a rejected code", async () => {
+		const fetchImpl = fetchMock(() => jsonResponse({ error: "invalid or expired pairing code" }, false, 401));
+
+		await expect(exchangePairingCode("WRONGONE", { fetchImpl })).rejects.toThrow(CollectorHttpError);
+	});
+
+	it("exchangePairingCode throws when a 200 carries no token", async () => {
+		const fetchImpl = fetchMock(() => jsonResponse({}));
+
+		await expect(exchangePairingCode("ABCD-2345", { fetchImpl })).rejects.toThrow("no token");
 	});
 
 	it("ping resolves false when the collector is unreachable", async () => {

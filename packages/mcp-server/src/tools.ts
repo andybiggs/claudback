@@ -2,6 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 import { renderCommentsEnvelope } from "./envelope.js";
+import { formatPairingCode, type PairingManager } from "./pairing.js";
 import type { CommentFilter, StoreApi } from "./store-api.js";
 
 // The MCP text-content shape every tool handler returns.
@@ -82,7 +83,21 @@ export async function clearCommentsHandler(
 	return textResult(`Removed ${removed} comment(s).`);
 }
 
-export function registerTools(server: McpServer, store: StoreApi): void {
+export function getPairingCodeHandler(pairing: PairingManager): Promise<ToolResult> {
+	const { code, ttlMinutes } = pairing.mint();
+
+	return Promise.resolve(
+		textResult(
+			[
+				`Claudback pairing code: ${formatPairingCode(code)}`,
+				`Show this code to the user so they can enter it in the Claudback extension's setup or options page.`,
+				`It expires in ${ttlMinutes} minutes, works exactly once, and asking again replaces it.`,
+			].join(" "),
+		),
+	);
+}
+
+export function registerTools(server: McpServer, store: StoreApi, pairing: PairingManager): void {
 	server.registerTool(
 		"get_comments",
 		{
@@ -122,6 +137,20 @@ export function registerTools(server: McpServer, store: StoreApi): void {
 			},
 		},
 		(args) => guarded("resolve_comment", () => resolveCommentHandler(store, args)),
+	);
+
+	server.registerTool(
+		"get_pairing_code",
+		{
+			description: [
+				"Mint a short-lived, single-use pairing code for connecting the Claudback browser",
+				"extension to this machine's collector. Show the code to the user so they can type it",
+				"into the extension's setup or options page. The code expires in 10 minutes, works once,",
+				"and minting a new one replaces the old. This never exposes the long-lived pairing token.",
+			].join(" "),
+			inputSchema: {},
+		},
+		() => guarded("get_pairing_code", () => getPairingCodeHandler(pairing)),
 	);
 
 	server.registerTool(

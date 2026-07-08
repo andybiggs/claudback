@@ -1,8 +1,9 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 
-import { COMMENT_TEXT_MAX_LENGTH, DEFAULT_PORT, TOKEN_HEADER, newCommentInputSchema } from "@claudback/shared";
+import { COMMENT_TEXT_MAX_LENGTH, DEFAULT_PORT, PAIR_PATH, TOKEN_HEADER, newCommentInputSchema } from "@claudback/shared";
 
 import { tokenMatches } from "./auth.js";
+import type { PairingManager } from "./pairing.js";
 import { sanitizeText } from "./sanitize.js";
 import { applyCorsHeaders, originAllowed } from "./security.js";
 import type { StoreApi } from "./store-api.js";
@@ -68,6 +69,12 @@ function readBody(req: IncomingMessage): Promise<unknown | undefined> {
 	});
 }
 
+function asObjectBody(body: unknown): Record<string, unknown> | undefined {
+	return body !== undefined && typeof body === "object" && body !== null
+		? (body as Record<string, unknown>)
+		: undefined;
+}
+
 function sanitizeCommentFields<T extends Record<string, unknown>>(body: T): T {
 	const cleaned: Record<string, unknown> = { ...body };
 
@@ -80,7 +87,7 @@ function sanitizeCommentFields<T extends Record<string, unknown>>(body: T): T {
 	return cleaned as T;
 }
 
-export function createCollector(store: StoreApi, token: string): Server {
+export function createCollector(store: StoreApi, token: string, pairing: PairingManager): Server {
 	const server = createServer(async (req, res) => {
 		const method = req.method ?? "GET";
 		const origin = req.headers.origin;
@@ -101,6 +108,38 @@ export function createCollector(store: StoreApi, token: string): Server {
 
 		if (method === "OPTIONS") {
 			send(res, 204);
+
+			return;
+		}
+
+		// /pair is the one endpoint that runs before the token gate: it exists
+		// to bootstrap the token, so it authenticates with a short-lived code
+		// instead. The pairing manager enforces expiry, single-use, an attempt
+		// cap, and a constant failure delay; origin/CORS checks above still
+		// apply, and the server only listens on loopback.
+		if (path === PAIR_PATH && method === "POST") {
+			const body = await readBody(req);
+			const code = asObjectBody(body)?.code;
+
+			if (typeof code !== "string" || code.length === 0 || code.length > 64) {
+				send(res, 400, { error: "invalid body" });
+
+				return;
+			}
+
+			const exchanged = await pairing.exchange(code);
+
+			if (exchanged === null) {
+				// Never log the attempted code: a near-miss typo is one guess
+				// away from the real one.
+				console.error(`[claudback] rejected pairing attempt (origin: ${origin ?? "none"})`);
+				send(res, 401, { error: "invalid or expired pairing code" });
+
+				return;
+			}
+
+			console.error("[claudback] extension paired via pairing code");
+			send(res, 200, { token: exchanged });
 
 			return;
 		}
@@ -126,15 +165,15 @@ export function createCollector(store: StoreApi, token: string): Server {
 			}
 
 			if (path === "/comments" && method === "POST") {
-				const body = await readBody(req);
+				const body = asObjectBody(await readBody(req));
 
-				if (body === undefined || typeof body !== "object" || body === null) {
+				if (body === undefined) {
 					send(res, 400, { error: "invalid or oversized body" });
 
 					return;
 				}
 
-				const parsed = newCommentInputSchema.safeParse(sanitizeCommentFields(body as Record<string, unknown>));
+				const parsed = newCommentInputSchema.safeParse(sanitizeCommentFields(body));
 
 				if (!parsed.success) {
 					send(res, 400, { error: "comment failed validation", issues: parsed.error.issues });
@@ -152,15 +191,15 @@ export function createCollector(store: StoreApi, token: string): Server {
 			const idMatch = path.match(/^\/comments\/([0-9a-f-]{36})$/);
 
 			if (idMatch && method === "PUT") {
-				const body = await readBody(req);
+				const body = asObjectBody(await readBody(req));
 
-				if (body === undefined || typeof body !== "object" || body === null) {
+				if (body === undefined) {
 					send(res, 400, { error: "invalid or oversized body" });
 
 					return;
 				}
 
-				const text = (body as Record<string, unknown>).text;
+				const text = body.text;
 
 				if (typeof text !== "string" || text.length === 0 || text.length > COMMENT_TEXT_MAX_LENGTH) {
 					send(res, 400, { error: `text must be a non-empty string of at most ${COMMENT_TEXT_MAX_LENGTH} chars` });
@@ -200,18 +239,18 @@ export function createCollector(store: StoreApi, token: string): Server {
 			}
 
 			if (path === "/clear" && method === "POST") {
-				const body = await readBody(req);
-
 				// A bodyless request is a legitimate "clear everything", but a
 				// malformed body must not silently widen an origin-scoped clear
 				// into a global one.
-				if (body === undefined || typeof body !== "object" || body === null) {
+				const body = asObjectBody(await readBody(req));
+
+				if (body === undefined) {
 					send(res, 400, { error: "invalid or oversized body" });
 
 					return;
 				}
 
-				const clearOrigin = (body as Record<string, unknown>).origin;
+				const clearOrigin = body.origin;
 				const removed = await store.clearComments(typeof clearOrigin === "string" ? clearOrigin : undefined);
 
 				send(res, 200, { removed });
@@ -220,9 +259,9 @@ export function createCollector(store: StoreApi, token: string): Server {
 			}
 
 			if (path === "/mode" && method === "PUT") {
-				const body = await readBody(req);
+				const body = asObjectBody(await readBody(req));
 
-				if (body === undefined || typeof body !== "object" || body === null) {
+				if (body === undefined) {
 					send(res, 400, { error: "invalid or oversized body" });
 
 					return;
@@ -230,7 +269,7 @@ export function createCollector(store: StoreApi, token: string): Server {
 
 				// storeModeSchema coerces unknown values to "clear" (lenient for
 				// store reads); the HTTP API must reject them instead.
-				const mode = (body as Record<string, unknown>).mode;
+				const mode = body.mode;
 
 				if (mode !== "clear" && mode !== "keep") {
 					send(res, 400, { error: "mode must be 'clear' or 'keep'" });
@@ -260,8 +299,12 @@ export function createCollector(store: StoreApi, token: string): Server {
 	return server;
 }
 
-export async function startCollector(store: StoreApi, token: string): Promise<{ server: Server; port: number }> {
-	const server = createCollector(store, token);
+export async function startCollector(
+	store: StoreApi,
+	token: string,
+	pairing: PairingManager,
+): Promise<{ server: Server; port: number }> {
+	const server = createCollector(store, token, pairing);
 	const port = await new Promise<number>((resolve, reject) => {
 		server.once("error", (error: NodeJS.ErrnoException) => {
 			if (error.code === "EADDRINUSE") {

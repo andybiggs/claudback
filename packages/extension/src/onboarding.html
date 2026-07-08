@@ -15,8 +15,10 @@
 				--secondary-text: #5c6167;
 				--faint-text: #8b9096;
 				--border: #e5e7e9;
+				--hairline: #eff1f2;
 				--input-border: #d9dcde;
 				--green: #0f8a46;
+				--green-hover: #0c6e38;
 				--green-strong: #0c6e38;
 				--green-tint: #eaf5ee;
 				--green-tint-hover: #dff0e5;
@@ -24,6 +26,7 @@
 				--mark-dot: #fff;
 				--ghost-bg: #f3f4f4;
 				--surface: #fff;
+				--illus-wash: #f2f8f4;
 			}
 			@media (prefers-color-scheme: dark) {
 				:root {
@@ -31,8 +34,10 @@
 					--secondary-text: #9aa1a8;
 					--faint-text: #6e757c;
 					--border: #2b3036;
+					--hairline: #2b3036;
 					--input-border: #2b3036;
 					--green: #0f8a46;
+					--green-hover: #0c6e38;
 					--green-strong: #3fc479;
 					--green-tint: rgba(63, 196, 121, 0.14);
 					--green-tint-hover: rgba(63, 196, 121, 0.2);
@@ -40,7 +45,11 @@
 					--mark-dot: #141619;
 					--ghost-bg: #2b3036;
 					--surface: #141619;
+					--illus-wash: #181d1a;
 				}
+			}
+			* {
+				box-sizing: border-box;
 			}
 			body {
 				font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
@@ -54,12 +63,12 @@
 			.brand {
 				display: flex;
 				align-items: center;
-				gap: 10px;
+				gap: 12px;
 				margin-bottom: 6px;
 			}
 			.mark {
-				width: 26px;
-				height: 26px;
+				width: 28px;
+				height: 28px;
 				flex-shrink: 0;
 				background: var(--mark-bg);
 				border-radius: 50% 50% 50% 3px;
@@ -84,7 +93,7 @@
 			h2 {
 				font-family: "Space Grotesk", ui-sans-serif, sans-serif;
 				font-weight: 600;
-				font-size: 16px;
+				font-size: 17px;
 				letter-spacing: -0.01em;
 				margin: 0 0 8px;
 			}
@@ -93,6 +102,9 @@
 				font-size: 13px;
 				color: var(--secondary-text);
 				line-height: 1.55;
+			}
+			strong {
+				color: var(--ink);
 			}
 			code {
 				font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -105,13 +117,14 @@
 			.steps {
 				display: flex;
 				gap: 6px;
-				margin: 24px 0 28px;
+				margin: 26px 0 30px;
 			}
 			.step-dot {
 				height: 4px;
 				flex: 1;
 				border-radius: 2px;
 				background: var(--ghost-bg);
+				transition: background 0.25s ease;
 			}
 			.step-dot.active {
 				background: var(--green);
@@ -136,6 +149,10 @@
 				font-size: 13px;
 				font-weight: 600;
 				cursor: pointer;
+			}
+			.tab:hover {
+				border-color: var(--input-border);
+				color: var(--ink);
 			}
 			.tab.active {
 				background: var(--green-tint);
@@ -166,19 +183,25 @@
 			}
 			.copy {
 				position: absolute;
-				top: 8px;
-				right: 8px;
-				border: none;
+				top: 50%;
+				transform: translateY(-50%);
+				right: 10px;
+				border: 1px solid var(--border);
 				border-radius: 6px;
 				padding: 5px 10px;
 				font-size: 11px;
 				font-weight: 600;
 				cursor: pointer;
-				background: var(--green-tint);
+				background: var(--surface);
 				color: var(--green-strong);
+				box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+			}
+			.copy.corner {
+				top: 10px;
+				transform: none;
 			}
 			.copy:hover {
-				background: var(--green-tint-hover);
+				background: var(--green-tint);
 			}
 			input {
 				width: 100%;
@@ -192,6 +215,15 @@
 			}
 			input::placeholder {
 				color: var(--faint-text);
+			}
+			input:focus-visible {
+				outline: none;
+				border-color: var(--green);
+				box-shadow: 0 0 0 1px var(--green) inset;
+			}
+			button:focus-visible {
+				outline: 2px solid var(--green);
+				outline-offset: 2px;
 			}
 			.row {
 				display: flex;
@@ -208,6 +240,9 @@
 				background: var(--green);
 				color: #fff;
 			}
+			button.primary:hover:not(:disabled) {
+				background: var(--green-hover);
+			}
 			button.ghost {
 				border: none;
 				border-radius: 8px;
@@ -218,7 +253,7 @@
 				background: var(--green-tint);
 				color: var(--green-strong);
 			}
-			button.ghost:hover {
+			button.ghost:hover:not(:disabled) {
 				background: var(--green-tint-hover);
 			}
 			button:disabled {
@@ -248,7 +283,7 @@
 				justify-content: space-between;
 				margin-top: 32px;
 				padding-top: 18px;
-				border-top: 1px solid var(--border);
+				border-top: 1px solid var(--hairline);
 			}
 			ol {
 				padding-left: 20px;
@@ -282,6 +317,66 @@
 			.illus .mono {
 				font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 			}
+			.illus .brand-font {
+				font-family: "Space Grotesk", ui-sans-serif, sans-serif;
+				font-weight: 600;
+				letter-spacing: -0.01em;
+			}
+			.illus .flow {
+				stroke-dasharray: 5 5;
+				animation: flow 1.2s linear infinite;
+			}
+			@keyframes flow {
+				to {
+					stroke-dashoffset: -10;
+				}
+			}
+			@media (prefers-reduced-motion: reduce) {
+				.illus .flow {
+					animation: none;
+				}
+				.illus .cursor animate {
+					display: none;
+				}
+			}
+			.row input {
+				flex: 1;
+			}
+			.hint {
+				font-size: 12px;
+				color: var(--faint-text);
+				margin-top: 8px;
+			}
+			details {
+				margin-top: 18px;
+				border-top: 1px solid var(--hairline);
+				padding-top: 12px;
+			}
+			summary {
+				font-size: 13px;
+				font-weight: 600;
+				color: var(--secondary-text);
+				cursor: pointer;
+			}
+			summary:hover {
+				color: var(--ink);
+			}
+			details.learn-more {
+				border: none;
+				margin: 2px 0 0;
+				padding: 0;
+			}
+			details.learn-more summary {
+				color: var(--green-strong);
+				font-size: 12px;
+			}
+			details.learn-more ul {
+				padding-left: 18px;
+				margin: 8px 0;
+			}
+			details.learn-more li {
+				margin-bottom: 6px;
+			}
 			.nav-hint {
 				align-self: center;
 				font-size: 12px;
@@ -307,67 +402,75 @@
 		<section class="step active" data-step="0">
 			<h2>Comment on your page. Claude reads it.</h2>
 			<p>
-				Claudback lets you pin comments to elements on any web page — a button that's the
+				Claudback lets you pin comments to elements on any web page, a button that's the
 				wrong colour, a layout that breaks, copy that needs a rewrite. Claude reads them
-				through a local MCP server and makes the changes.
+				through a local MCP server and if you are developing the page locally, makes the
+				changes.
 			</p>
-			<svg class="illus" viewBox="0 0 640 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A comment pinned to a button in the browser flows into Claude, which reads it and resolves it">
+			<svg class="illus" viewBox="0 0 640 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A comment pinned to a button in the browser flows into Claude, which reads it and resolves it">
+				<!-- wash backdrop -->
+				<rect x="0" y="0" width="640" height="240" rx="14" fill="var(--illus-wash)" />
 				<!-- browser window -->
-				<rect x="16" y="16" width="280" height="196" rx="12" fill="var(--surface)" stroke="var(--border)" />
-				<line x1="16" y1="48" x2="296" y2="48" stroke="var(--border)" />
-				<circle cx="36" cy="32" r="4" fill="var(--border)" />
-				<circle cx="50" cy="32" r="4" fill="var(--border)" />
-				<circle cx="64" cy="32" r="4" fill="var(--border)" />
-				<text x="156" y="36" font-size="11" text-anchor="middle" fill="var(--faint-text)">Chrome</text>
+				<rect x="20" y="22" width="280" height="196" rx="12" fill="var(--surface)" stroke="var(--border)" />
+				<line x1="20" y1="54" x2="300" y2="54" stroke="var(--border)" />
+				<circle cx="40" cy="38" r="4" fill="#f26d5f" />
+				<circle cx="54" cy="38" r="4" fill="#f2be4c" />
+				<circle cx="68" cy="38" r="4" fill="#57c25b" />
+				<rect x="88" y="28" width="172" height="20" rx="10" fill="var(--ghost-bg)" />
+				<text x="174" y="42" font-size="10.5" text-anchor="middle" fill="var(--faint-text)" class="mono">localhost:5173</text>
 				<!-- page wireframe -->
-				<rect x="36" y="66" width="150" height="12" rx="6" fill="var(--ghost-bg)" />
-				<rect x="36" y="90" width="240" height="8" rx="4" fill="var(--ghost-bg)" />
-				<rect x="36" y="106" width="200" height="8" rx="4" fill="var(--ghost-bg)" />
+				<rect x="40" y="72" width="150" height="12" rx="6" fill="var(--ghost-bg)" />
+				<rect x="40" y="96" width="240" height="8" rx="4" fill="var(--ghost-bg)" />
+				<rect x="40" y="112" width="200" height="8" rx="4" fill="var(--ghost-bg)" />
 				<!-- the annotated button -->
-				<rect x="36" y="132" width="104" height="30" rx="8" fill="var(--green-tint)" stroke="var(--green)" />
-				<rect x="52" y="144" width="72" height="6" rx="3" fill="var(--green-strong)" opacity="0.55" />
+				<rect x="40" y="138" width="104" height="30" rx="8" fill="var(--green-tint)" stroke="var(--green)" stroke-width="1.5" />
+				<rect x="56" y="150" width="72" height="6" rx="3" fill="var(--green-strong)" opacity="0.55" />
 				<!-- waypoint pin on the button corner -->
-				<g transform="translate(140, 132)">
-					<circle cx="0" cy="0" r="11" fill="var(--mark-bg)" />
-					<rect x="-11" y="0" width="11" height="11" fill="var(--mark-bg)" />
-					<circle cx="0" cy="0" r="3.4" fill="var(--mark-dot)" />
+				<g transform="translate(144, 138)">
+					<path d="M 0 -11 A 11 11 0 0 1 11 0 A 11 11 0 0 1 0 11 L -8.8 11 Q -11 11 -11 8.8 L -11 0 A 11 11 0 0 1 0 -11 Z" fill="var(--mark-bg)" stroke="var(--surface)" stroke-width="2" />
+					<text x="0" y="3.6" font-size="10.5" font-weight="700" text-anchor="middle" fill="var(--mark-dot)">1</text>
 				</g>
-				<!-- comment bubble -->
-				<rect x="120" y="158" width="152" height="34" rx="10" fill="var(--surface)" stroke="var(--green)" />
-				<text x="134" y="180" font-size="12" fill="var(--ink)">“Make this bigger”</text>
+				<!-- composer -->
+				<rect x="112" y="164" width="168" height="36" rx="10" fill="var(--surface)" stroke="var(--border)" />
+				<rect x="122" y="172" width="112" height="20" rx="6" fill="var(--surface)" stroke="var(--input-border)" />
+				<text x="130" y="186" font-size="10.5" fill="var(--ink)">“Make this bigger”</text>
+				<rect x="240" y="172" width="32" height="20" rx="6" fill="var(--green)" />
+				<text x="256" y="186" font-size="10" font-weight="600" text-anchor="middle" fill="#fff">Add</text>
 				<!-- flow arrow -->
-				<path d="M 306 114 C 330 114, 336 114, 360 114" stroke="var(--green)" stroke-width="2" stroke-dasharray="5 5" fill="none" />
-				<path d="M 356 107 L 368 114 L 356 121 Z" fill="var(--green)" />
-				<!-- claude terminal -->
-				<rect x="378" y="16" width="246" height="196" rx="12" fill="var(--ghost-bg)" stroke="var(--border)" />
-				<line x1="378" y1="48" x2="624" y2="48" stroke="var(--border)" />
-				<circle cx="398" cy="32" r="4" fill="var(--border)" />
-				<circle cx="412" cy="32" r="4" fill="var(--border)" />
-				<circle cx="426" cy="32" r="4" fill="var(--border)" />
-				<text x="501" y="36" font-size="11" text-anchor="middle" fill="var(--faint-text)">Claude</text>
-				<text x="398" y="78" font-size="12" class="mono" fill="var(--faint-text)">&gt; Hey Claude, check my</text>
-				<text x="398" y="94" font-size="12" class="mono" fill="var(--faint-text)">  Claudback comments</text>
-				<text x="398" y="122" font-size="12" class="mono" fill="var(--green-strong)">● get_comments</text>
-				<text x="398" y="146" font-size="12" class="mono" fill="var(--ink)">“Make this bigger”</text>
-				<text x="398" y="170" font-size="12" class="mono" fill="var(--secondary-text)">editing button.css…</text>
-				<text x="398" y="194" font-size="12" class="mono" fill="var(--green-strong)">✓ resolved</text>
+				<path class="flow" d="M 310 120 C 334 120, 340 120, 358 120" stroke="var(--green)" stroke-width="2" fill="none" />
+				<path d="M 356 113 L 368 120 L 356 127 Z" fill="var(--green)" />
+				<!-- claude terminal: dark in both modes -->
+				<rect x="378" y="22" width="242" height="196" rx="12" fill="#191c1f" stroke="#2b3036" />
+				<line x1="378" y1="54" x2="620" y2="54" stroke="#2b3036" />
+				<circle cx="398" cy="38" r="4" fill="#3a3f44" />
+				<circle cx="412" cy="38" r="4" fill="#3a3f44" />
+				<circle cx="426" cy="38" r="4" fill="#3a3f44" />
+				<text x="499" y="42" font-size="10.5" text-anchor="middle" fill="#6e757c" class="brand-font">Claude Code</text>
+				<text x="398" y="84" font-size="12" class="mono" fill="#9aa1a8">&gt; Hey Claude, check my</text>
+				<text x="398" y="100" font-size="12" class="mono" fill="#9aa1a8">  Claudback comments</text>
+				<text x="398" y="128" font-size="12" class="mono" fill="#3fc479">● get_comments</text>
+				<text x="398" y="152" font-size="12" class="mono" fill="#e9ecee">“Make this bigger”</text>
+				<text x="398" y="176" font-size="12" class="mono" fill="#9aa1a8">editing button.css…</text>
+				<text x="398" y="200" font-size="12" class="mono" fill="#3fc479">✓ resolved</text>
+				<rect class="cursor" x="472" y="190" width="7" height="12" fill="#3fc479">
+					<animate attributeName="opacity" values="1;1;0;0" dur="1.1s" repeatCount="indefinite" />
+				</rect>
 			</svg>
 			<p>
-				It shines when you're iterating on a local build with Claude Code: click the things
-				you want changed and say why — no screenshots, no describing where things are. The
+				It shines when you're iterating on a local build with Claude Code. Click the things
+				you want changed and say why, no screenshots, no describing where things are. The
 				comment carries the exact element.
 			</p>
-			<p>Everything stays on your machine: comments go to a local collector on <code>127.0.0.1</code>, never to a remote server.</p>
 		</section>
 
 		<section class="step" data-step="1">
 			<h2>Install the server</h2>
 			<p>
-				Claude starts and stops the server itself — you just register it once. Pick your
+				Claude starts and stops the server itself, you just register it once. Pick your
 				client:
 			</p>
 			<div class="tabs">
-				<button class="tab active" data-tab="code">Claude Code</button>
+				<button class="tab active" data-tab="code">Claude Code (CLI)</button>
 				<button class="tab" data-tab="desktop">Claude Desktop</button>
 			</div>
 			<div class="tab-panel active" data-panel="code">
@@ -388,79 +491,121 @@
     }
   }
 }</pre>
-					<button class="copy" data-copy="cmd-desktop">Copy</button>
+					<button class="copy corner" data-copy="cmd-desktop">Copy</button>
 				</div>
+				<details class="learn-more">
+					<summary>Learn more: finding your config file</summary>
+					<p>
+						The easiest way: in Claude Desktop open
+						<strong>Settings → Developer → Edit Config</strong> — it opens (or creates)
+						the file for you. To find it manually:
+					</p>
+					<ul>
+						<li><strong>macOS:</strong> <code>~/Library/Application Support/Claude/claude_desktop_config.json</code></li>
+						<li><strong>Windows:</strong> <code>%APPDATA%\Claude\claude_desktop_config.json</code> (paste that into the File Explorer address bar)</li>
+					</ul>
+					<p>Save the file, then fully restart Claude Desktop so it picks up the change.</p>
+				</details>
 			</div>
 			<p>
-				On first run the server prints a pairing token and saves it to
-				<code>~/.claudback/token</code> — you'll paste that in the next step.
+				That's it for installation, in the next step you'll ask Claude for a pairing
+				code to connect this extension.
 			</p>
 		</section>
 
 		<section class="step" data-step="2">
 			<h2>Pair the extension</h2>
 			<p>
-				Start a Claude session (or run <code>npx claudback-mcp</code> once in a terminal),
-				then paste the token from <code>~/.claudback/token</code>:
+				Ask Claude for a pairing code, copy this prompt into any Claude Code or Claude
+				Desktop chat that has Claudback installed:
 			</p>
-			<input id="token" type="password" placeholder="Paste pairing token" autocomplete="off" />
+			<div class="code-block">
+				<pre id="pair-prompt">Give me a Claudback pairing code</pre>
+				<button class="copy" data-copy="pair-prompt">Copy</button>
+			</div>
+			<p>Then enter the code Claude gives you:</p>
 			<div class="row">
-				<button id="save" class="primary">Save token</button>
-				<button id="test" class="ghost">Test connection</button>
+				<input
+					id="pair-code"
+					type="text"
+					placeholder="e.g. 7XKQ-M3PD"
+					autocomplete="off"
+					autocapitalize="characters"
+					spellcheck="false"
+				/>
+				<button id="pair" class="primary">Pair</button>
 			</div>
 			<div class="status">
 				<span class="status-dot" id="status-dot"></span>
-				<span id="status-text">Paste your token to connect.</span>
+				<span id="status-text">Ask Claude for a pairing code to connect.</span>
 			</div>
 		</section>
 
 		<section class="step" data-step="3">
-			<h2>You're set — here's the loop</h2>
+			<h2>You're set. Here's the loop.</h2>
 			<ol>
-				<li>Open the page you're working on and click the Claudback icon → <strong>Enable</strong> for this tab (grant the per-site permission when prompted).</li>
-				<li>Use the floating button to pin comments to elements — click the thing, say what you want.</li>
+				<li>Open the page you're working on and click the Claudback Extension icon in Chrome → <strong>Enable</strong> for this tab (grant the per-site permission when prompted).</li>
+				<li>Use the floating button to pin comments to elements. Click the thing, say what you want.</li>
 				<li>Ask Claude: <code>check my claudback comments and make the changes</code>.</li>
 				<li>Resolved comments clear automatically as Claude works through them.</li>
 			</ol>
 			<p>You can reopen this guide any time from the extension's options page.</p>
-			<div class="tip">
+			<div>
+				<h2 style="margin-top: 30px">Pin it to your toolbar</h2>
 				<p>
-					<strong>One last tip:</strong> pin Claudback to your toolbar so it's one click away —
-					click the puzzle-piece icon next to the address bar, find Claudback, and click the pin.
+					So Claudback is one click away: click the puzzle-piece icon next to the address
+					bar, find Claudback, and click the pin.
 				</p>
-				<svg class="illus" viewBox="0 0 640 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Chrome's toolbar with the puzzle-piece extensions menu open, showing the pin next to Claudback">
-				<!-- browser toolbar -->
-				<rect x="16" y="16" width="608" height="44" rx="12" fill="var(--surface)" stroke="var(--border)" />
-				<rect x="34" y="27" width="420" height="22" rx="11" fill="var(--ghost-bg)" />
-				<text x="52" y="42" font-size="11" class="mono" fill="var(--faint-text)">localhost:3000</text>
-				<!-- puzzle icon, highlighted -->
-				<g transform="translate(476, 24)">
-					<circle cx="14" cy="14" r="20" fill="none" stroke="var(--green)" stroke-width="2" stroke-dasharray="4 4" />
-					<path d="M 9 6 h 4 a 3 3 0 0 1 6 0 h 4 v 5 a 3 3 0 0 1 0 6 v 5 h -5 a 3 3 0 0 0 -6 0 h -5 v -5 a 3 3 0 0 0 0 -6 z" transform="translate(0,1) scale(0.85)" fill="var(--secondary-text)" />
-				</g>
-				<circle cx="548" cy="38" r="9" fill="var(--ghost-bg)" />
-				<circle cx="580" cy="38" r="9" fill="var(--ghost-bg)" />
-				<!-- extensions dropdown -->
-				<rect x="380" y="72" width="244" height="58" rx="12" fill="var(--surface)" stroke="var(--border)" />
-				<path d="M 490 72 L 496 62 L 502 72 Z" fill="var(--border)" />
-				<g transform="translate(398, 89)">
-					<circle cx="10" cy="10" r="10" fill="var(--mark-bg)" />
-					<rect x="0" y="10" width="10" height="10" fill="var(--mark-bg)" />
-					<circle cx="10" cy="10" r="3" fill="var(--mark-dot)" />
-				</g>
-				<text x="430" y="106" font-size="13" font-weight="600" fill="var(--ink)">Claudback</text>
-				<!-- pin icon -->
-				<g transform="translate(584, 88)">
-					<circle cx="12" cy="12" r="14" fill="var(--green-tint)" />
-					<path d="M 9 5 h 6 l 1 6 l 3 3 h -14 l 3 -3 z M 12 14 v 6" stroke="var(--green-strong)" stroke-width="1.8" fill="none" stroke-linejoin="round" stroke-linecap="round" />
-				</g>
+				<svg class="illus" viewBox="0 0 640 224" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Chrome's toolbar with the puzzle-piece extensions menu open, showing the pin next to Claudback">
+					<defs>
+						<filter id="standoff" x="-20%" y="-20%" width="140%" height="150%">
+							<feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0b2416" flood-opacity="0.10" />
+						</filter>
+					</defs>
+					<!-- wash backdrop -->
+					<rect x="0" y="0" width="640" height="224" rx="14" fill="var(--illus-wash)" />
+					<!-- browser toolbar -->
+					<g filter="url(#standoff)">
+						<rect x="24" y="26" width="592" height="46" rx="12" fill="var(--surface)" stroke="var(--input-border)" />
+					</g>
+					<rect x="42" y="38" width="330" height="22" rx="11" fill="var(--ghost-bg)" />
+					<text x="60" y="53" font-size="11" class="mono" fill="var(--faint-text)">localhost:3000</text>
+					<!-- puzzle icon, highlighted -->
+					<g transform="translate(466, 35)">
+						<circle cx="14" cy="14" r="19" fill="none" stroke="var(--green)" stroke-width="2" stroke-dasharray="4 4" />
+						<path d="M 9 6 h 4 a 3 3 0 0 1 6 0 h 4 v 5 a 3 3 0 0 1 0 6 v 5 h -5 a 3 3 0 0 0 -6 0 h -5 v -5 a 3 3 0 0 0 0 -6 z" transform="translate(0,1) scale(0.85)" fill="var(--secondary-text)" />
+					</g>
+					<circle cx="542" cy="49" r="9" fill="var(--ghost-bg)" />
+					<circle cx="574" cy="49" r="9" fill="var(--ghost-bg)" />
+					<!-- extensions dropdown -->
+					<g filter="url(#standoff)">
+						<rect x="338" y="96" width="278" height="96" rx="12" fill="var(--surface)" stroke="var(--input-border)" />
+					</g>
+					<path d="M 474 96 L 480 86 L 486 96 Z" fill="var(--border)" />
+					<text x="356" y="122" font-size="10.5" font-weight="700" fill="var(--faint-text)" letter-spacing="0.5">EXTENSIONS</text>
+					<!-- Claudback row, highlighted -->
+					<rect x="350" y="132" width="254" height="44" rx="10" fill="var(--green-tint)" />
+					<g transform="translate(378, 154)">
+						<path d="M 0 -10 A 10 10 0 0 1 10 0 A 10 10 0 0 1 0 10 L -8 10 Q -10 10 -10 8 L -10 0 A 10 10 0 0 1 0 -10 Z" fill="var(--mark-bg)" />
+						<circle cx="0" cy="0" r="3" fill="var(--mark-dot)" />
+					</g>
+					<text x="400" y="159" font-size="13" font-weight="600" fill="var(--ink)" class="brand-font">Claudback</text>
+					<!-- pin control -->
+					<g transform="translate(562, 140)">
+						<circle cx="14" cy="14" r="14" fill="var(--green)" />
+						<path d="M 11 7 h 6 l 1 6 l 3 3 h -14 l 3 -3 z M 14 16 v 6" stroke="#fff" stroke-width="1.8" fill="none" stroke-linejoin="round" stroke-linecap="round" />
+					</g>
+					<!-- cursor -->
+					<g transform="translate(586, 166)">
+						<path d="M 0 0 L 0 15 L 3.8 11.4 L 6.4 17.2 L 9.2 16 L 6.6 10.2 L 12 10.2 Z" fill="var(--ink)" stroke="var(--surface)" stroke-width="1.4" stroke-linejoin="round" />
+					</g>
 				</svg>
 			</div>
 		</section>
 
 		<div class="nav">
 			<button id="back" class="ghost" disabled>Back</button>
-			<span class="nav-hint" id="nav-hint" hidden>Connect to continue</span>
+			<span class="nav-hint" id="nav-hint" hidden>Pair to continue</span>
 			<button id="next" class="primary">Next</button>
 		</div>
 

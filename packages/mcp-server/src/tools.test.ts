@@ -5,11 +5,13 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type { NewCommentInput } from "@claudback/shared";
 
+import { createPairingManager } from "./pairing.js";
 import { createStore } from "./store.js";
 import type { StoreApi } from "./store-api.js";
 import {
 	clearCommentsHandler,
 	getCommentsHandler,
+	getPairingCodeHandler,
 	listOriginsHandler,
 	resolveCommentHandler,
 } from "./tools.js";
@@ -117,6 +119,29 @@ describe("tools", () => {
 			const result = await resolveCommentHandler(store, { id: "missing-id" });
 
 			expect(result.content[0].text).toContain("not found");
+		});
+	});
+
+	describe("get_pairing_code", () => {
+		const TOKEN = "a".repeat(64);
+
+		it("returns a formatted code, mentions the TTL, and never leaks the token", async () => {
+			const pairing = createPairingManager(TOKEN, { delayMs: 0 });
+			const result = await getPairingCodeHandler(pairing);
+			const text = result.content[0].text;
+
+			expect(text).toMatch(/[A-Z2-9]{4}-[A-Z2-9]{4}/);
+			expect(text).toContain("10 minutes");
+			expect(text).not.toContain(TOKEN);
+		});
+
+		it("returns a code that actually exchanges for the token", async () => {
+			const pairing = createPairingManager(TOKEN, { delayMs: 0 });
+			const result = await getPairingCodeHandler(pairing);
+			const code = result.content[0].text.match(/[A-Z2-9]{4}-[A-Z2-9]{4}/)?.[0];
+
+			expect(code).toBeTruthy();
+			expect(await pairing.exchange(code as string)).toBe(TOKEN);
 		});
 	});
 

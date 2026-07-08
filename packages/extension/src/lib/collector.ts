@@ -1,4 +1,4 @@
-import { DEFAULT_PORT, TOKEN_HEADER, type Comment, type NewCommentInput, type Store, type StoreMode } from "@claudback/shared";
+import { DEFAULT_PORT, PAIR_PATH, TOKEN_HEADER, type Comment, type NewCommentInput, type Store, type StoreMode } from "@claudback/shared";
 
 // A thin typed client over the loopback collector. Every request carries the
 // pairing token; the worker constructs one of these once it has a token.
@@ -67,6 +67,33 @@ export function clearComments(config: CollectorConfig, origin: string): Promise<
 
 export function setMode(config: CollectorConfig, mode: StoreMode): Promise<Store> {
 	return request<Store>(config, "/mode", { method: "PUT", body: JSON.stringify({ mode }) });
+}
+
+// The one deliberately unauthenticated call: trade a short-lived pairing code
+// (minted by the get_pairing_code MCP tool) for the real bearer token. Kept
+// separate from request() so the token header can never leak into it.
+export async function exchangePairingCode(
+	code: string,
+	opts?: { port?: number; fetchImpl?: typeof fetch },
+): Promise<string> {
+	const doFetch = opts?.fetchImpl ?? fetch;
+	const res = await doFetch(`http://127.0.0.1:${opts?.port ?? DEFAULT_PORT}${PAIR_PATH}`, {
+		method: "POST",
+		headers: { "content-type": "application/json" },
+		body: JSON.stringify({ code }),
+	});
+
+	if (!res.ok) {
+		throw new CollectorHttpError(res.status);
+	}
+
+	const body = (await res.json()) as { token?: unknown };
+
+	if (typeof body.token !== "string" || body.token.length === 0) {
+		throw new Error("collector returned no token for the pairing code");
+	}
+
+	return body.token;
 }
 
 // A cheap authenticated round-trip used by the popup/options "test connection"

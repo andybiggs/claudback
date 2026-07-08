@@ -143,6 +143,56 @@
 				background: var(--green-strong);
 				flex-shrink: 0;
 			}
+			.row input {
+				flex: 1;
+			}
+			.hint {
+				font-size: 12px;
+				color: var(--faint-text);
+				margin-top: 8px;
+			}
+			.code-block {
+				position: relative;
+			}
+			pre {
+				background: var(--ghost-bg);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 14px 16px;
+				overflow-x: auto;
+				font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+				font-size: 12px;
+				line-height: 1.5;
+				color: var(--ink);
+				margin: 10px 0;
+			}
+			.copy {
+				position: absolute;
+				top: 8px;
+				right: 8px;
+				border: none;
+				border-radius: 6px;
+				padding: 5px 10px;
+				font-size: 11px;
+				font-weight: 600;
+				cursor: pointer;
+				background: var(--green-tint);
+				color: var(--green-strong);
+			}
+			.copy:hover {
+				background: var(--green-tint-hover);
+			}
+			details {
+				margin-top: 18px;
+				border-top: 1px solid var(--border);
+				padding-top: 12px;
+			}
+			summary {
+				font-size: 13px;
+				font-weight: 600;
+				color: var(--secondary-text);
+				cursor: pointer;
+			}
 			.guide-link {
 				display: inline-block;
 				margin-top: 18px;
@@ -162,15 +212,38 @@
 			<h1>Claudback pairing</h1>
 		</div>
 		<p>
-			Paste the pairing token so this extension can talk to your local Claudback
-			collector. The token is generated on first run of the MCP server and printed
-			to its stderr; it is also stored at <code>~/.claudback/token</code>.
+			Ask Claude for a pairing code so this extension can talk to your local Claudback
+			collector — copy this prompt into any Claude Code or Claude Desktop chat that has
+			Claudback installed:
 		</p>
-		<input id="token" type="password" placeholder="Paste pairing token" autocomplete="off" />
-		<div class="row">
-			<button id="save">Save token</button>
-			<button id="test" class="ghost">Test connection</button>
+		<div class="code-block">
+			<pre id="pair-prompt">Give me a Claudback pairing code</pre>
+			<button id="copy-prompt" class="copy">Copy</button>
 		</div>
+		<div class="row">
+			<input
+				id="pair-code"
+				type="text"
+				placeholder="e.g. 7XKQ-M3PD"
+				autocomplete="off"
+				autocapitalize="characters"
+				spellcheck="false"
+			/>
+			<button id="pair">Pair</button>
+		</div>
+		<p class="hint">Codes look like <code>7XKQ-M3PD</code>, expire after 10 minutes, and work once.</p>
+		<details>
+			<summary>Paste the token manually instead</summary>
+			<p>
+				The long-lived token is generated on first run of the MCP server and stored at
+				<code>~/.claudback/token</code> (a hidden folder in your home directory).
+			</p>
+			<input id="token" type="password" placeholder="Paste pairing token" autocomplete="off" />
+			<div class="row">
+				<button id="save">Save token</button>
+				<button id="test" class="ghost">Test connection</button>
+			</div>
+		</details>
 		<div id="status" class="status">
 			<span class="status-dot"></span>
 			<span id="status-text"></span>

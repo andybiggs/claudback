@@ -22,7 +22,7 @@ export async function loadOrCreateToken(): Promise<string> {
 	// 0600: the token gates writes to the store, so only this user may read it.
 	await writeFile(TOKEN_FILE, `${token}\n`, { encoding: "utf8", mode: 0o600 });
 	console.error(
-		`[claudback] pairing token generated at ${TOKEN_FILE} — paste it into the Claudback extension options page.`,
+		`[claudback] pairing token generated at ${TOKEN_FILE} — ask Claude for a pairing code (get_pairing_code), or paste the token into the Claudback extension options page.`,
 	);
 
 	return token;

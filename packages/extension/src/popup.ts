@@ -11,9 +11,10 @@ function send<T>(message: PopupRequest | { type: "status" } | { type: "list"; or
 }
 
 const CLAUDE_START_SERVER_PROMPT =
-	"The Claudback MCP server (claudback-mcp) isn't running — check whether the " +
-	"dev.claudback.mcp-server LaunchAgent is installed and running, and if not, " +
-	"follow the setup in this repo's README.md to build and start it.";
+	"The Claudback MCP server (claudback-mcp) isn't running — check that it is " +
+	"registered with this Claude client (for Claude Code: claude mcp add claudback " +
+	"-- npx -y claudback-mcp) and confirm its collector is up by calling the " +
+	"list_origins tool.";
 
 function statusText(state: SyncState): string {
 	switch (state) {
@@ -48,10 +49,10 @@ function statusHint(state: SyncState): string | null {
 			return "Can't reach the local Claudback server.";
 		}
 		case "unpaired": {
-			return "Add the pairing token from claudback-mcp in Pairing & options.";
+			return "Ask Claude for a pairing code, then enter it in Pairing & options.";
 		}
 		case "unauthorized": {
-			return "The collector rejected the pairing token — re-pair in Pairing & options.";
+			return "The collector rejected the pairing token — ask Claude for a pairing code and re-pair in Pairing & options.";
 		}
 		default: {
 			return null;

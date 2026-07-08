@@ -8,6 +8,8 @@ The security-auditor review of the token, origin/CORS, collector, and extension 
 
 One condition remains for **distribution** (steps 3–4): at Web Store listing time, pin the published extension ID in the origin allowlist (`packages/mcp-server/src/security.ts` currently accepts any `chrome-extension://` origin) — see step 4.
 
+**Pairing-code flow — ✅ passed 2026-07-08.** The `get_pairing_code` tool, `POST /pair` endpoint, and `packages/mcp-server/src/pairing.ts` (added after the initial GO) got their own focused audit: brute force is infeasible (2^40 code space, 5-attempt cap, single-use, 10-min TTL), the bearer token never leaks via MCP output, logs, errors, or timing, and the endpoint's placement in the request pipeline doesn't regress the token gate on any other route. Verdict: GO. One low-severity note (unbounded concurrent `/pair` requests from a hostile local process — no confidentiality/integrity impact, loopback-only) is optional hardening, not blocking. The extension-ID pin in step 4 covers `/pair` too — no separate action needed.
+
 ## 1. Make the repo public
 
 GitHub → Settings → change visibility. Check first that no secrets or personal paths are committed (`git log -p` spot check, `~/.claudback` is never referenced with real tokens).
