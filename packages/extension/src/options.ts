@@ -27,40 +27,57 @@ async function init(): Promise<void> {
 		setStatus("No token saved yet.");
 	}
 
-	saveBtn.addEventListener("click", async () => {
-		const token = input.value.trim();
+	// Both buttons save whatever is in the input (if anything), then test —
+	// users shouldn't have to know save and test are separate operations.
+	const onClick = () => {
+		void (async () => {
+			const typed = input.value.trim();
 
-		if (!token) {
-			setStatus("Enter a token first.");
-
-			return;
-		}
-
-		await chrome.storage.local.set({ [TOKEN_KEY]: token });
-		input.value = "";
-		setStatus("Token saved.");
-	});
-
-	testBtn.addEventListener("click", async () => {
-		setStatus("Testing…");
-		const result = (await chrome.runtime.sendMessage({ type: "testConnection" })) as TestConnectionResponse;
-
-		switch (result.state) {
-			case "unpaired": {
-				setStatus("Not paired — save a token first.");
+			if (typed) {
+				await chrome.storage.local.set({ [TOKEN_KEY]: typed });
+				input.value = "";
+				setStatus("Token saved — testing…");
+			} else if ((await loadToken()) === "") {
+				setStatus("Paste your token first.");
 
 				return;
+			} else {
+				setStatus("Testing…");
 			}
-			case "offline": {
-				setStatus("Collector offline — is the MCP server running?");
 
-				return;
+			const result = (await chrome.runtime.sendMessage({ type: "testConnection" })) as TestConnectionResponse;
+
+			switch (result.state) {
+				case "unpaired": {
+					setStatus("No token saved yet — paste the one from ~/.claudback/token.");
+
+					return;
+				}
+				case "offline": {
+					setStatus("Collector offline — is the MCP server running?");
+
+					return;
+				}
+				case "synced":
+				case "pending": {
+					setStatus("Connected to the local collector.");
+
+					return;
+				}
+				default: {
+					setStatus("Unexpected response from the extension — try again.");
+				}
 			}
-			default: {
-				setStatus("Connected to the local collector.");
-			}
-		}
-	});
+		})().catch(reportError);
+	};
+
+	saveBtn.addEventListener("click", onClick);
+	testBtn.addEventListener("click", onClick);
 }
 
-void init();
+function reportError(error: unknown): void {
+	console.error("[claudback] options error:", error);
+	setStatus("Something went wrong — reload this page and try again.");
+}
+
+void init().catch(reportError);

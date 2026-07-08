@@ -465,6 +465,16 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 	})();
 });
 
+// First install opens the setup guide, which walks through registering the
+// MCP server and pairing the token. Updates don't reopen it.
+chrome.runtime.onInstalled.addListener(({ reason }) => {
+	if (reason === "install") {
+		chrome.tabs.create({ url: chrome.runtime.getURL("onboarding.html") }).catch((error: unknown) => {
+			console.error("[claudback] failed to open onboarding:", error);
+		});
+	}
+});
+
 chrome.tabs.onRemoved.addListener((tabId) => {
 	enabledTabs.delete(tabId);
 	pendingEnables.delete(tabId);

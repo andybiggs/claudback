@@ -13,7 +13,7 @@ const ICON_SIZES = [16, 32, 48, 128];
 async function copyStaticFiles() {
 	await mkdir(`${outdir}/icons`, { recursive: true });
 	await Promise.all([
-		...["manifest.json", "src/popup.html", "src/options.html"].map(async (file) => {
+		...["manifest.json", "src/popup.html", "src/options.html", "src/onboarding.html"].map(async (file) => {
 			const dest = `${outdir}/${file.split("/").pop()}`;
 
 			await copyFile(root(`./${file}`), dest);
@@ -30,6 +30,7 @@ const buildOptions = {
 		content: root("./src/content.ts"),
 		popup: root("./src/popup.ts"),
 		options: root("./src/options.ts"),
+		onboarding: root("./src/onboarding.ts"),
 	},
 	outdir,
 	bundle: true,

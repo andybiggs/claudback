@@ -1,35 +1,74 @@
 # Claudback
 
-Claudback is a visual-feedback overlay for pinning comments to elements on any web page. It ships as a Chrome extension, and the comments are read by Claude through a local MCP server.
+**Comment on your page. Claude reads it.**
 
-Status: pre-v1, under active development.
+Claudback is a Chrome extension for pinning visual-feedback comments to elements on any web page, plus a local MCP server (`claudback-mcp`) that lets Claude read them and make the changes. The main use case: iterate on a local build or prototype with Claude Code without screenshots or "the third button in the sidebar" descriptions — click the thing, say what you want, ask Claude to check your comments.
 
-See [PLAN.md](./PLAN.md) for the full architecture and phase plan.
+Everything stays on your machine: comments sync to a loopback-only collector and live in `~/.claudback/`.
 
-## Setup
+**Docs & 101:** https://andybiggs.github.io/Claudback/ · **Status:** pre-v1. See [PLAN.md](./PLAN.md) for architecture and the security model, [RELEASING.md](./RELEASING.md) for the release process.
 
-### 1. Install and build
+## Quick start
+
+1. **Install the extension** — from the Chrome Web Store (link coming soon — until then, see [Load the extension from source](#load-the-extension-from-source) below). A setup guide opens on install.
+2. **Register the MCP server** — for Claude Code:
+
+   ```sh
+   claude mcp add claudback -- npx -y claudback-mcp
+   ```
+
+   Or for Claude Desktop, add to `claude_desktop_config.json`:
+
+   ```json
+   {
+   	"mcpServers": {
+   		"claudback": {
+   			"command": "npx",
+   			"args": ["-y", "claudback-mcp"]
+   		}
+   	}
+   }
+   ```
+
+3. **Pair** — the server saves a pairing token to `~/.claudback/token` on first run (also printed to stderr). Paste it into the extension's setup page.
+4. **Annotate** — click the Claudback icon on any tab → **Enable**, grant the per-site permission, and pin comments with the floating button.
+5. **Ask Claude** — "check my claudback comments and make the changes." Claude reads them via the `get_comments` tool; `list_origins`, `resolve_comment`, and `clear_comments` are also available.
+
+## Development
 
 ```sh
 npm install
-npm run build --workspace=claudback-mcp
+npm run typecheck   # tsc -b across all packages
+npm test            # vitest across all packages
+```
+
+Repo layout (npm workspaces):
+
+```
+packages/
+  shared/       zod comment schema, constants, selector capture
+  extension/    MV3 extension
+  mcp-server/   stdio MCP server + embedded collector
+```
+
+Each package builds via `npm run build --workspace=<name>`. `npm run zip --workspace=@claudback/extension` produces the Web Store zip.
+
+### Load the extension from source
+
+```sh
 npm run build --workspace=@claudback/extension
 ```
 
-### 2. Start the MCP server
+Open `chrome://extensions`, enable Developer mode, click **Load unpacked**, select `packages/extension/dist/`. The setup guide opens automatically on first install (or via **Pairing & options → Open setup guide**).
 
-The server is a stdio process — Claude starts and stops it, you don't run it standalone in normal use. Register it once:
+### Run the server from source
 
 ```sh
+npm run build --workspace=claudback-mcp
 claude mcp add claudback -- node /absolute/path/to/Claudback/packages/mcp-server/dist/bin.js
 ```
 
-The next time Claude Code (or Claude Desktop) connects to the `claudback` MCP server, it launches `dist/bin.js`, which:
-
-- generates a pairing token on first run at `~/.claudback/token` (mode `0600`) — also printed to stderr, e.g. `[claudback] pairing token generated at /Users/you/.claudback/token`
-- starts the loopback collector at `http://127.0.0.1:4319`
-
-To generate the token without waiting on an MCP client (e.g. to pair the extension before your first Claude session), run it directly once and stop it:
+To generate the pairing token without waiting on an MCP client, run it directly once and stop it:
 
 ```sh
 node packages/mcp-server/dist/bin.js
@@ -37,9 +76,10 @@ node packages/mcp-server/dist/bin.js
 cat ~/.claudback/token
 ```
 
-#### Running the collector without an active Claude session
+<details>
+<summary><strong>Advanced: run the collector without an active Claude session</strong></summary>
 
-The stdio MCP transport needs an MCP client (Claude) to spawn it, but the collector the extension talks to is just a plain HTTP server in the same process — so you can keep it running independently of Claude, and annotate any time. Everything reads/writes the same files under `~/.claudback/` (token, store), so it's safe to also let Claude spawn its own instance later via `claude mcp add` — token and comments stay in sync regardless of which process's collector actually handled a given request.
+The stdio MCP transport needs an MCP client (Claude) to spawn it, but the collector the extension talks to is just a plain HTTP server in the same process — so you can keep it running independently of Claude, and annotate any time. Everything reads/writes the same files under `~/.claudback/` (token, store), so it's safe to also let Claude spawn its own instance later — token and comments stay in sync regardless of which process's collector actually handled a given request.
 
 **Manual background** — run it yourself when you want it up; stops on logout/reboot:
 
@@ -87,22 +127,4 @@ To stop it and remove the auto-start:
 launchctl bootout gui/$(id -u)/dev.claudback.mcp-server
 ```
 
-### 3. Load the extension
-
-1. Open `chrome://extensions`, enable Developer mode, click **Load unpacked**, select `packages/extension/dist/`.
-2. Click the Claudback icon → **Pairing & options** → paste the token from `~/.claudback/token` → **Save token** → **Test connection** (expect "Connected to the local collector").
-3. On any page, click the Claudback icon → **Enable** for this tab, grant the per-site permission when prompted.
-4. Use the floating buttons to pin a comment to an element.
-
-### 4. Read comments from Claude
-
-With the MCP server registered and running, ask Claude to use the `get_comments` tool (optionally `origin`/`urlContains` filters, `consume: true` to apply clear/keep mode). `list_origins`, `resolve_comment`, and `clear_comments` are also available — see [PLAN.md](./PLAN.md) for the full tool surface and security model.
-
-## Development
-
-```sh
-npm run typecheck   # tsc -b across all packages
-npm test            # vitest across all packages
-```
-
-Each package also builds independently via `npm run build --workspace=<name>`.
+</details>

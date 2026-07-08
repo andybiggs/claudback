@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Claudback — Privacy Policy</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600&display=swap"
+			rel="stylesheet"
+		/>
+		<style>
+			:root {
+				--ink: #191c1f;
+				--secondary-text: #5c6167;
+				--faint-text: #8b9096;
+				--border: #e5e7e9;
+				--green-strong: #0c6e38;
+				--mark-bg: #0f8a46;
+				--mark-dot: #fff;
+				--ghost-bg: #f3f4f4;
+				--surface: #fff;
+			}
+			@media (prefers-color-scheme: dark) {
+				:root {
+					--ink: #e9ecee;
+					--secondary-text: #9aa1a8;
+					--faint-text: #6e757c;
+					--border: #2b3036;
+					--green-strong: #3fc479;
+					--mark-bg: #3fc479;
+					--mark-dot: #141619;
+					--ghost-bg: #1c1f23;
+					--surface: #141619;
+				}
+			}
+			body {
+				margin: 0;
+				font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+				color: var(--ink);
+				background: var(--surface);
+				line-height: 1.6;
+			}
+			main {
+				max-width: 680px;
+				margin: 0 auto;
+				padding: 40px 24px 80px;
+			}
+			.brand {
+				display: flex;
+				align-items: center;
+				gap: 12px;
+				margin-bottom: 32px;
+				text-decoration: none;
+				color: var(--ink);
+			}
+			.mark {
+				width: 24px;
+				height: 24px;
+				border-radius: 50% 50% 50% 3px;
+				background: var(--mark-bg);
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				flex-shrink: 0;
+			}
+			.mark::after {
+				content: "";
+				width: 7px;
+				height: 7px;
+				border-radius: 50%;
+				background: var(--mark-dot);
+			}
+			h1,
+			h2,
+			.name {
+				font-family: "Space Grotesk", ui-sans-serif, sans-serif;
+				font-weight: 600;
+				letter-spacing: -0.02em;
+			}
+			.name {
+				font-size: 16px;
+			}
+			h1 {
+				font-size: 28px;
+				margin: 0 0 6px;
+			}
+			h2 {
+				font-size: 18px;
+				margin: 34px 0 8px;
+			}
+			p,
+			li {
+				font-size: 15px;
+				color: var(--secondary-text);
+			}
+			code {
+				font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+				background: var(--ghost-bg);
+				padding: 1px 6px;
+				border-radius: 4px;
+				font-size: 13px;
+				color: var(--ink);
+			}
+			.updated {
+				font-size: 13px;
+				color: var(--faint-text);
+				margin-bottom: 28px;
+			}
+			a {
+				color: var(--green-strong);
+			}
+		</style>
+	</head>
+	<body>
+		<main>
+			<a class="brand" href="index.html">
+				<span class="mark"></span>
+				<span class="name">Claudback</span>
+			</a>
+
+			<h1>Privacy Policy</h1>
+			<p class="updated">Last updated: 7 July 2026</p>
+
+			<p>
+				Claudback is built to keep your data on your own machine. The extension and the
+				<code>claudback-mcp</code> server have no backend: there are no Claudback servers, no
+				accounts, and no analytics.
+			</p>
+
+			<h2>What the extension handles</h2>
+			<ul>
+				<li>
+					<strong>Comments you write</strong>, together with the page URL, the element's CSS
+					selector, and a minimal excerpt of the element's HTML (tag and attribute
+					<em>names</em> only — attribute values are stripped so tokens or personal data in the
+					page can't leak into a comment).
+				</li>
+				<li>
+					<strong>A pairing token</strong> you paste in, stored in the browser's
+					<code>chrome.storage.local</code>.
+				</li>
+			</ul>
+
+			<h2>Where that data goes</h2>
+			<p>
+				Comments are sent to exactly one place: a collector run by the
+				<code>claudback-mcp</code> server <strong>on your own computer</strong>, listening only
+				on <code>127.0.0.1</code> (localhost). They are stored in
+				<code>~/.claudback/comments.json</code>. Nothing is transmitted to the developer or to
+				any third party. Claude reads the comments locally through MCP tools when you ask it
+				to.
+			</p>
+
+			<h2>What we collect</h2>
+			<p>Nothing. No telemetry, no analytics, no crash reporting, no remote logging.</p>
+
+			<h2>Permissions</h2>
+			<ul>
+				<li><code>storage</code> — keeps the pairing token and buffers unsent comments locally.</li>
+				<li><code>activeTab</code> and <code>scripting</code> — inject the comment overlay, only on tabs you explicitly enable.</li>
+				<li><code>alarms</code> — periodically retries syncing buffered comments to the local collector.</li>
+				<li>Per-site host permissions — requested individually when you enable Claudback on a site; never granted broadly.</li>
+			</ul>
+
+			<h2>Deleting your data</h2>
+			<p>
+				Clear comments from the extension's list panel or via the <code>clear_comments</code>
+				tool, or delete the <code>~/.claudback/</code> directory. Uninstalling the extension
+				removes the token and any locally buffered comments.
+			</p>
+
+			<h2>Contact</h2>
+			<p>
+				Questions or concerns: open an issue at
+				<a href="https://github.com/andybiggs/Claudback/issues">github.com/andybiggs/Claudback</a>.
+			</p>
+		</main>
+	</body>
+</html>

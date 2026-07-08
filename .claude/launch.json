@@ -6,6 +6,12 @@
 			"runtimeExecutable": "npx",
 			"runtimeArgs": ["serve", "packages/extension/dist", "-l", "4400"],
 			"port": 4400
+		},
+		{
+			"name": "docs",
+			"runtimeExecutable": "npx",
+			"runtimeArgs": ["serve", "docs", "-l", "4173"],
+			"port": 4173
 		}
 	]
 }
