@@ -49,6 +49,11 @@ function reportState(state: TestConnectionResponse["state"]): boolean {
 
 			return false;
 		}
+		case "unauthorized": {
+			setStatus("Token rejected by the collector — paste the current one from ~/.claudback/token.");
+
+			return false;
+		}
 		case "synced":
 		case "pending": {
 			setStatus("Connected to the local collector.", true);

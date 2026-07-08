@@ -1,10 +1,8 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
-import { mkdir, writeFile } from "node:fs/promises";
 
-import { DEFAULT_PORT, TOKEN_HEADER, newCommentInputSchema, storeModeSchema } from "@claudback/shared";
+import { COMMENT_TEXT_MAX_LENGTH, DEFAULT_PORT, TOKEN_HEADER, newCommentInputSchema } from "@claudback/shared";
 
 import { tokenMatches } from "./auth.js";
-import { CLAUDBACK_DIR, PORT_FILE } from "./paths.js";
 import { sanitizeText } from "./sanitize.js";
 import { applyCorsHeaders, originAllowed } from "./security.js";
 import type { StoreApi } from "./store-api.js";
@@ -164,8 +162,8 @@ export function createCollector(store: StoreApi, token: string): Server {
 
 				const text = (body as Record<string, unknown>).text;
 
-				if (typeof text !== "string" || text.length === 0 || text.length > 4096) {
-					send(res, 400, { error: "text must be a non-empty string of at most 4096 chars" });
+				if (typeof text !== "string" || text.length === 0 || text.length > COMMENT_TEXT_MAX_LENGTH) {
+					send(res, 400, { error: `text must be a non-empty string of at most ${COMMENT_TEXT_MAX_LENGTH} chars` });
 
 					return;
 				}
@@ -203,10 +201,17 @@ export function createCollector(store: StoreApi, token: string): Server {
 
 			if (path === "/clear" && method === "POST") {
 				const body = await readBody(req);
-				const clearOrigin =
-					body !== undefined && typeof body === "object" && body !== null
-						? (body as Record<string, unknown>).origin
-						: undefined;
+
+				// A bodyless request is a legitimate "clear everything", but a
+				// malformed body must not silently widen an origin-scoped clear
+				// into a global one.
+				if (body === undefined || typeof body !== "object" || body === null) {
+					send(res, 400, { error: "invalid or oversized body" });
+
+					return;
+				}
+
+				const clearOrigin = (body as Record<string, unknown>).origin;
 				const removed = await store.clearComments(typeof clearOrigin === "string" ? clearOrigin : undefined);
 
 				send(res, 200, { removed });
@@ -223,7 +228,16 @@ export function createCollector(store: StoreApi, token: string): Server {
 					return;
 				}
 
-				const mode = storeModeSchema.parse((body as Record<string, unknown>).mode);
+				// storeModeSchema coerces unknown values to "clear" (lenient for
+				// store reads); the HTTP API must reject them instead.
+				const mode = (body as Record<string, unknown>).mode;
+
+				if (mode !== "clear" && mode !== "keep") {
+					send(res, 400, { error: "mode must be 'clear' or 'keep'" });
+
+					return;
+				}
+
 				const updated = await store.setMode(mode);
 
 				send(res, 200, updated);
@@ -251,18 +265,13 @@ export async function startCollector(store: StoreApi, token: string): Promise<{ 
 	const port = await new Promise<number>((resolve, reject) => {
 		server.once("error", (error: NodeJS.ErrnoException) => {
 			if (error.code === "EADDRINUSE") {
-				// Default port taken (another collector or unrelated process):
-				// fall back to an ephemeral port and advertise it via the port
-				// file so the extension's sync layer can discover it.
-				server.listen(0, "127.0.0.1", () => {
-					const address = server.address();
-
-					if (address && typeof address === "object") {
-						resolve(address.port);
-					} else {
-						reject(new Error("collector bound without an address"));
-					}
-				});
+				// The extension only ever talks to the default port, so falling
+				// back to another port would just leave a silently broken pairing.
+				reject(
+					new Error(
+						`[claudback] port ${DEFAULT_PORT} is already in use — is another claudback-mcp instance running?`,
+					),
+				);
 			} else {
 				reject(error);
 			}
@@ -273,9 +282,6 @@ export async function startCollector(store: StoreApi, token: string): Promise<{ 
 			resolve(DEFAULT_PORT);
 		});
 	});
-
-	await mkdir(CLAUDBACK_DIR, { recursive: true });
-	await writeFile(PORT_FILE, `${port}\n`, "utf8");
 
 	return { server, port };
 }

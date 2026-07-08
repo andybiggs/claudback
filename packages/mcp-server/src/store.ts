@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { randomUUID } from "node:crypto";
 
@@ -27,25 +27,75 @@ function matchesFilter(comment: Comment, filter?: CommentFilter): boolean {
 // Every method reads and writes the file fresh: the file can change
 // out-of-band (extension sync, manual edits), so no in-memory state is kept.
 export function createStore(filePath: string): StoreApi {
-	async function read(): Promise<Store> {
-		try {
-			const raw = await readFile(filePath, "utf8");
-			const parsed = JSON.parse(raw);
-			const result = storeSchema.safeParse(parsed);
+	// An unreadable store must never be silently replaced: the next write would
+	// destroy the user's comments. Set the bad file aside so it can be recovered.
+	async function quarantine(reason: string): Promise<Store> {
+		const corruptPath = `${filePath}.corrupt-${new Date().toISOString()}`;
 
-			if (!result.success) {
+		console.error(`[claudback] store file ${filePath} is unreadable (${reason}); moving it to ${corruptPath}`);
+
+		try {
+			await rename(filePath, corruptPath);
+		} catch (error) {
+			console.error("[claudback] failed to set aside corrupt store file:", error);
+		}
+
+		return emptyStore();
+	}
+
+	async function read(): Promise<Store> {
+		let raw: string;
+
+		try {
+			raw = await readFile(filePath, "utf8");
+		} catch (error) {
+			if ((error as NodeJS.ErrnoException).code === "ENOENT") {
 				return emptyStore();
 			}
 
-			return result.data;
-		} catch {
-			return emptyStore();
+			return quarantine(String(error));
 		}
+
+		let parsed: unknown;
+
+		try {
+			parsed = JSON.parse(raw);
+		} catch {
+			return quarantine("invalid JSON");
+		}
+
+		const result = storeSchema.safeParse(parsed);
+
+		if (!result.success) {
+			return quarantine("failed schema validation");
+		}
+
+		return result.data;
 	}
 
 	async function write(store: Store): Promise<void> {
-		await mkdir(dirname(filePath), { recursive: true });
-		await writeFile(filePath, `${JSON.stringify(store, null, 2)}\n`, "utf8");
+		// 0700/0600: the store holds user-authored comment text; keep it private
+		// to this user, matching the token file.
+		await mkdir(dirname(filePath), { recursive: true, mode: 0o700 });
+
+		// Write-then-rename so a crash mid-write can never leave a truncated
+		// store behind.
+		const tmpPath = `${filePath}.tmp`;
+
+		await writeFile(tmpPath, `${JSON.stringify(store, null, 2)}\n`, { encoding: "utf8", mode: 0o600 });
+		await rename(tmpPath, filePath);
+	}
+
+	// Serialize mutations: each one is a read-modify-write of the whole file,
+	// so two running concurrently would drop one's changes.
+	let mutationChain: Promise<unknown> = Promise.resolve();
+
+	function mutate<T>(operation: () => Promise<T>): Promise<T> {
+		const result = mutationChain.then(operation, operation);
+
+		mutationChain = result.catch(() => undefined);
+
+		return result;
 	}
 
 	async function addComment(input: NewCommentInput): Promise<Comment> {
@@ -215,15 +265,15 @@ export function createStore(filePath: string): StoreApi {
 
 	return {
 		read,
-		addComment,
-		updateCommentText,
-		deleteComment,
+		addComment: (input) => mutate(() => addComment(input)),
+		updateCommentText: (id, text) => mutate(() => updateCommentText(id, text)),
+		deleteComment: (id) => mutate(() => deleteComment(id)),
 		getComments,
-		consumeComments,
-		resolveComment,
-		unresolveComment,
-		clearComments,
-		setMode,
+		consumeComments: (filter) => mutate(() => consumeComments(filter)),
+		resolveComment: (id) => mutate(() => resolveComment(id)),
+		unresolveComment: (id) => mutate(() => unresolveComment(id)),
+		clearComments: (origin) => mutate(() => clearComments(origin)),
+		setMode: (mode) => mutate(() => setMode(mode)),
 		listOrigins,
 	};
 }

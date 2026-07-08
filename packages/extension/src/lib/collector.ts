@@ -2,6 +2,16 @@ import { DEFAULT_PORT, TOKEN_HEADER, type Comment, type NewCommentInput, type St
 
 // A thin typed client over the loopback collector. Every request carries the
 // pairing token; the worker constructs one of these once it has a token.
+export class CollectorHttpError extends Error {
+	readonly status: number;
+
+	constructor(status: number) {
+		super(`collector responded ${status}`);
+		this.name = "CollectorHttpError";
+		this.status = status;
+	}
+}
+
 export interface CollectorConfig {
 	token: string;
 	port?: number;
@@ -23,7 +33,7 @@ async function request<T>(config: CollectorConfig, path: string, init: RequestIn
 	});
 
 	if (!res.ok) {
-		throw new Error(`collector responded ${res.status}`);
+		throw new CollectorHttpError(res.status);
 	}
 
 	return (await res.json()) as T;

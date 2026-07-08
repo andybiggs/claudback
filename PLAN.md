@@ -6,7 +6,7 @@ Claudback is a visual-feedback overlay for pinning comments to elements on any w
 
 ## Decisions
 
-- **Visibility**: repo stays private until a security-auditor review passes; then consider open sourcing. Public-distribution prep (npm packaging, Web Store zip + listing draft, onboarding, GitHub Pages docs) is complete — publication steps live in [RELEASING.md](./RELEASING.md) and are gated on that audit.
+- **Visibility**: ✅ security audit passed 2026-07-08 (full-repo review + security-auditor pass; findings fixed in [PR #9](https://github.com/andybiggs/Claudback/pull/9)). Verdict: GO for open-sourcing the code. Public *distribution* (Web Store publish / npx promotion) has one remaining gate: pin the published extension ID in the origin allowlist at listing time (`packages/mcp-server/src/security.ts`). Publication steps live in [RELEASING.md](./RELEASING.md).
 - **Pairing**: paste-a-token (server generates `~/.claudback/token`; pasted once into extension options).
 - **`resolve_comment` is in v1**, and its behaviour follows the store's clear/keep mode: in **clear** mode (the default) resolving a comment removes it; in **keep** mode resolved comments are retained and the extension renders them as resolved on next sync. The mode is toggleable from the extension popup.
 - **Distribution**: run the MCP server from the local clone first; publish `claudback-mcp` to npm at the end of Phase 3.
@@ -39,7 +39,7 @@ Claudback is a visual-feedback overlay for pinning comments to elements on any w
 | Drive-by localhost requests from web pages | Origin allowlist: only `chrome-extension://<our-id>`; no wildcard CORS; explicit Private Network Access handling. |
 | Prompt injection via comment text | Pull-only, tool-gated: comments enter context only via explicit tool calls; output wraps each comment in an untrusted-data envelope; text length-capped and control-chars stripped at ingest. |
 | Running by default | Off by default at both ends: per-tab opt-in in the extension popup; collector exists only while Claude runs the MCP server. |
-| Port config ambiguity | Port 4319 defined once in `packages/shared`; if taken, server picks a free port and writes `~/.claudback/port`. |
+| Port config ambiguity | Port 4319 defined once in `packages/shared`; if taken, the server fails fast with a clear error (the extension can only reach the fixed port, so a silent fallback would just misreport as "offline"). |
 | `mode` default mismatch | Missing `mode` parses as `"clear"`; store schema validated on every read. |
 
 Extra hardening: zod-validated request bodies with size caps (text 4 KB, HTML excerpt 2 KB); `htmlExcerpt` sanitised to tag/attribute *names* only (no attribute values → no leaked tokens/PII); minimal extension permissions (`activeTab` + `storage` + per-site host grants, not `<all_urls>`).

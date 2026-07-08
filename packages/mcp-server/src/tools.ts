@@ -5,8 +5,22 @@ import { renderCommentsEnvelope } from "./envelope.js";
 import type { CommentFilter, StoreApi } from "./store-api.js";
 
 // The MCP text-content shape every tool handler returns.
-function textResult(text: string): { content: [{ type: "text"; text: string }] } {
+type ToolResult = { content: [{ type: "text"; text: string }]; isError?: true };
+
+function textResult(text: string): ToolResult {
 	return { content: [{ type: "text", text }] };
+}
+
+// A store failure (e.g. an unwritable ~/.claudback) must surface as an MCP
+// error result, not a raw exception that kills the tool call.
+async function guarded(name: string, run: () => Promise<ToolResult>): Promise<ToolResult> {
+	try {
+		return await run();
+	} catch (error) {
+		console.error(`[claudback] ${name} failed:`, error);
+
+		return { content: [{ type: "text", text: `Claudback ${name} failed: ${String(error)}` }], isError: true };
+	}
 }
 
 function toFilter(args: { origin?: string; urlContains?: string }): CommentFilter | undefined {
@@ -20,7 +34,7 @@ function toFilter(args: { origin?: string; urlContains?: string }): CommentFilte
 export async function getCommentsHandler(
 	store: StoreApi,
 	args: { origin?: string; urlContains?: string; consume?: boolean },
-): Promise<{ content: [{ type: "text"; text: string }] }> {
+): Promise<ToolResult> {
 	const filter = toFilter(args);
 
 	if (args.consume) {
@@ -36,7 +50,7 @@ export async function getCommentsHandler(
 
 export async function listOriginsHandler(
 	store: StoreApi,
-): Promise<{ content: [{ type: "text"; text: string }] }> {
+): Promise<ToolResult> {
 	const origins = await store.listOrigins();
 
 	return textResult(JSON.stringify(origins, null, 2));
@@ -45,7 +59,7 @@ export async function listOriginsHandler(
 export async function resolveCommentHandler(
 	store: StoreApi,
 	args: { id: string },
-): Promise<{ content: [{ type: "text"; text: string }] }> {
+): Promise<ToolResult> {
 	const outcome = await store.resolveComment(args.id);
 
 	if (outcome === "not_found") {
@@ -62,7 +76,7 @@ export async function resolveCommentHandler(
 export async function clearCommentsHandler(
 	store: StoreApi,
 	args: { origin?: string },
-): Promise<{ content: [{ type: "text"; text: string }] }> {
+): Promise<ToolResult> {
 	const removed = await store.clearComments(args.origin);
 
 	return textResult(`Removed ${removed} comment(s).`);
@@ -84,7 +98,7 @@ export function registerTools(server: McpServer, store: StoreApi): void {
 				consume: z.boolean().optional(),
 			},
 		},
-		(args) => getCommentsHandler(store, args),
+		(args) => guarded("get_comments", () => getCommentsHandler(store, args)),
 	);
 
 	server.registerTool(
@@ -93,7 +107,7 @@ export function registerTools(server: McpServer, store: StoreApi): void {
 			description: "List sites (origins) that have Claudback comments, with total and unresolved counts.",
 			inputSchema: {},
 		},
-		() => listOriginsHandler(store),
+		() => guarded("list_origins", () => listOriginsHandler(store)),
 	);
 
 	server.registerTool(
@@ -107,7 +121,7 @@ export function registerTools(server: McpServer, store: StoreApi): void {
 				id: z.string(),
 			},
 		},
-		(args) => resolveCommentHandler(store, args),
+		(args) => guarded("resolve_comment", () => resolveCommentHandler(store, args)),
 	);
 
 	server.registerTool(
@@ -118,6 +132,6 @@ export function registerTools(server: McpServer, store: StoreApi): void {
 				origin: z.string().optional(),
 			},
 		},
-		(args) => clearCommentsHandler(store, args),
+		(args) => guarded("clear_comments", () => clearCommentsHandler(store, args)),
 	);
 }

@@ -1,12 +1,12 @@
-import type { NewCommentInput } from "@claudback/shared";
+import { CollectorHttpError } from "./collector.js";
 
 // Comments created while the collector is unreachable are appended to a buffer
 // in chrome.storage.local and flushed later, in order. The flush is factored
 // out of the chrome APIs so it can be tested against plain functions.
-export interface BufferDeps {
-	read(): Promise<NewCommentInput[]>;
-	write(items: NewCommentInput[]): Promise<void>;
-	post(input: NewCommentInput): Promise<void>;
+export interface BufferDeps<T> {
+	read(): Promise<T[]>;
+	write(items: T[]): Promise<void>;
+	post(item: T): Promise<void>;
 }
 
 export interface FlushResult {
@@ -14,26 +14,40 @@ export interface FlushResult {
 	remaining: number;
 }
 
-// Post buffered comments oldest-first. Stop at the first failure and persist
-// the unsent tail (failed item included) so ordering is preserved and nothing
-// is dropped; the caller retries later with backoff.
-export async function flushBuffer(deps: BufferDeps): Promise<FlushResult> {
+// Post buffered comments oldest-first. A 4xx response (except 401) means the
+// collector rejected that specific item — retrying it can never succeed, so
+// drop it and keep flushing the rest. A 401 means the pairing token itself was
+// rejected, and any other failure (network error, 5xx) means the collector is
+// unreachable or unhealthy: stop and persist the unsent tail (failed item
+// included) so ordering is preserved; the caller retries later.
+export async function flushBuffer<T>(deps: BufferDeps<T>): Promise<FlushResult> {
 	const items = await deps.read();
-	let index = 0;
+	const remaining: T[] = [];
+	let flushed = 0;
+	let stoppedAt = -1;
 
-	for (; index < items.length; index += 1) {
+	for (let index = 0; index < items.length; index += 1) {
 		try {
 			await deps.post(items[index]);
-		} catch {
+			flushed += 1;
+		} catch (error) {
+			if (error instanceof CollectorHttpError && error.status >= 400 && error.status < 500 && error.status !== 401) {
+				console.error("[claudback] collector rejected buffered comment, dropping it:", error.status);
+				continue;
+			}
+
+			stoppedAt = index;
 			break;
 		}
 	}
 
-	const remaining = items.slice(index);
+	if (stoppedAt >= 0) {
+		remaining.push(...items.slice(stoppedAt));
+	}
 
-	if (index > 0) {
+	if (remaining.length !== items.length) {
 		await deps.write(remaining);
 	}
 
-	return { flushed: index, remaining: remaining.length };
+	return { flushed, remaining: remaining.length };
 }

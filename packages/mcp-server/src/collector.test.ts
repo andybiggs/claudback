@@ -196,6 +196,156 @@ describe("collector", () => {
 		expect(body.mode).toBe("keep");
 	});
 
+	it("updates a comment's text via PUT /comments/:id", async () => {
+		const postRes = await fetch(`${baseUrl}/comments`, {
+			method: "POST",
+			headers: { [TOKEN_HEADER]: TOKEN, "content-type": "application/json" },
+			body: JSON.stringify(validCommentPayload()),
+		});
+		const created = (await postRes.json()) as { id: string };
+
+		const putRes = await fetch(`${baseUrl}/comments/${created.id}`, {
+			method: "PUT",
+			headers: { [TOKEN_HEADER]: TOKEN, "content-type": "application/json" },
+			body: JSON.stringify({ text: "updated text" }),
+		});
+
+		expect(putRes.status).toBe(200);
+
+		const updated = (await putRes.json()) as { text: string };
+
+		expect(updated.text).toBe("updated text");
+	});
+
+	it("rejects a PUT with text over the shared max length", async () => {
+		const postRes = await fetch(`${baseUrl}/comments`, {
+			method: "POST",
+			headers: { [TOKEN_HEADER]: TOKEN, "content-type": "application/json" },
+			body: JSON.stringify(validCommentPayload()),
+		});
+		const created = (await postRes.json()) as { id: string };
+
+		const putRes = await fetch(`${baseUrl}/comments/${created.id}`, {
+			method: "PUT",
+			headers: { [TOKEN_HEADER]: TOKEN, "content-type": "application/json" },
+			body: JSON.stringify({ text: "x".repeat(4097) }),
+		});
+
+		expect(putRes.status).toBe(400);
+	});
+
+	it("sanitizes updated text via PUT /comments/:id", async () => {
+		const postRes = await fetch(`${baseUrl}/comments`, {
+			method: "POST",
+			headers: { [TOKEN_HEADER]: TOKEN, "content-type": "application/json" },
+			body: JSON.stringify(validCommentPayload()),
+		});
+		const created = (await postRes.json()) as { id: string };
+
+		const putRes = await fetch(`${baseUrl}/comments/${created.id}`, {
+			method: "PUT",
+			headers: { [TOKEN_HEADER]: TOKEN, "content-type": "application/json" },
+			body: JSON.stringify({ text: "hello‮world" }),
+		});
+		const updated = (await putRes.json()) as { text: string };
+
+		expect(updated.text).toBe("helloworld");
+	});
+
+	it("deletes a comment via DELETE /comments/:id", async () => {
+		const postRes = await fetch(`${baseUrl}/comments`, {
+			method: "POST",
+			headers: { [TOKEN_HEADER]: TOKEN, "content-type": "application/json" },
+			body: JSON.stringify(validCommentPayload()),
+		});
+		const created = (await postRes.json()) as { id: string };
+
+		const deleteRes = await fetch(`${baseUrl}/comments/${created.id}`, {
+			method: "DELETE",
+			headers: { [TOKEN_HEADER]: TOKEN },
+		});
+
+		expect(deleteRes.status).toBe(200);
+		expect(await store.getComments()).toHaveLength(0);
+	});
+
+	it("filters GET /comments by origin", async () => {
+		for (const origin of ["https://a.com", "https://b.com"]) {
+			await fetch(`${baseUrl}/comments`, {
+				method: "POST",
+				headers: { [TOKEN_HEADER]: TOKEN, "content-type": "application/json" },
+				body: JSON.stringify(validCommentPayload({ origin })),
+			});
+		}
+
+		const res = await fetch(`${baseUrl}/comments?origin=${encodeURIComponent("https://a.com")}`, {
+			headers: { [TOKEN_HEADER]: TOKEN },
+		});
+		const body = (await res.json()) as { comments: Array<{ origin: string }> };
+
+		expect(body.comments).toHaveLength(1);
+		expect(body.comments[0].origin).toBe("https://a.com");
+	});
+
+	it("POST /clear with an origin only clears that origin", async () => {
+		for (const origin of ["https://a.com", "https://b.com"]) {
+			await fetch(`${baseUrl}/comments`, {
+				method: "POST",
+				headers: { [TOKEN_HEADER]: TOKEN, "content-type": "application/json" },
+				body: JSON.stringify(validCommentPayload({ origin })),
+			});
+		}
+
+		const clearRes = await fetch(`${baseUrl}/clear`, {
+			method: "POST",
+			headers: { [TOKEN_HEADER]: TOKEN, "content-type": "application/json" },
+			body: JSON.stringify({ origin: "https://a.com" }),
+		});
+
+		expect(clearRes.status).toBe(200);
+		expect((await clearRes.json()) as { removed: number }).toEqual({ removed: 1 });
+
+		const remaining = await store.getComments();
+
+		expect(remaining).toHaveLength(1);
+		expect(remaining[0].origin).toBe("https://b.com");
+	});
+
+	it("POST /clear with a malformed JSON body is a 400, not a global clear", async () => {
+		await fetch(`${baseUrl}/comments`, {
+			method: "POST",
+			headers: { [TOKEN_HEADER]: TOKEN, "content-type": "application/json" },
+			body: JSON.stringify(validCommentPayload()),
+		});
+
+		const clearRes = await fetch(`${baseUrl}/clear`, {
+			method: "POST",
+			headers: { [TOKEN_HEADER]: TOKEN, "content-type": "application/json" },
+			body: "{ not json",
+		});
+
+		expect(clearRes.status).toBe(400);
+		expect(await store.getComments()).toHaveLength(1);
+	});
+
+	it("404s an unknown path", async () => {
+		const res = await fetch(`${baseUrl}/nope`, {
+			headers: { [TOKEN_HEADER]: TOKEN },
+		});
+
+		expect(res.status).toBe(404);
+	});
+
+	it("400s a PUT /mode with an invalid payload", async () => {
+		const res = await fetch(`${baseUrl}/mode`, {
+			method: "PUT",
+			headers: { [TOKEN_HEADER]: TOKEN, "content-type": "application/json" },
+			body: JSON.stringify({ mode: "bogus" }),
+		});
+
+		expect(res.status).toBe(400);
+	});
+
 	it("strips control characters from posted text", async () => {
 		const postRes = await fetch(`${baseUrl}/comments`, {
 			method: "POST",

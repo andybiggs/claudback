@@ -18,7 +18,7 @@ export async function loadOrCreateToken(): Promise<string> {
 
 	const token = randomBytes(32).toString("hex");
 
-	await mkdir(CLAUDBACK_DIR, { recursive: true });
+	await mkdir(CLAUDBACK_DIR, { recursive: true, mode: 0o700 });
 	// 0600: the token gates writes to the store, so only this user may read it.
 	await writeFile(TOKEN_FILE, `${token}\n`, { encoding: "utf8", mode: 0o600 });
 	console.error(

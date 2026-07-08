@@ -58,6 +58,11 @@ async function init(): Promise<void> {
 
 					return;
 				}
+				case "unauthorized": {
+					setStatus("Token rejected by the collector — paste the current one from ~/.claudback/token.");
+
+					return;
+				}
 				case "synced":
 				case "pending": {
 					setStatus("Connected to the local collector.");
