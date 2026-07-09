@@ -78,6 +78,10 @@ If you want *live* sync to `~/.claudback/` while Claude is closed, you can run t
 node packages/mcp-server/dist/bin.js
 ```
 
-One caveat: the collector binds port 57463 exclusively, so while a standalone instance is running, a Claude session **cannot spawn its own** — the Claudback MCP tools (including `get_pairing_code`) will be unavailable in that session. Stop the standalone instance before working with Claude. For this reason, don't run it under a keep-alive supervisor (LaunchAgent/systemd): it will permanently starve Claude's own instance of the port.
+The collector binds port 57463 exclusively, so while a standalone instance is running, a Claude session's own process runs in shared-store mode instead — its MCP tools (including `get_pairing_code`) keep working against `~/.claudback/`, it just doesn't serve the extension itself. When the standalone instance stops, a running session takes over the port automatically within a couple of seconds.
 
 </details>
+
+## License
+
+[PolyForm Noncommercial 1.0.0](./LICENSE) — free for personal, internal, and noncommercial use. Not licensed for resale or as a paid product/service.

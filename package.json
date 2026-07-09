@@ -1,6 +1,7 @@
 {
 	"name": "claudback",
 	"private": true,
+	"license": "SEE LICENSE IN LICENSE",
 	"type": "module",
 	"engines": {
 		"node": ">=20"
