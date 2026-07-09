@@ -13,24 +13,13 @@ Made by [Andy Biggs](https://www.andybiggs.net) (NZ).
 ## Quick start
 
 1. **Install the extension** — from the Chrome Web Store (link coming soon — until then, see [Load the extension from source](#load-the-extension-from-source) below). A setup guide opens on install.
-2. **Register the MCP server** — for Claude Code:
+2. **Register the MCP server** — run this once for Claude Code (CLI):
 
    ```sh
-   claude mcp add claudback -- npx -y claudback-mcp
+   claude mcp add --scope user claudback -- npx -y claudback-mcp
    ```
 
-   Or for Claude Desktop, add to `claude_desktop_config.json`:
-
-   ```json
-   {
-   	"mcpServers": {
-   		"claudback": {
-   			"command": "npx",
-   			"args": ["-y", "claudback-mcp"]
-   		}
-   	}
-   }
-   ```
+   `--scope user` registers Claudback for every project on your machine, so you only do it once. Using the **Claude Code desktop app**? Paste the same command straight into a Claude Code chat as a prompt instead of running it in a terminal — Claude Code runs the install for you.
 
 3. **Pair** — ask Claude for a pairing code ("Give me a Claudback pairing code") and type it into the extension's setup page. Codes expire in 10 minutes and work once. Fallback: paste the long-lived token from `~/.claudback/token` (saved on the server's first run, also printed to stderr) instead.
 4. **Annotate** — click the Claudback icon on any tab → **Enable**, grant the per-site permission, and pin comments with the floating button.
@@ -67,7 +56,7 @@ Open `chrome://extensions`, enable Developer mode, click **Load unpacked**, sele
 
 ```sh
 npm run build --workspace=claudback-mcp
-claude mcp add claudback -- node /absolute/path/to/Claudback/packages/mcp-server/dist/bin.js
+claude mcp add --scope user claudback -- node /absolute/path/to/Claudback/packages/mcp-server/dist/bin.js
 ```
 
 Pairing normally happens by asking Claude for a code, but to grab the long-lived token manually without an MCP client, run the server directly once and stop it:

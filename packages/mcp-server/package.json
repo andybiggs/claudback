@@ -4,7 +4,7 @@
 	"description": "Local MCP server that lets Claude read visual-feedback comments pinned to web pages with the Claudback Chrome extension.",
 	"type": "module",
 	"bin": {
-		"claudback-mcp": "./dist/bin.js"
+		"claudback-mcp": "dist/bin.js"
 	},
 	"files": [
 		"dist",

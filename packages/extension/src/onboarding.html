@@ -344,7 +344,7 @@
 			}
 			.hint {
 				font-size: 12px;
-				color: var(--faint-text);
+				color: var(--secondary-text);
 				margin-top: 8px;
 			}
 			details {
@@ -471,41 +471,32 @@
 			</p>
 			<div class="tabs">
 				<button class="tab active" data-tab="code">Claude Code (CLI)</button>
-				<button class="tab" data-tab="desktop">Claude Desktop</button>
+				<button class="tab" data-tab="desktop">Claude Code (Desktop App)</button>
 			</div>
 			<div class="tab-panel active" data-panel="code">
 				<p>Run this in your terminal:</p>
 				<div class="code-block">
-					<pre id="cmd-code">claude mcp add claudback -- npx -y claudback-mcp</pre>
+					<pre id="cmd-code">claude mcp add --scope user claudback -- npx -y claudback-mcp</pre>
 					<button class="copy" data-copy="cmd-code">Copy</button>
 				</div>
+				<p class="hint">
+					The <code>--scope user</code> flag registers Claudback for every project on
+					your machine, so you only have to do this once.
+				</p>
 			</div>
 			<div class="tab-panel" data-panel="desktop">
-				<p>Add this to your <code>claude_desktop_config.json</code>:</p>
+				<p>
+					Paste this command into a Claude Code chat as a prompt, Claude Code runs the
+					install for you:
+				</p>
 				<div class="code-block">
-					<pre id="cmd-desktop">{
-  "mcpServers": {
-    "claudback": {
-      "command": "npx",
-      "args": ["-y", "claudback-mcp"]
-    }
-  }
-}</pre>
-					<button class="copy corner" data-copy="cmd-desktop">Copy</button>
+					<pre id="cmd-desktop">claude mcp add --scope user claudback -- npx -y claudback-mcp</pre>
+					<button class="copy" data-copy="cmd-desktop">Copy</button>
 				</div>
-				<details class="learn-more">
-					<summary>Learn more: finding your config file</summary>
-					<p>
-						The easiest way: in Claude Desktop open
-						<strong>Settings → Developer → Edit Config</strong> — it opens (or creates)
-						the file for you. To find it manually:
-					</p>
-					<ul>
-						<li><strong>macOS:</strong> <code>~/Library/Application Support/Claude/claude_desktop_config.json</code></li>
-						<li><strong>Windows:</strong> <code>%APPDATA%\Claude\claude_desktop_config.json</code> (paste that into the File Explorer address bar)</li>
-					</ul>
-					<p>Save the file, then fully restart Claude Desktop so it picks up the change.</p>
-				</details>
+				<p class="hint">
+					The <code>--scope user</code> flag registers Claudback for every project on
+					your machine, so you only have to do this once.
+				</p>
 			</div>
 			<p>
 				That's it for installation, in the next step you'll ask Claude for a pairing

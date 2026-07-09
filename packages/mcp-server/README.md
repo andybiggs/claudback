@@ -6,25 +6,20 @@ The main use case: run your site or prototype locally, drop comments on the bits
 
 ## Setup
 
-### Claude Code
+### Claude Code (CLI)
 
 ```sh
-claude mcp add claudback -- npx -y claudback-mcp
+claude mcp add --scope user claudback -- npx -y claudback-mcp
 ```
 
-### Claude Desktop
+`--scope user` registers Claudback for every project on your machine, so you only do it once.
 
-Add to your `claude_desktop_config.json`:
+### Claude Code (desktop app)
 
-```json
-{
-	"mcpServers": {
-		"claudback": {
-			"command": "npx",
-			"args": ["-y", "claudback-mcp"]
-		}
-	}
-}
+Paste the same command straight into a Claude Code chat as a prompt instead of running it in a terminal — Claude Code runs the install for you:
+
+```sh
+claude mcp add --scope user claudback -- npx -y claudback-mcp
 ```
 
 Claude starts and stops the server itself — there is nothing to run manually.
