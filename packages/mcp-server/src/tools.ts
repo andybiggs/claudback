@@ -83,17 +83,15 @@ export async function clearCommentsHandler(
 	return textResult(`Removed ${removed} comment(s).`);
 }
 
-export function getPairingCodeHandler(pairing: PairingManager): Promise<ToolResult> {
-	const { code, ttlMinutes } = pairing.mint();
+export async function getPairingCodeHandler(pairing: PairingManager): Promise<ToolResult> {
+	const { code, ttlMinutes } = await pairing.mint();
 
-	return Promise.resolve(
-		textResult(
-			[
-				`Claudback pairing code: ${formatPairingCode(code)}`,
-				`Show this code to the user so they can enter it in the Claudback extension's setup or options page.`,
-				`It expires in ${ttlMinutes} minutes, works exactly once, and asking again replaces it.`,
-			].join(" "),
-		),
+	return textResult(
+		[
+			`Claudback pairing code: ${formatPairingCode(code)}`,
+			`Show this code to the user so they can enter it in the Claudback extension's setup or options page.`,
+			`It expires in ${ttlMinutes} minutes, works exactly once, and asking again replaces it.`,
+		].join(" "),
 	);
 }
 

@@ -126,7 +126,7 @@ describe("tools", () => {
 		const TOKEN = "a".repeat(64);
 
 		it("returns a formatted code, mentions the TTL, and never leaks the token", async () => {
-			const pairing = createPairingManager(TOKEN, { delayMs: 0 });
+			const pairing = createPairingManager(TOKEN, { delayMs: 0, filePath: join(dir, "pairing.json") });
 			const result = await getPairingCodeHandler(pairing);
 			const text = result.content[0].text;
 
@@ -136,7 +136,7 @@ describe("tools", () => {
 		});
 
 		it("returns a code that actually exchanges for the token", async () => {
-			const pairing = createPairingManager(TOKEN, { delayMs: 0 });
+			const pairing = createPairingManager(TOKEN, { delayMs: 0, filePath: join(dir, "pairing.json") });
 			const result = await getPairingCodeHandler(pairing);
 			const code = result.content[0].text.match(/[A-Z2-9]{4}-[A-Z2-9]{4}/)?.[0];
 

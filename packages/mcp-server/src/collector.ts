@@ -303,18 +303,17 @@ export async function startCollector(
 	store: StoreApi,
 	token: string,
 	pairing: PairingManager,
-): Promise<{ server: Server; port: number }> {
+): Promise<{ server: Server; port: number } | undefined> {
 	const server = createCollector(store, token, pairing);
-	const port = await new Promise<number>((resolve, reject) => {
+	const port = await new Promise<number | undefined>((resolve, reject) => {
 		server.once("error", (error: NodeJS.ErrnoException) => {
 			if (error.code === "EADDRINUSE") {
-				// The extension only ever talks to the default port, so falling
-				// back to another port would just leave a silently broken pairing.
-				reject(
-					new Error(
-						`[claudback] port ${DEFAULT_PORT} is already in use — is another claudback-mcp instance running?`,
-					),
-				);
+				// Every Claude Code session spawns its own claudback-mcp process,
+				// but only one can own the collector port that the extension
+				// talks to. The store file on disk is shared, so this process
+				// can still serve its own MCP tools against it — it just won't
+				// run a collector of its own.
+				resolve(undefined);
 			} else {
 				reject(error);
 			}
@@ -326,5 +325,5 @@ export async function startCollector(
 		});
 	});
 
-	return { server, port };
+	return port === undefined ? undefined : { server, port };
 }

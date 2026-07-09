@@ -3,7 +3,7 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>Claudback — comment on your page, Claude reads it</title>
+		<title>Claudback: comment on your page, Claude reads it</title>
 		<meta
 			name="description"
 			content="Comment on elements of any web page. Claude reads them via a local MCP server and makes the changes. Nothing leaves your machine."
@@ -47,7 +47,7 @@
 					--surface: #141619;
 					--card: #1c1f23;
 					--hairline: #2b3036;
-					--hero-wash: #181d1a;
+					--hero-wash: #1e2622;
 					--hero-grid: rgba(63, 196, 121, 0.08);
 				}
 			}
@@ -90,6 +90,14 @@
 				align-items: center;
 				gap: 12px;
 				padding: 28px 0;
+			}
+			a {
+				color: var(--green-strong);
+				text-decoration-color: color-mix(in srgb, var(--green-strong) 40%, transparent);
+				text-underline-offset: 2px;
+			}
+			a:hover {
+				text-decoration-color: var(--green-strong);
 			}
 			header .mark {
 				width: 26px;
@@ -154,7 +162,7 @@
 				background: var(--green-tint);
 				color: var(--green-strong);
 			}
-			/* Hero illustration — breaks out of the 720px column */
+			/* Hero illustration, breaks out of the 720px column */
 			.hero-illus-wrap {
 				width: min(960px, 100vw - 32px);
 				position: relative;
@@ -391,7 +399,7 @@
 				<h1 class="brand-font">Comment on your page.<br />Claude reads it.</h1>
 				<p>
 					Claudback is a Chrome extension that lets you pin comments to elements on any web
-					page — and a local MCP server that lets Claude read them and make the changes.
+					page, plus a local MCP server that lets Claude read them and make the changes.
 				</p>
 				<div class="cta-row">
 					<!-- TODO: replace with the Chrome Web Store listing URL once live -->
@@ -487,10 +495,11 @@
 			<section>
 				<h2 class="brand-font">Iterate on your build without describing it</h2>
 				<p>
-					The main use case: you're building a site or prototype locally and iterating with
-					Claude Code. Instead of screenshotting, or typing "the third button in the sidebar,
-					no, the other sidebar" — you click the thing and say what you want. Each comment
-					carries the exact element, so Claude knows precisely what you mean.
+					If you're anything like me you're building a site or prototype locally and
+					iterating with Claude Code. Instead of screenshotting, or typing "the second
+					button in the header, no, the other one", you click the exact thing on the page
+					and say what you want. Each comment carries the exact element, so Claude knows
+					precisely what you mean.
 				</p>
 				<ol class="walkthrough">
 					<li>
@@ -503,7 +512,7 @@
 					</li>
 					<li>
 						<strong>Ask Claude Code</strong>: <code>check my claudback comments and make the changes</code>.
-						Claude reads each comment — with its element selector — through the MCP server.
+						Claude reads each comment, with its element selector, through the MCP server.
 					</li>
 					<li>
 						<strong>Comments resolve as Claude works</strong> through them. Reload, look at
@@ -511,9 +520,9 @@
 					</li>
 				</ol>
 				<p>
-					It's not just for local builds — annotate any site to collect structured,
-					element-anchored notes for Claude to work from: competitor teardowns, design reviews,
-					content audits.
+					<strong>It's not just for local builds.</strong> Annotate any site to collect
+					structured, element-anchored notes for Claude to work from. Useful for competitor
+					teardowns, design reviews and content audits.
 				</p>
 			</section>
 
@@ -546,31 +555,21 @@
 
 			<section id="start">
 				<h2 class="brand-font">Quick start</h2>
+				<p>
+					<!-- TODO: replace with the Chrome Web Store listing URL once live -->
+					<strong>Install the extension</strong> from the Chrome Web Store (link coming
+					soon). A setup guide opens automatically and walks you through the following:
+				</p>
 				<ol class="walkthrough">
 					<li>
-						<strong>Install the extension.</strong>
-						<!-- TODO: replace with the Chrome Web Store listing URL once live -->
-						Get Claudback from the Chrome Web Store (link coming soon). A setup guide opens
-						automatically on install.
+						<strong>Register the MCP server</strong>, one command that the guide has you run
+						in a terminal, or paste straight into a Claude Code chat if you use the desktop
+						app:
+						<pre><code>claude mcp add --scope user claudback -- npx -y claudback-mcp</code></pre>
 					</li>
 					<li>
-						<strong>Register the MCP server.</strong> For Claude Code:
-						<pre><code>claude mcp add claudback -- npx -y claudback-mcp</code></pre>
-						Or for Claude Desktop, add to <code>claude_desktop_config.json</code>:
-						<pre><code>{
-  "mcpServers": {
-    "claudback": {
-      "command": "npx",
-      "args": ["-y", "claudback-mcp"]
-    }
-  }
-}</code></pre>
-					</li>
-					<li>
-						<strong>Pair.</strong> Ask Claude for a pairing code —
-						<em>"Give me a Claudback pairing code"</em> — and type it into the extension's
-						setup page. Codes expire in 10 minutes and work once. (Prefer doing it by hand?
-						Paste the token from <code>~/.claudback/token</code> instead.)
+						<strong>Pair the extension.</strong> Ask Claude for a pairing code and enter it
+						on the setup page. You'll be commenting in a couple of minutes.
 					</li>
 				</ol>
 			</section>
@@ -580,7 +579,7 @@
 				<div class="card">
 					<span class="tag">Local only</span>
 					<p>
-						The collector binds to <code>127.0.0.1</code> — it is never reachable from the
+						The collector binds to <code>127.0.0.1</code>, so it is never reachable from the
 						network. Your comments live in <code>~/.claudback/</code> on your own machine. No
 						remote servers, no accounts, no analytics.
 					</p>
@@ -589,7 +588,7 @@
 					<span class="tag">Paired &amp; permissioned</span>
 					<p>
 						Every request needs the pairing token, and only the extension's own origin passes
-						CORS — a random web page can't write into your comment store. Pairing itself uses a
+						CORS, so a random web page can't write into your comment store. Pairing itself uses a
 						short-lived, single-use code (10-minute expiry, five-attempt cap), so the long-lived
 						token never appears in a chat. The extension is off by default and enabled per tab,
 						with per-site permissions granted only when you ask.
@@ -598,7 +597,7 @@
 				<div class="card">
 					<span class="tag">Pull, not push</span>
 					<p>
-						Comments never enter Claude's context automatically — Claude reads them only when
+						Comments never enter Claude's context automatically. Claude reads them only when
 						you ask it to call the tools, and each comment is wrapped in an untrusted-data
 						envelope. Full threat model in the
 						<a href="https://github.com/andybiggs/Claudback">repo</a>.
@@ -608,12 +607,11 @@
 
 			<footer>
 				<span class="mark" style="width: 18px; height: 18px; border-radius: 50% 50% 50% 2px"></span>
-				<span>Claudback</span>
+				<span>Claudback <span class="note">by <a href="https://www.andybiggs.net">Andy Biggs</a> (NZ)</span></span>
 				<a href="https://github.com/andybiggs/Claudback">GitHub</a>
 				<a href="https://www.npmjs.com/package/claudback-mcp">npm</a>
 				<a href="privacy.html">Privacy</a>
-				<span class="note">by <a href="https://www.andybiggs.net">Andy Biggs</a> (NZ)</span>
-				<span class="note" style="margin-left: auto">Requires Node 20+ and Claude</span>
+				<span class="note" style="margin-left: auto; white-space: nowrap">Requires Node 20+ and Claude</span>
 			</footer>
 		</main>
 	</body>
