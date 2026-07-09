@@ -101,14 +101,16 @@ const STYLES = `
 	border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,var(--shadow-alpha)); padding: 12px;
 	border: 1px solid var(--border);
 }
-.popover textarea {
+.popover textarea, .inline-edit textarea {
 	width: 100%; min-height: 56px; resize: vertical; border: 1.5px solid var(--border);
 	border-radius: 8px; padding: 8px 10px; font-size: 13px; color: var(--ink); background: var(--surface);
 }
-.popover textarea:focus { outline: none; border-color: var(--green); }
+.popover textarea:focus, .inline-edit textarea:focus { outline: none; border-color: var(--green); }
 @media (prefers-color-scheme: dark) {
-	.popover textarea:focus { border-color: #3fc479; }
+	.popover textarea:focus, .inline-edit textarea:focus { border-color: #3fc479; }
 }
+.inline-edit { margin: 5px 0 3px; }
+.inline-edit .row { margin-top: 6px; }
 .popover .tagchip {
 	font-size: 11px; font-weight: 700; background: var(--green-tint); color: var(--green-strong);
 	padding: 2px 7px; border-radius: 4px; flex-shrink: 0;
@@ -125,10 +127,13 @@ button.btn { border: none; border-radius: 8px; padding: 7px 13px; font-size: 13p
 .btn.danger { background: var(--danger-tint); color: var(--danger); }
 button.btn:disabled { opacity: .5; cursor: default; }
 .panel {
-	position: fixed; bottom: 84px; right: 20px; width: 330px; max-height: 70vh; overflow-y: auto;
+	position: fixed; bottom: 84px; right: 20px; width: 330px; max-height: 70vh;
+	display: flex; flex-direction: column;
 	z-index: 2147483647; background: var(--surface); color: var(--ink); border-radius: 12px;
 	box-shadow: 0 8px 30px rgba(0,0,0,var(--shadow-alpha)); border: 1px solid var(--border);
 }
+.panel > :not(.items) { flex-shrink: 0; }
+.panel .items { overflow-y: auto; flex: 1; min-height: 0; }
 .panel header { padding: 12px 14px; border-bottom: 1px solid var(--hairline); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .panel header .identity { display: flex; align-items: center; gap: 9px; min-width: 0; flex: 1; }
 .panel header .identity .mark { width: 30px; height: 30px; }
@@ -264,6 +269,42 @@ function mountClaudback(): void {
 	highlight.className = "highlight";
 	highlight.style.display = "none";
 
+	function frameElement(el: Element): void {
+		const rect = el.getBoundingClientRect();
+		highlight.style.display = "block";
+		highlight.style.left = `${rect.left}px`;
+		highlight.style.top = `${rect.top}px`;
+		highlight.style.width = `${rect.width}px`;
+		highlight.style.height = `${rect.height}px`;
+	}
+
+	// The open popover's anchor: the element it belongs to and the popover's
+	// offset from that element's rect at open time, so scrolling can carry the
+	// popover (and the frame) along with the element instead of stranding it.
+	let anchor: { el: Element; pop: HTMLElement; dx: number; dy: number } | null = null;
+
+	function anchorTransient(el: Element, pop: HTMLElement): void {
+		const rect = el.getBoundingClientRect();
+		anchor = {
+			el,
+			pop,
+			dx: parseFloat(pop.style.left) - rect.left,
+			dy: parseFloat(pop.style.top) - rect.top,
+		};
+		frameElement(el);
+	}
+
+	function repositionTransient(): void {
+		if (!anchor) {
+			return;
+		}
+
+		const rect = anchor.el.getBoundingClientRect();
+		anchor.pop.style.left = `${Math.min(rect.left + anchor.dx, window.innerWidth - 300)}px`;
+		anchor.pop.style.top = `${Math.min(rect.top + anchor.dy, window.innerHeight - 200)}px`;
+		frameElement(anchor.el);
+	}
+
 	function elementAtPoint(x: number, y: number): Element | null {
 		host.style.pointerEvents = "none";
 		const el = document.elementFromPoint(x, y);
@@ -273,7 +314,12 @@ function mountClaudback(): void {
 	}
 
 	function onMouseMove(event: MouseEvent): void {
-		if (!commentMode || shadow.querySelector(".transient")) {
+		// While a popover is open the frame marks its anchor element — leave it.
+		if (shadow.querySelector(".transient")) {
+			return;
+		}
+
+		if (!commentMode) {
 			highlight.style.display = "none";
 
 			return;
@@ -343,6 +389,7 @@ function mountClaudback(): void {
 				<button class="btn primary" data-act="save">Add comment</button>
 			</div>`;
 		shadow.append(pop);
+		anchorTransient(el, pop);
 
 		const textarea = pop.querySelector("textarea") as HTMLTextAreaElement;
 		textarea.focus();
@@ -426,6 +473,7 @@ function mountClaudback(): void {
 				<button class="btn primary" data-act="save">Save</button>
 			</div>`;
 		shadow.append(pop);
+		anchorTransient(el, pop);
 
 		const textarea = pop.querySelector("textarea") as HTMLTextAreaElement;
 
@@ -480,6 +528,8 @@ function mountClaudback(): void {
 		shadow.querySelectorAll(".transient").forEach((node) => {
 			node.remove();
 		});
+		anchor = null;
+		highlight.style.display = "none";
 	}
 
 	function setCommentMode(on: boolean): void {
@@ -627,11 +677,17 @@ function mountClaudback(): void {
 		mode.append(select);
 		panel.append(mode);
 
+		// Header, sync strip, and mode stay pinned; only this list scrolls, so
+		// Clear all and the prompt footer are always reachable.
+		const items = document.createElement("div");
+		items.className = "items";
+		panel.append(items);
+
 		if (store.comments.length === 0) {
 			const empty = document.createElement("div");
 			empty.className = "empty";
 			empty.textContent = "No comments yet. Turn on comment mode, then click an element.";
-			panel.append(empty);
+			items.append(empty);
 		}
 
 		store.comments.forEach((comment, index) => {
@@ -683,15 +739,19 @@ function mountClaudback(): void {
 				}
 
 				if (act === "edit") {
-					const el = resolveElement(comment.selector);
+					const el = comment.url === window.location.href ? resolveElement(comment.selector) : null;
 
 					if (el) {
 						el.scrollIntoView({ block: "center", behavior: "smooth" });
 						openPinPopover(comment, el);
+					} else {
+						// The element lives on another page (or is gone), so
+						// there's nothing to anchor a popover to — edit in place.
+						openInlineEdit(item, comment);
 					}
 				}
 			});
-			panel.append(item);
+			items.append(item);
 		});
 
 		if (store.comments.length > 0) {
@@ -717,6 +777,64 @@ function mountClaudback(): void {
 		}
 
 		shadow.append(panel);
+	}
+
+	function openInlineEdit(item: HTMLElement, comment: Comment): void {
+		if (item.querySelector(".inline-edit")) {
+			return;
+		}
+
+		const txt = item.querySelector(".txt") as HTMLElement;
+		const acts = item.querySelector(".acts") as HTMLElement;
+		txt.style.display = "none";
+		acts.style.display = "none";
+
+		const editor = document.createElement("div");
+		editor.className = "inline-edit";
+		editor.innerHTML = `
+			<textarea>${escapeHtml(comment.text)}</textarea>
+			<div class="row">
+				<button class="btn ghost" data-act="cancel-edit">Cancel</button>
+				<button class="btn primary" data-act="save-edit">Save</button>
+			</div>`;
+		txt.after(editor);
+
+		const textarea = editor.querySelector("textarea") as HTMLTextAreaElement;
+		textarea.focus();
+
+		textarea.addEventListener("keydown", (ev) => {
+			if (ev.key === "Enter" && ev.shiftKey) {
+				ev.preventDefault();
+				(editor.querySelector("[data-act='save-edit']") as HTMLButtonElement)?.click();
+			}
+		});
+
+		editor.addEventListener("click", async (ev) => {
+			const act = (ev.target as HTMLElement).dataset?.act;
+
+			if (act === "cancel-edit") {
+				render();
+			}
+
+			if (act === "save-edit") {
+				const text = textarea.value.trim();
+
+				if (!text) {
+					return;
+				}
+
+				const ok = await sendGuarded<SimpleResponse>(
+					{ type: "update", id: comment.id, text },
+					"update",
+					"Couldn't save — change not stored.",
+					showError,
+				);
+
+				if (ok) {
+					await refresh();
+				}
+			}
+		});
 	}
 
 	function renderPins(): void {
@@ -762,10 +880,29 @@ function mountClaudback(): void {
 		}
 	};
 
+	// While a popover is open the page must not react to clicks — a stray
+	// click following a link would strand the half-written comment. Scrolling
+	// stays free; repositionTransient keeps the popover with its element.
+	const blockPageClicks = (event: Event): void => {
+		if (!shadow.querySelector(".popover.transient")) {
+			return;
+		}
+
+		if (event.composedPath().includes(host)) {
+			return;
+		}
+
+		event.preventDefault();
+		event.stopPropagation();
+	};
+
 	let raf = 0;
 	const reposition = (): void => {
 		cancelAnimationFrame(raf);
-		raf = requestAnimationFrame(renderPins);
+		raf = requestAnimationFrame(() => {
+			renderPins();
+			repositionTransient();
+		});
 	};
 
 	// The store can change out-of-band (Claude reads and clears, or the file is
@@ -777,7 +914,7 @@ function mountClaudback(): void {
 			return;
 		}
 
-		if (shadow.querySelector(".transient")) {
+		if (shadow.querySelector(".transient, .inline-edit")) {
 			return;
 		}
 
@@ -793,6 +930,10 @@ function mountClaudback(): void {
 	function teardown(): void {
 		window.removeEventListener("mousemove", onMouseMove);
 		window.removeEventListener("click", onClickCapture, true);
+		window.removeEventListener("pointerdown", blockPageClicks, true);
+		window.removeEventListener("mousedown", blockPageClicks, true);
+		window.removeEventListener("click", blockPageClicks, true);
+		window.removeEventListener("auxclick", blockPageClicks, true);
 		window.removeEventListener("keydown", keydownHandler);
 		window.removeEventListener("scroll", reposition, true);
 		window.removeEventListener("resize", reposition);
@@ -804,6 +945,10 @@ function mountClaudback(): void {
 
 	window.addEventListener("mousemove", onMouseMove);
 	window.addEventListener("click", onClickCapture, true);
+	window.addEventListener("pointerdown", blockPageClicks, true);
+	window.addEventListener("mousedown", blockPageClicks, true);
+	window.addEventListener("click", blockPageClicks, true);
+	window.addEventListener("auxclick", blockPageClicks, true);
 	window.addEventListener("keydown", keydownHandler);
 	window.addEventListener("scroll", reposition, true);
 	window.addEventListener("resize", reposition);
