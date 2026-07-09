@@ -83,44 +83,19 @@ export async function clearCommentsHandler(
 	return textResult(`Removed ${removed} comment(s).`);
 }
 
-export function getPairingCodeHandler(
-	pairing: PairingManager,
-	hasCollector: boolean,
-): Promise<ToolResult> {
-	// A pairing code is minted in this process's memory and can only be
-	// exchanged by the process that owns the collector's /pair endpoint. When
-	// another instance owns the collector, a code minted here could never be
-	// redeemed, so refuse rather than hand the user a code that always fails.
-	if (!hasCollector) {
-		return Promise.resolve(
-			textResult(
-				[
-					`This Claudback session isn't running the collector — another claudback-mcp process already owns it on this machine, so a code minted here could never be exchanged.`,
-					`Ask the session that owns the collector for a pairing code, or tell the user to paste the long-lived token from ~/.claudback/token into the extension's setup page instead (that works from any session).`,
-				].join(" "),
-			),
-		);
-	}
+export async function getPairingCodeHandler(pairing: PairingManager): Promise<ToolResult> {
+	const { code, ttlMinutes } = await pairing.mint();
 
-	const { code, ttlMinutes } = pairing.mint();
-
-	return Promise.resolve(
-		textResult(
-			[
-				`Claudback pairing code: ${formatPairingCode(code)}`,
-				`Show this code to the user so they can enter it in the Claudback extension's setup or options page.`,
-				`It expires in ${ttlMinutes} minutes, works exactly once, and asking again replaces it.`,
-			].join(" "),
-		),
+	return textResult(
+		[
+			`Claudback pairing code: ${formatPairingCode(code)}`,
+			`Show this code to the user so they can enter it in the Claudback extension's setup or options page.`,
+			`It expires in ${ttlMinutes} minutes, works exactly once, and asking again replaces it.`,
+		].join(" "),
 	);
 }
 
-export function registerTools(
-	server: McpServer,
-	store: StoreApi,
-	pairing: PairingManager,
-	hasCollector: boolean,
-): void {
+export function registerTools(server: McpServer, store: StoreApi, pairing: PairingManager): void {
 	server.registerTool(
 		"get_comments",
 		{
@@ -173,7 +148,7 @@ export function registerTools(
 			].join(" "),
 			inputSchema: {},
 		},
-		() => guarded("get_pairing_code", () => getPairingCodeHandler(pairing, hasCollector)),
+		() => guarded("get_pairing_code", () => getPairingCodeHandler(pairing)),
 	);
 
 	server.registerTool(

@@ -40,7 +40,7 @@ describe("collector", () => {
 	beforeEach(async () => {
 		dir = await mkdtemp(join(tmpdir(), "claudback-collector-"));
 		store = createStore(join(dir, "comments.json"));
-		pairing = createPairingManager(TOKEN, { delayMs: 0 });
+		pairing = createPairingManager(TOKEN, { delayMs: 0, filePath: join(dir, "pairing.json") });
 		server = createCollector(store, TOKEN, pairing);
 
 		await new Promise<void>((resolve) => {
@@ -350,7 +350,7 @@ describe("collector", () => {
 	});
 
 	it("exchanges a valid pairing code for the token with no token header", async () => {
-		const { code } = pairing.mint();
+		const { code } = await pairing.mint();
 		const res = await fetch(`${baseUrl}/pair`, {
 			method: "POST",
 			headers: { "content-type": "application/json", origin: VALID_EXTENSION_ORIGIN },
@@ -362,7 +362,7 @@ describe("collector", () => {
 	});
 
 	it("401s a wrong pairing code with the uniform error and CORS headers", async () => {
-		pairing.mint();
+		await pairing.mint();
 
 		const res = await fetch(`${baseUrl}/pair`, {
 			method: "POST",
@@ -376,7 +376,7 @@ describe("collector", () => {
 	});
 
 	it("403s /pair from a disallowed origin without touching the pairing code", async () => {
-		const { code } = pairing.mint();
+		const { code } = await pairing.mint();
 		const res = await fetch(`${baseUrl}/pair`, {
 			method: "POST",
 			headers: { "content-type": "application/json", origin: "https://evil.example" },
@@ -402,7 +402,7 @@ describe("collector", () => {
 	});
 
 	it("401s even the correct code after too many failed attempts", async () => {
-		const { code } = pairing.mint();
+		const { code } = await pairing.mint();
 
 		for (let i = 0; i < 5; i += 1) {
 			await fetch(`${baseUrl}/pair`, {
@@ -445,7 +445,7 @@ describe("startCollector", () => {
 	beforeEach(async () => {
 		dir = await mkdtemp(join(tmpdir(), "claudback-collector-"));
 		store = createStore(join(dir, "comments.json"));
-		pairing = createPairingManager(TOKEN, { delayMs: 0 });
+		pairing = createPairingManager(TOKEN, { delayMs: 0, filePath: join(dir, "pairing.json") });
 		servers = [];
 	});
 
