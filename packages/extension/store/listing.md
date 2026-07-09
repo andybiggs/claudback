@@ -20,27 +20,30 @@ Draft copy for the Web Store submission form. Not shipped in the extension zip.
 
 > **Comment on your page. Claude reads it.**
 >
-> Claudback lets you pin visual-feedback comments to elements on any web page — a button that's the wrong colour, a layout that breaks on mobile, copy that needs a rewrite. Claude reads your comments through a local MCP server and makes the changes.
+> Claudback lets you pin visual-feedback comments to elements on any web page, a button that's the wrong colour, a layout that breaks on mobile, copy that needs a rewrite. Claude reads your comments through a local MCP server and makes the changes. Claudback gives Claude all the destials it needs to know exactly what your comment was on.
 >
-> **The main use case:** you're iterating on a local build or prototype with Claude Code. Instead of screenshotting and describing where things are, enable Claudback on the tab, click the elements you want changed, and say why. Each comment carries the exact element selector. Then ask Claude: "check my claudback comments and make the changes."
+> **The main use case:** you're iterating on a local build or prototype with Claude Code. Instead of screenshotting and describing where things are, enable Claudback on the Chrome tab where your site is, click the elements you want changed, and say why. Each comment carries the exact element selector. Then ask Claude: "check my claudback comments and make the changes."
 >
-> You can also use it to annotate any site — collecting structured, element-anchored notes for Claude to work from.
+> It's not just for code changes. You can pin comments while browsing any site (a competitor's product, a reference design, a client's current site) you can then ask Claude to turn them into a doc: A competitor teardown, a PRID, a slide deck, whatever your needs are.
 >
 > **How it works**
-> - The extension is off by default; you enable it per tab.
-> - Comments sync to a local collector on 127.0.0.1 run by the `claudback-mcp` server (installed via `npx` — the first-run guide walks you through it).
-> - Claude reads comments via MCP tools (`get_comments`, `list_origins`, `resolve_comment`, `clear_comments`).
+> - The extension is off by default and you enable it per tab.
+> - Comments sync to a local collector on 127.0.0.1 run by the `claudback-mcp` server (installed via `npx` the first-run guide walks you through it).
+> - Claude reads the comments via MCP tools (`get_comments`, `list_origins`, `resolve_comment`, `clear_comments`).
 >
-> **Private by design**
-> - No remote servers, no accounts, no analytics.
+> **Private and secure**
+> - There are no remote servers, no accounts, no analytics.
 > - The collector binds to localhost only and requires a pairing token.
 > - Your comments live in `~/.claudback/` on your own machine.
+> - I've no interest in commercialising this, it's just a helpful tool for the people.
 >
 > Requires the free `claudback-mcp` npm package (Node 20+) and Claude Code or Claude Desktop. Setup guide opens on install.
+>
+> Made by Andy Biggs (NZ) — www.andybiggs.net
 
 ## Single-purpose statement
 
-> Claudback's single purpose is to let users pin feedback comments to elements on web pages and sync them to a local server on the user's own machine, where Claude (via MCP) can read them.
+> Claudback's single purpose is to let users pin feedback comments to elements on web pages and sync them to a local server on the user's own machine, where Claude (via MCP) can read and act on them.
 
 ## Permission justifications
 
@@ -53,7 +56,7 @@ Draft copy for the Web Store submission form. Not shipped in the extension zip.
 ## Remote code / data use disclosures
 
 - Remote code: none (all code packaged in the extension).
-- Data collected: none transmitted to the developer or third parties. User-created comments and minimal page excerpts (tag/attribute names only) are sent exclusively to a localhost collector on the user's own machine.
+- Data collected: none. No data is transmitted to the developer or third parties. User-created comments and minimal page excerpts (tag/attribute names only) are sent exclusively to a localhost collector on the user's own machine.
 
 ## Assets (manual task)
 

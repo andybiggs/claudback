@@ -37,7 +37,7 @@ describe("collector client", () => {
 
 		const [url, init] = fetchImpl.mock.calls[0];
 
-		expect(url).toBe("http://127.0.0.1:4319/comments?origin=https%3A%2F%2Fexample.com");
+		expect(url).toBe("http://127.0.0.1:57463/comments?origin=https%3A%2F%2Fexample.com");
 		expect(init?.method).toBe("GET");
 		expect(init?.headers).toMatchObject({ [TOKEN_HEADER]: "secret-token" });
 	});
@@ -49,7 +49,7 @@ describe("collector client", () => {
 
 		const [url, init] = fetchImpl.mock.calls[0];
 
-		expect(url).toBe("http://127.0.0.1:4319/comments");
+		expect(url).toBe("http://127.0.0.1:57463/comments");
 		expect(init?.method).toBe("POST");
 		expect(JSON.parse(init?.body as string)).toMatchObject({ text: "fix this" });
 	});
@@ -59,7 +59,7 @@ describe("collector client", () => {
 
 		await updateComment({ token: "t", fetchImpl }, "abc", "new text");
 
-		expect(fetchImpl.mock.calls[0][0]).toBe("http://127.0.0.1:4319/comments/abc");
+		expect(fetchImpl.mock.calls[0][0]).toBe("http://127.0.0.1:57463/comments/abc");
 	});
 
 	it("honours a custom port", async () => {
@@ -83,7 +83,7 @@ describe("collector client", () => {
 
 		const [url, init] = fetchImpl.mock.calls[0];
 
-		expect(url).toBe("http://127.0.0.1:4319/pair");
+		expect(url).toBe("http://127.0.0.1:57463/pair");
 		expect(init?.method).toBe("POST");
 		expect(JSON.parse(init?.body as string)).toEqual({ code: "ABCD-2345" });
 		expect(init?.headers).not.toHaveProperty(TOKEN_HEADER);
