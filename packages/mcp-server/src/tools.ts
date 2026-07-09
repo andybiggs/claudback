@@ -83,7 +83,25 @@ export async function clearCommentsHandler(
 	return textResult(`Removed ${removed} comment(s).`);
 }
 
-export function getPairingCodeHandler(pairing: PairingManager): Promise<ToolResult> {
+export function getPairingCodeHandler(
+	pairing: PairingManager,
+	hasCollector: boolean,
+): Promise<ToolResult> {
+	// A pairing code is minted in this process's memory and can only be
+	// exchanged by the process that owns the collector's /pair endpoint. When
+	// another instance owns the collector, a code minted here could never be
+	// redeemed, so refuse rather than hand the user a code that always fails.
+	if (!hasCollector) {
+		return Promise.resolve(
+			textResult(
+				[
+					`This Claudback session isn't running the collector — another claudback-mcp process already owns it on this machine, so a code minted here could never be exchanged.`,
+					`Ask the session that owns the collector for a pairing code, or tell the user to paste the long-lived token from ~/.claudback/token into the extension's setup page instead (that works from any session).`,
+				].join(" "),
+			),
+		);
+	}
+
 	const { code, ttlMinutes } = pairing.mint();
 
 	return Promise.resolve(
@@ -97,7 +115,12 @@ export function getPairingCodeHandler(pairing: PairingManager): Promise<ToolResu
 	);
 }
 
-export function registerTools(server: McpServer, store: StoreApi, pairing: PairingManager): void {
+export function registerTools(
+	server: McpServer,
+	store: StoreApi,
+	pairing: PairingManager,
+	hasCollector: boolean,
+): void {
 	server.registerTool(
 		"get_comments",
 		{
@@ -150,7 +173,7 @@ export function registerTools(server: McpServer, store: StoreApi, pairing: Pairi
 			].join(" "),
 			inputSchema: {},
 		},
-		() => guarded("get_pairing_code", () => getPairingCodeHandler(pairing)),
+		() => guarded("get_pairing_code", () => getPairingCodeHandler(pairing, hasCollector)),
 	);
 
 	server.registerTool(

@@ -12,14 +12,18 @@ export async function main(): Promise<void> {
 	const token = await loadOrCreateToken();
 	const pairing = createPairingManager(token);
 	const store = createStore(STORE_FILE);
-	const { port } = await startCollector(store, token, pairing);
+	const collector = await startCollector(store, token, pairing);
 
 	// stdout carries the MCP protocol; all human-facing logging goes to stderr.
-	console.error(`[claudback] collector listening on http://127.0.0.1:${port}`);
+	if (collector) {
+		console.error(`[claudback] collector listening on http://127.0.0.1:${collector.port}`);
+	} else {
+		console.error("[claudback] another instance already owns the collector port; using shared store only");
+	}
 
 	const server = new McpServer({ name: "claudback", version: "0.0.1" });
 
-	registerTools(server, store, pairing);
+	registerTools(server, store, pairing, collector !== undefined);
 	await server.connect(new StdioServerTransport());
 	console.error("[claudback] MCP server connected on stdio");
 }

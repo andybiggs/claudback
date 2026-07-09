@@ -1,7 +1,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { NewCommentInput } from "@claudback/shared";
 
@@ -127,7 +127,7 @@ describe("tools", () => {
 
 		it("returns a formatted code, mentions the TTL, and never leaks the token", async () => {
 			const pairing = createPairingManager(TOKEN, { delayMs: 0 });
-			const result = await getPairingCodeHandler(pairing);
+			const result = await getPairingCodeHandler(pairing, true);
 			const text = result.content[0].text;
 
 			expect(text).toMatch(/[A-Z2-9]{4}-[A-Z2-9]{4}/);
@@ -137,11 +137,24 @@ describe("tools", () => {
 
 		it("returns a code that actually exchanges for the token", async () => {
 			const pairing = createPairingManager(TOKEN, { delayMs: 0 });
-			const result = await getPairingCodeHandler(pairing);
+			const result = await getPairingCodeHandler(pairing, true);
 			const code = result.content[0].text.match(/[A-Z2-9]{4}-[A-Z2-9]{4}/)?.[0];
 
 			expect(code).toBeTruthy();
 			expect(await pairing.exchange(code as string)).toBe(TOKEN);
+		});
+
+		it("refuses to mint a code when this instance does not own the collector", async () => {
+			const pairing = createPairingManager(TOKEN, { delayMs: 0 });
+			const mint = vi.spyOn(pairing, "mint");
+			const result = await getPairingCodeHandler(pairing, false);
+			const text = result.content[0].text;
+
+			// No dud code that could never be exchanged, and point the user at
+			// the token fallback that works from any session.
+			expect(text).not.toMatch(/[A-Z2-9]{4}-[A-Z2-9]{4}/);
+			expect(text).toContain("~/.claudback/token");
+			expect(mint).not.toHaveBeenCalled();
 		});
 	});
 

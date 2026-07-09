@@ -5,9 +5,9 @@ import type { AddressInfo } from "node:net";
 import type { Server } from "node:http";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { TOKEN_HEADER } from "@claudback/shared";
+import { DEFAULT_PORT, TOKEN_HEADER } from "@claudback/shared";
 
-import { createCollector } from "./collector.js";
+import { createCollector, startCollector } from "./collector.js";
 import { createPairingManager, type PairingManager } from "./pairing.js";
 import { createStore } from "./store.js";
 import type { StoreApi } from "./store-api.js";
@@ -433,5 +433,43 @@ describe("collector", () => {
 		const created = (await postRes.json()) as { text: string };
 
 		expect(created.text).toBe("helloworld");
+	});
+});
+
+describe("startCollector", () => {
+	let dir: string;
+	let store: StoreApi;
+	let pairing: PairingManager;
+	let servers: Server[];
+
+	beforeEach(async () => {
+		dir = await mkdtemp(join(tmpdir(), "claudback-collector-"));
+		store = createStore(join(dir, "comments.json"));
+		pairing = createPairingManager(TOKEN, { delayMs: 0 });
+		servers = [];
+	});
+
+	afterEach(async () => {
+		await Promise.all(servers.map((server) => new Promise<void>((resolve) => server.close(() => resolve()))));
+		await rm(dir, { recursive: true, force: true });
+	});
+
+	// startCollector always binds DEFAULT_PORT (the extension only ever talks
+	// to that fixed port), so this test needs it free rather than an ephemeral
+	// port like the rest of the file.
+	it("returns undefined instead of throwing when the port is already taken", async () => {
+		const first = await startCollector(store, TOKEN, pairing);
+
+		expect(first).toBeDefined();
+
+		if (first) {
+			servers.push(first.server);
+		}
+
+		expect(first?.port).toBe(DEFAULT_PORT);
+
+		const second = await startCollector(store, TOKEN, pairing);
+
+		expect(second).toBeUndefined();
 	});
 });
