@@ -303,6 +303,9 @@ export async function startCollector(
 	store: StoreApi,
 	token: string,
 	pairing: PairingManager,
+	// Overridable only so tests can bind a throwaway port; production always
+	// uses DEFAULT_PORT, the one fixed address the extension knows to call.
+	listenPort: number = DEFAULT_PORT,
 ): Promise<{ server: Server; port: number } | undefined> {
 	const server = createCollector(store, token, pairing);
 	const port = await new Promise<number | undefined>((resolve, reject) => {
@@ -320,8 +323,8 @@ export async function startCollector(
 		});
 		// Loopback only: the collector accepts token-authenticated writes, and
 		// must never be reachable from other machines.
-		server.listen(DEFAULT_PORT, "127.0.0.1", () => {
-			resolve(DEFAULT_PORT);
+		server.listen(listenPort, "127.0.0.1", () => {
+			resolve(listenPort);
 		});
 	});
 

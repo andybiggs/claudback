@@ -49,10 +49,10 @@ function statusHint(state: SyncState): string | null {
 			return "Can't reach the local Claudback server.";
 		}
 		case "unpaired": {
-			return "Ask Claude for a pairing code, then enter it in Pairing & options.";
+			return "Ask Claude for a pairing code, then enter it via the gear icon above.";
 		}
 		case "unauthorized": {
-			return "The collector rejected the pairing token — ask Claude for a pairing code and re-pair in Pairing & options.";
+			return "The collector rejected the pairing token — ask Claude for a pairing code and re-pair via the gear icon above.";
 		}
 		default: {
 			return null;

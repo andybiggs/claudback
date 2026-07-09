@@ -185,11 +185,11 @@
 				position: absolute;
 				top: 50%;
 				transform: translateY(-50%);
-				right: 12px;
+				right: 10px;
 				border: 1px solid var(--border);
 				border-radius: 6px;
-				padding: 6px 12px;
-				font-size: 12px;
+				padding: 5px 10px;
+				font-size: 11px;
 				font-weight: 600;
 				cursor: pointer;
 				background: var(--surface);
@@ -197,7 +197,7 @@
 				box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 			}
 			.copy.corner {
-				top: 12px;
+				top: 10px;
 				transform: none;
 			}
 			.copy:hover {
@@ -205,8 +205,8 @@
 			}
 			input {
 				width: 100%;
-				padding: 11px 14px;
-				font-size: 15px;
+				padding: 9px 12px;
+				font-size: 13px;
 				color: var(--ink);
 				background: var(--surface);
 				border: 1px solid var(--input-border);
@@ -233,8 +233,8 @@
 			button.primary {
 				border: none;
 				border-radius: 8px;
-				padding: 11px 20px;
-				font-size: 15px;
+				padding: 9px 16px;
+				font-size: 13px;
 				font-weight: 600;
 				cursor: pointer;
 				background: var(--green);
@@ -246,8 +246,8 @@
 			button.ghost {
 				border: none;
 				border-radius: 8px;
-				padding: 11px 20px;
-				font-size: 15px;
+				padding: 9px 16px;
+				font-size: 13px;
 				font-weight: 600;
 				cursor: pointer;
 				background: var(--green-tint);
@@ -264,8 +264,8 @@
 				display: flex;
 				align-items: center;
 				gap: 7px;
-				margin-top: 16px;
-				font-size: 14px;
+				margin-top: 14px;
+				font-size: 13px;
 				color: var(--secondary-text);
 			}
 			.status-dot {
@@ -343,8 +343,9 @@
 				flex: 1;
 			}
 			.hint {
+				font-size: 12px;
 				color: var(--secondary-text);
-				margin-top: 10px;
+				margin-top: 8px;
 			}
 			details {
 				margin-top: 18px;
@@ -478,7 +479,7 @@
 					<pre id="cmd-code">claude mcp add --scope user claudback -- npx -y claudback-mcp</pre>
 					<button class="copy" data-copy="cmd-code">Copy</button>
 				</div>
-				<p class="hint">
+				<p>
 					The <code>--scope user</code> flag registers Claudback for every project on
 					your machine, so you only have to do this once.
 				</p>
@@ -493,7 +494,7 @@
 claude mcp add --scope user claudback -- npx -y claudback-mcp</pre>
 					<button class="copy corner" data-copy="cmd-desktop">Copy</button>
 				</div>
-				<p class="hint">
+				<p>
 					Claudback needs Node 20 or later. If you don't have it, ask Claude to install
 					it first. The <code>--scope user</code> flag registers Claudback for every
 					project on your machine, so you only have to do this once.
@@ -534,19 +535,19 @@ claude mcp add --scope user claudback -- npx -y claudback-mcp</pre>
 		</section>
 
 		<section class="step" data-step="3">
-			<h2>You're set. Here's the loop.</h2>
+			<h2>You're set. Here's how it works.</h2>
 			<ol>
-				<li>Open the page you're working on and click the Claudback Extension icon in Chrome → <strong>Enable</strong> for this tab (grant the per-site permission when prompted).</li>
-				<li>Use the floating button to pin comments to elements. Click the thing, say what you want.</li>
-				<li>Ask Claude: <code>check my claudback comments and make the changes</code>.</li>
+				<li>Open the page you're working on and then click the Claudback Extension icon in Chrome → Toggle to <strong>Enabled</strong> to turn it on (grant the per-site permission when prompted).</li>
+				<li>Use the plus button in bottom right to pin comments to elements. Just click on page elements and add your comments.</li>
+				<li>Once you are done just ask Claude: <code>Grab my claudback comments and make the changes</code>.</li>
 				<li>Resolved comments clear automatically as Claude works through them.</li>
 			</ol>
 			<p>You can reopen this guide any time from the extension's options page.</p>
 			<div>
-				<h2 style="margin-top: 30px">Pin it to your toolbar</h2>
+				<h2 style="margin-top: 30px">Pin the extension to your toolbar</h2>
 				<p>
-					So Claudback is one click away: click the puzzle-piece icon next to the address
-					bar, find Claudback, and click the pin.
+					So Claudback is always one click away, just click the puzzle-piece icon next to the address
+					bar in Chrome, find Claudback, and click the pin.
 				</p>
 				<svg class="illus" viewBox="0 0 640 224" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Chrome's toolbar with the puzzle-piece extensions menu open, showing the pin next to Claudback">
 					<defs>
