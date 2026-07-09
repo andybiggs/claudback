@@ -347,6 +347,13 @@ function mountClaudback(): void {
 		const textarea = pop.querySelector("textarea") as HTMLTextAreaElement;
 		textarea.focus();
 
+		textarea.addEventListener("keydown", (ev) => {
+			if (ev.key === "Enter" && ev.shiftKey) {
+				ev.preventDefault();
+				(pop.querySelector("[data-act='save']") as HTMLButtonElement)?.click();
+			}
+		});
+
 		pop.addEventListener("click", async (ev) => {
 			const act = (ev.target as HTMLElement).dataset?.act;
 
