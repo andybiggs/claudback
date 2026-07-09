@@ -74,13 +74,15 @@ const STYLES = `
 .fab.secondary.active .count { background: #fff; color: var(--green); border-color: var(--green); }
 .hint {
 	position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 2147483647;
-	background: var(--green); color: #fff; padding: 8px 14px; border-radius: 8px;
-	font-size: 13px; box-shadow: 0 4px 14px rgba(0,0,0,.25); display: flex; align-items: center; gap: 8px;
+	background: var(--green); color: #fff; padding: 10px 16px; border-radius: 100px;
+	font-size: 15px; font-weight: 500; box-shadow: 0 4px 18px rgba(0,0,0,.28); display: flex; align-items: center; gap: 10px;
+	white-space: nowrap;
 }
-.hint.error-toast { background: var(--danger); }
+.hint.error-toast { background: var(--danger); border-radius: 8px; font-size: 13px; }
 .hint .keycap {
-	font-size: 11px; color: rgba(255,255,255,.85); border: 1px solid rgba(255,255,255,.4);
-	border-radius: 4px; padding: 1px 5px;
+	font-size: 12px; font-weight: 600; color: rgba(255,255,255,.9);
+	background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.3);
+	border-radius: 6px; padding: 2px 8px; line-height: 1.4;
 }
 .highlight {
 	position: fixed; pointer-events: none; z-index: 2147483646;
@@ -154,6 +156,13 @@ button.btn:disabled { opacity: .5; cursor: default; }
 .item .acts a { font-size: 12px; font-weight: 600; color: var(--green); cursor: pointer; }
 .item .acts a.del { color: var(--danger); }
 .empty { padding: 20px 14px; font-size: 13px; color: var(--faint-text); text-align: center; }
+.prompt-footer { padding: 12px 14px; border-top: 1px solid var(--hairline); }
+.prompt-footer .label { font-size: 12px; color: var(--faint-text); margin-bottom: 7px; }
+.prompt-footer .prompt-row { display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; background: var(--surface); }
+.prompt-footer .prompt-text { flex: 1; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.prompt-footer .copy-prompt { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: var(--green-strong); background: var(--green-tint); border: none; border-radius: 6px; padding: 4px 10px; cursor: pointer; flex-shrink: 0; white-space: nowrap; }
+.prompt-footer .copy-prompt:hover { background: #d5eddf; }
+.prompt-footer .copy-prompt svg { display: block; }
 `;
 
 const ADD_ICON = `<span class="waypoint-icon"><svg width="14" height="14" viewBox="0 0 14 14"><line x1="7" y1="4" x2="7" y2="10" stroke="#0F8A46" stroke-width="2" stroke-linecap="round"/><line x1="4" y1="7" x2="10" y2="7" stroke="#0F8A46" stroke-width="2" stroke-linecap="round"/></svg></span>`;
@@ -378,7 +387,7 @@ function mountClaudback(): void {
 			selector,
 			tag: el.tagName.toLowerCase(),
 			text,
-			textSnippet: (el.textContent || "").trim().slice(0, 120),
+			textSnippet: (el.textContent || "").trim().slice(0, 512),
 			// Names only — no attribute values ever leave the page.
 			htmlExcerpt: excerptFromNames(el.tagName, el.getAttributeNames()),
 			rect: {
@@ -532,7 +541,7 @@ function mountClaudback(): void {
 		if (commentMode) {
 			const hint = document.createElement("div");
 			hint.className = "hint";
-			hint.textContent = "Click any element to comment · Esc to exit";
+			hint.innerHTML = 'Click any element to comment <span class="keycap">esc</span>';
 			shadow.append(hint);
 		}
 
@@ -677,6 +686,28 @@ function mountClaudback(): void {
 			});
 			panel.append(item);
 		});
+
+		if (store.comments.length > 0) {
+			const PROMPT = "Grab my Claudback comments and make the changes";
+			const footer = document.createElement("div");
+			footer.className = "prompt-footer";
+			footer.innerHTML = `
+				<div class="label">Got your comments sorted? Ask Claude:</div>
+				<div class="prompt-row">
+					<span class="prompt-text">${escapeHtml(PROMPT)}</span>
+					<button class="copy-prompt">
+						<svg width="13" height="13" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+							<rect x="5" y="5" width="9" height="9" rx="2" stroke="currentColor" stroke-width="1.5"/>
+							<path d="M11 5V3a2 2 0 0 0-2-2H3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+						</svg>
+						Copy
+					</button>
+				</div>`;
+			footer.querySelector(".copy-prompt")?.addEventListener("click", () => {
+				navigator.clipboard.writeText(PROMPT).catch(() => {});
+			});
+			panel.append(footer);
+		}
 
 		shadow.append(panel);
 	}

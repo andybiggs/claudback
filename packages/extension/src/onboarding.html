@@ -53,9 +53,9 @@
 			}
 			body {
 				font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
-				max-width: 680px;
-				margin: 48px auto;
-				padding: 0 24px;
+				max-width: 800px;
+				margin: 56px auto;
+				padding: 0 32px;
 				color: var(--ink);
 				background: var(--surface);
 				line-height: 1.5;
@@ -63,12 +63,12 @@
 			.brand {
 				display: flex;
 				align-items: center;
-				gap: 12px;
+				gap: 14px;
 				margin-bottom: 6px;
 			}
 			.mark {
-				width: 28px;
-				height: 28px;
+				width: 34px;
+				height: 34px;
 				flex-shrink: 0;
 				background: var(--mark-bg);
 				border-radius: 50% 50% 50% 3px;
@@ -78,30 +78,30 @@
 			}
 			.mark::after {
 				content: "";
-				width: 8px;
-				height: 8px;
+				width: 10px;
+				height: 10px;
 				border-radius: 50%;
 				background: var(--mark-dot);
 			}
 			h1 {
 				font-family: "Space Grotesk", ui-sans-serif, sans-serif;
 				font-weight: 600;
-				font-size: 22px;
+				font-size: 26px;
 				letter-spacing: -0.01em;
 				margin: 0;
 			}
 			h2 {
 				font-family: "Space Grotesk", ui-sans-serif, sans-serif;
 				font-weight: 600;
-				font-size: 17px;
+				font-size: 20px;
 				letter-spacing: -0.01em;
-				margin: 0 0 8px;
+				margin: 0 0 10px;
 			}
 			p,
 			li {
-				font-size: 13px;
+				font-size: 15px;
 				color: var(--secondary-text);
-				line-height: 1.55;
+				line-height: 1.6;
 			}
 			strong {
 				color: var(--ink);
@@ -109,20 +109,20 @@
 			code {
 				font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 				background: var(--ghost-bg);
-				padding: 1px 5px;
+				padding: 1px 6px;
 				border-radius: 4px;
-				font-size: 12px;
+				font-size: 13px;
 				color: var(--ink);
 			}
 			.steps {
 				display: flex;
 				gap: 6px;
-				margin: 26px 0 30px;
+				margin: 30px 0 36px;
 			}
 			.step-dot {
-				height: 4px;
+				height: 5px;
 				flex: 1;
-				border-radius: 2px;
+				border-radius: 3px;
 				background: var(--ghost-bg);
 				transition: background 0.25s ease;
 			}
@@ -145,8 +145,8 @@
 				background: var(--surface);
 				color: var(--secondary-text);
 				border-radius: 8px;
-				padding: 6px 14px;
-				font-size: 13px;
+				padding: 7px 16px;
+				font-size: 14px;
 				font-weight: 600;
 				cursor: pointer;
 			}
@@ -170,13 +170,13 @@
 				background: var(--ghost-bg);
 				border: 1px solid var(--border);
 				border-radius: 8px;
-				padding: 14px 16px;
+				padding: 16px 18px;
 				overflow-x: auto;
 				font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-				font-size: 12px;
+				font-size: 13px;
 				line-height: 1.5;
 				color: var(--ink);
-				margin: 10px 0;
+				margin: 12px 0;
 			}
 			.code-block {
 				position: relative;
@@ -185,11 +185,11 @@
 				position: absolute;
 				top: 50%;
 				transform: translateY(-50%);
-				right: 10px;
+				right: 12px;
 				border: 1px solid var(--border);
 				border-radius: 6px;
-				padding: 5px 10px;
-				font-size: 11px;
+				padding: 6px 12px;
+				font-size: 12px;
 				font-weight: 600;
 				cursor: pointer;
 				background: var(--surface);
@@ -197,7 +197,7 @@
 				box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 			}
 			.copy.corner {
-				top: 10px;
+				top: 12px;
 				transform: none;
 			}
 			.copy:hover {
@@ -205,8 +205,8 @@
 			}
 			input {
 				width: 100%;
-				padding: 9px 12px;
-				font-size: 13px;
+				padding: 11px 14px;
+				font-size: 15px;
 				color: var(--ink);
 				background: var(--surface);
 				border: 1px solid var(--input-border);
@@ -233,8 +233,8 @@
 			button.primary {
 				border: none;
 				border-radius: 8px;
-				padding: 9px 16px;
-				font-size: 13px;
+				padding: 11px 20px;
+				font-size: 15px;
 				font-weight: 600;
 				cursor: pointer;
 				background: var(--green);
@@ -246,8 +246,8 @@
 			button.ghost {
 				border: none;
 				border-radius: 8px;
-				padding: 9px 16px;
-				font-size: 13px;
+				padding: 11px 20px;
+				font-size: 15px;
 				font-weight: 600;
 				cursor: pointer;
 				background: var(--green-tint);
@@ -264,8 +264,8 @@
 				display: flex;
 				align-items: center;
 				gap: 7px;
-				margin-top: 14px;
-				font-size: 13px;
+				margin-top: 16px;
+				font-size: 14px;
 				color: var(--secondary-text);
 			}
 			.status-dot {
@@ -343,9 +343,8 @@
 				flex: 1;
 			}
 			.hint {
-				font-size: 12px;
 				color: var(--secondary-text);
-				margin-top: 8px;
+				margin-top: 10px;
 			}
 			details {
 				margin-top: 18px;
@@ -486,16 +485,18 @@
 			</div>
 			<div class="tab-panel" data-panel="desktop">
 				<p>
-					Paste this command into a Claude Code chat as a prompt, Claude Code runs the
-					install for you:
+					Ask Claude to run it for you. Paste this into a Claude Code chat:
 				</p>
 				<div class="code-block">
-					<pre id="cmd-desktop">claude mcp add --scope user claudback -- npx -y claudback-mcp</pre>
-					<button class="copy" data-copy="cmd-desktop">Copy</button>
+					<pre id="cmd-desktop">Can you run this in the terminal for me:
+
+claude mcp add --scope user claudback -- npx -y claudback-mcp</pre>
+					<button class="copy corner" data-copy="cmd-desktop">Copy</button>
 				</div>
 				<p class="hint">
-					The <code>--scope user</code> flag registers Claudback for every project on
-					your machine, so you only have to do this once.
+					Claudback needs Node 20 or later. If you don't have it, ask Claude to install
+					it first. The <code>--scope user</code> flag registers Claudback for every
+					project on your machine, so you only have to do this once.
 				</p>
 			</div>
 			<p>
