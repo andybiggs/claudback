@@ -31,9 +31,37 @@ const TOKEN_KEY = "claudback_token";
 const BUFFER_KEY = "claudback_buffer";
 const FLUSH_ALARM = "claudback-flush";
 
-// Tabs the user has explicitly enabled this session. The overlay is injected
-// on demand — never auto-registered — so nothing runs on a page until asked.
-const enabledTabs = new Set<number>();
+// Tabs the user has explicitly enabled this session (tabId → origin pattern).
+// The overlay is injected on demand — never auto-registered — so nothing runs
+// on a page until asked. Kept in storage.session rather than memory so the
+// enable survives MV3 service-worker restarts; it still clears when the
+// browser closes.
+const ENABLED_TABS_KEY = "claudback_enabled_tabs";
+
+async function readEnabledTabs(): Promise<Record<string, string>> {
+	const result = await chrome.storage.session.get(ENABLED_TABS_KEY);
+	const tabs = result[ENABLED_TABS_KEY];
+
+	return typeof tabs === "object" && tabs !== null ? (tabs as Record<string, string>) : {};
+}
+
+async function getEnabledOrigin(tabId: number): Promise<string | undefined> {
+	return (await readEnabledTabs())[String(tabId)];
+}
+
+async function setTabEnabled(tabId: number, originPattern: string): Promise<void> {
+	const tabs = await readEnabledTabs();
+
+	tabs[String(tabId)] = originPattern;
+	await chrome.storage.session.set({ [ENABLED_TABS_KEY]: tabs });
+}
+
+async function setTabDisabled(tabId: number): Promise<void> {
+	const tabs = await readEnabledTabs();
+
+	delete tabs[String(tabId)];
+	await chrome.storage.session.set({ [ENABLED_TABS_KEY]: tabs });
+}
 
 // Tabs waiting on a permission grant. The popup shows Chrome's native
 // permission dialog, and Chrome closes extension popups the moment that
@@ -301,7 +329,7 @@ async function originPatternFor(tabId: number): Promise<string | null> {
 // path, when the popup survives) and from the onAdded listener (the reliable
 // path, when it doesn't) without double-injecting the content script.
 async function enableTabIfGranted(tabId: number, originPattern: string): Promise<boolean> {
-	if (enabledTabs.has(tabId)) {
+	if ((await getEnabledOrigin(tabId)) !== undefined) {
 		return true;
 	}
 
@@ -315,7 +343,7 @@ async function enableTabIfGranted(tabId: number, originPattern: string): Promise
 	}
 
 	await chrome.scripting.executeScript({ target: { tabId }, files: ["content.js"] });
-	enabledTabs.add(tabId);
+	await setTabEnabled(tabId, originPattern);
 
 	return true;
 }
@@ -369,7 +397,7 @@ chrome.permissions.onAdded.addListener((permissions) => {
 });
 
 async function handleDisableTab(tabId: number): Promise<TabStateResponse> {
-	enabledTabs.delete(tabId);
+	await setTabDisabled(tabId);
 
 	try {
 		await chrome.tabs.sendMessage(tabId, { type: "unmount" });
@@ -433,7 +461,7 @@ async function dispatch(message: ExtensionRequest): Promise<unknown> {
 			return computeStatus();
 		}
 		case "getTabState": {
-			return { enabled: enabledTabs.has(message.tabId) } satisfies TabStateResponse;
+			return { enabled: (await getEnabledOrigin(message.tabId)) !== undefined } satisfies TabStateResponse;
 		}
 		case "armEnable": {
 			return handleArmEnable(message.tabId);
@@ -500,8 +528,41 @@ chrome.runtime.onInstalled.addListener(({ reason }) => {
 });
 
 chrome.tabs.onRemoved.addListener((tabId) => {
-	enabledTabs.delete(tabId);
+	void setTabDisabled(tabId);
 	pendingEnables.delete(tabId);
+});
+
+// Page loads wipe the injected overlay, but the user's enable choice stands:
+// re-inject on reload or same-origin navigation. A navigation to an origin the
+// grant doesn't cover turns the tab off instead of following the user around.
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+	const url = tab.url;
+
+	if (changeInfo.status !== "loading" || !url) {
+		return;
+	}
+
+	void (async () => {
+		const originPattern = await getEnabledOrigin(tabId);
+
+		if (originPattern === undefined) {
+			return;
+		}
+
+		const stillGranted =
+			`${new URL(url).origin}/*` === originPattern &&
+			(await chrome.permissions.contains({ origins: [originPattern] }));
+
+		if (!stillGranted) {
+			await setTabDisabled(tabId);
+
+			return;
+		}
+
+		await chrome.scripting.executeScript({ target: { tabId }, files: ["content.js"] });
+	})().catch((error: unknown) => {
+		console.error("[claudback] failed to re-inject overlay:", error);
+	});
 });
 
 // Referenced only so PopupRequest/ContentRequest narrowing stays exhaustive if

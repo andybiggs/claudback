@@ -2,10 +2,10 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { AddressInfo } from "node:net";
-import type { Server } from "node:http";
+import { createServer as createHttpServer, type Server } from "node:http";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { DEFAULT_PORT, TOKEN_HEADER } from "@claudback/shared";
+import { TOKEN_HEADER } from "@claudback/shared";
 
 import { createCollector, startCollector } from "./collector.js";
 import { createPairingManager, type PairingManager } from "./pairing.js";
@@ -454,11 +454,16 @@ describe("startCollector", () => {
 		await rm(dir, { recursive: true, force: true });
 	});
 
-	// startCollector always binds DEFAULT_PORT (the extension only ever talks
-	// to that fixed port), so this test needs it free rather than an ephemeral
-	// port like the rest of the file.
+	// A throwaway port rather than DEFAULT_PORT: a real collector is usually
+	// running on the developer's machine, and the test must not collide with it.
 	it("returns undefined instead of throwing when the port is already taken", async () => {
-		const first = await startCollector(store, TOKEN, pairing);
+		const probe = createHttpServer();
+
+		await new Promise<void>((resolve) => probe.listen(0, "127.0.0.1", resolve));
+		const freePort = (probe.address() as AddressInfo).port;
+		await new Promise<void>((resolve) => probe.close(() => resolve()));
+
+		const first = await startCollector(store, TOKEN, pairing, freePort);
 
 		expect(first).toBeDefined();
 
@@ -466,9 +471,9 @@ describe("startCollector", () => {
 			servers.push(first.server);
 		}
 
-		expect(first?.port).toBe(DEFAULT_PORT);
+		expect(first?.port).toBe(freePort);
 
-		const second = await startCollector(store, TOKEN, pairing);
+		const second = await startCollector(store, TOKEN, pairing, freePort);
 
 		expect(second).toBeUndefined();
 	});
