@@ -23,7 +23,7 @@ export async function main(): Promise<void> {
 
 	const server = new McpServer({ name: "claudback", version: "0.0.1" });
 
-	registerTools(server, store, pairing);
+	registerTools(server, store, pairing, collector !== undefined);
 	await server.connect(new StdioServerTransport());
 	console.error("[claudback] MCP server connected on stdio");
 }
