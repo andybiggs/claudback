@@ -86,7 +86,15 @@ async function render(): Promise<void> {
 	}
 
 	const tabId = tab.id;
-	const origin = new URL(tab.url).origin;
+	const parsed = new URL(tab.url);
+	const origin = parsed.origin;
+
+	if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+		toggle.disabled = true;
+		statusEl.textContent = "not available on this page";
+
+		return;
+	}
 
 	const tabState = await send<TabStateResponse>({ type: "getTabState", tabId });
 	toggle.checked = tabState.enabled;
