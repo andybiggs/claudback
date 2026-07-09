@@ -2,6 +2,7 @@
 <html>
 	<head>
 		<meta charset="utf-8" />
+		<title>Claudback pairing</title>
 		<style>
 			@font-face {
 				font-family: "Space Grotesk";
@@ -14,8 +15,10 @@
 				--secondary-text: #5c6167;
 				--faint-text: #8b9096;
 				--border: #e5e7e9;
+				--hairline: #eff1f2;
 				--input-border: #d9dcde;
 				--green: #0f8a46;
+				--green-hover: #0c6e38;
 				--green-strong: #0c6e38;
 				--green-tint: #eaf5ee;
 				--green-tint-hover: #dff0e5;
@@ -30,8 +33,10 @@
 					--secondary-text: #9aa1a8;
 					--faint-text: #6e757c;
 					--border: #2b3036;
+					--hairline: #2b3036;
 					--input-border: #2b3036;
 					--green: #0f8a46;
+					--green-hover: #0c6e38;
 					--green-strong: #3fc479;
 					--green-tint: rgba(63, 196, 121, 0.14);
 					--green-tint-hover: rgba(63, 196, 121, 0.2);
@@ -41,11 +46,14 @@
 					--surface: #141619;
 				}
 			}
+			* {
+				box-sizing: border-box;
+			}
 			body {
 				font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
-				max-width: 520px;
-				margin: 40px auto;
-				padding: 0 20px;
+				max-width: 800px;
+				margin: 56px auto;
+				padding: 0 32px;
 				color: var(--ink);
 				background: var(--surface);
 				line-height: 1.5;
@@ -53,12 +61,12 @@
 			.brand {
 				display: flex;
 				align-items: center;
-				gap: 10px;
-				margin-bottom: 12px;
+				gap: 14px;
+				margin-bottom: 6px;
 			}
 			.mark {
-				width: 22px;
-				height: 22px;
+				width: 34px;
+				height: 34px;
 				flex-shrink: 0;
 				background: var(--mark-bg);
 				border-radius: 50% 50% 50% 3px;
@@ -68,30 +76,64 @@
 			}
 			.mark::after {
 				content: "";
-				width: 7px;
-				height: 7px;
+				width: 10px;
+				height: 10px;
 				border-radius: 50%;
 				background: var(--mark-dot);
 			}
 			h1 {
 				font-family: "Space Grotesk", ui-sans-serif, sans-serif;
 				font-weight: 600;
-				font-size: 19px;
+				font-size: 26px;
 				letter-spacing: -0.01em;
 				margin: 0;
 			}
 			p {
-				font-size: 13px;
+				font-size: 15px;
 				color: var(--secondary-text);
-				line-height: 1.55;
+				line-height: 1.6;
 			}
 			code {
 				font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 				background: var(--ghost-bg);
-				padding: 1px 5px;
+				padding: 1px 6px;
 				border-radius: 4px;
-				font-size: 12px;
+				font-size: 13px;
 				color: var(--ink);
+			}
+			pre {
+				position: relative;
+				background: var(--ghost-bg);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 16px 18px;
+				overflow-x: auto;
+				font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+				font-size: 13px;
+				line-height: 1.5;
+				color: var(--ink);
+				margin: 12px 0;
+			}
+			.code-block {
+				position: relative;
+			}
+			.copy {
+				position: absolute;
+				top: 50%;
+				transform: translateY(-50%);
+				right: 10px;
+				border: 1px solid var(--border);
+				border-radius: 6px;
+				padding: 5px 10px;
+				font-size: 11px;
+				font-weight: 600;
+				cursor: pointer;
+				background: var(--surface);
+				color: var(--green-strong);
+				box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+			}
+			.copy:hover {
+				background: var(--green-tint);
 			}
 			input {
 				width: 100%;
@@ -101,17 +143,28 @@
 				background: var(--surface);
 				border: 1px solid var(--input-border);
 				border-radius: 8px;
-				box-sizing: border-box;
 			}
 			input::placeholder {
 				color: var(--faint-text);
+			}
+			input:focus-visible {
+				outline: none;
+				border-color: var(--green);
+				box-shadow: 0 0 0 1px var(--green) inset;
+			}
+			button:focus-visible {
+				outline: 2px solid var(--green);
+				outline-offset: 2px;
 			}
 			.row {
 				display: flex;
 				gap: 8px;
 				margin-top: 10px;
 			}
-			button {
+			.row input {
+				flex: 1;
+			}
+			button.primary {
 				border: none;
 				border-radius: 8px;
 				padding: 9px 16px;
@@ -121,11 +174,20 @@
 				background: var(--green);
 				color: #fff;
 			}
+			button.primary:hover:not(:disabled) {
+				background: var(--green-hover);
+			}
 			button.ghost {
+				border: none;
+				border-radius: 8px;
+				padding: 9px 16px;
+				font-size: 13px;
+				font-weight: 600;
+				cursor: pointer;
 				background: var(--green-tint);
 				color: var(--green-strong);
 			}
-			button.ghost:hover {
+			button.ghost:hover:not(:disabled) {
 				background: var(--green-tint-hover);
 			}
 			.status {
@@ -140,62 +202,22 @@
 				width: 7px;
 				height: 7px;
 				border-radius: 50%;
-				background: var(--green-strong);
+				background: var(--faint-text);
 				flex-shrink: 0;
 			}
-			.row input {
-				flex: 1;
+			.status-dot.ok {
+				background: var(--green-strong);
 			}
 			.hint {
 				font-size: 12px;
-				color: var(--faint-text);
-				margin-top: 8px;
-			}
-			.code-block {
-				position: relative;
-			}
-			pre {
-				background: var(--ghost-bg);
-				border: 1px solid var(--border);
-				border-radius: 8px;
-				padding: 14px 16px;
-				overflow-x: auto;
-				font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-				font-size: 12px;
-				line-height: 1.5;
-				color: var(--ink);
-				margin: 10px 0;
-			}
-			.copy {
-				position: absolute;
-				top: 8px;
-				right: 8px;
-				border: none;
-				border-radius: 6px;
-				padding: 5px 10px;
-				font-size: 11px;
-				font-weight: 600;
-				cursor: pointer;
-				background: var(--green-tint);
-				color: var(--green-strong);
-			}
-			.copy:hover {
-				background: var(--green-tint-hover);
-			}
-			details {
-				margin-top: 18px;
-				border-top: 1px solid var(--border);
-				padding-top: 12px;
-			}
-			summary {
-				font-size: 13px;
-				font-weight: 600;
 				color: var(--secondary-text);
-				cursor: pointer;
+				margin-top: 8px;
 			}
 			.guide-link {
 				display: inline-block;
-				margin-top: 18px;
+				margin-top: 24px;
+				padding-top: 14px;
+				border-top: 1px solid var(--hairline);
 				font-size: 13px;
 				color: var(--green-strong);
 				text-decoration: none;
@@ -220,6 +242,7 @@
 			<pre id="pair-prompt">Give me a Claudback pairing code</pre>
 			<button id="copy-prompt" class="copy">Copy</button>
 		</div>
+		<p>Then enter the code Claude gives you:</p>
 		<div class="row">
 			<input
 				id="pair-code"
@@ -229,23 +252,12 @@
 				autocapitalize="characters"
 				spellcheck="false"
 			/>
-			<button id="pair">Pair</button>
+			<button id="pair" class="primary">Pair</button>
+			<button id="test" class="ghost">Test connection</button>
 		</div>
 		<p class="hint">Codes look like <code>7XKQ-M3PD</code>, expire after 10 minutes, and work once.</p>
-		<details>
-			<summary>Paste the token manually instead</summary>
-			<p>
-				The long-lived token is generated on first run of the MCP server and stored at
-				<code>~/.claudback/token</code> (a hidden folder in your home directory).
-			</p>
-			<input id="token" type="password" placeholder="Paste pairing token" autocomplete="off" />
-			<div class="row">
-				<button id="save">Save token</button>
-				<button id="test" class="ghost">Test connection</button>
-			</div>
-		</details>
 		<div id="status" class="status">
-			<span class="status-dot"></span>
+			<span class="status-dot" id="status-dot"></span>
 			<span id="status-text"></span>
 		</div>
 		<a class="guide-link" href="onboarding.html">Open setup guide</a>
