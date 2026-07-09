@@ -1,6 +1,7 @@
 import type { Comment, NewCommentInput, Store, StoreMode } from "@claudback/shared";
 
 import { flushBuffer } from "./lib/buffer.js";
+import { originMatches } from "./lib/origin.js";
 import {
 	clearComments,
 	CollectorHttpError,
@@ -42,7 +43,15 @@ async function readEnabledTabs(): Promise<Record<string, string>> {
 	const result = await chrome.storage.session.get(ENABLED_TABS_KEY);
 	const tabs = result[ENABLED_TABS_KEY];
 
-	return typeof tabs === "object" && tabs !== null ? (tabs as Record<string, string>) : {};
+	if (typeof tabs === "object" && tabs !== null) {
+		return tabs as Record<string, string>;
+	}
+
+	if (tabs !== undefined) {
+		console.warn("[claudback] enabled-tabs state was malformed, resetting:", tabs);
+	}
+
+	return {};
 }
 
 async function getEnabledOrigin(tabId: number): Promise<string | undefined> {
@@ -423,7 +432,10 @@ async function handlePairWithCode(code: string): Promise<PairResponse> {
 			return { ok: false, state: status.state, error: "invalid_code" };
 		}
 
-		console.debug("[claudback] pairing exchange failed:", error);
+		// Not just "offline": a 500, 404, or malformed body lands here too, and
+		// pairing is the only way in — the cause must survive at a level
+		// DevTools shows by default.
+		console.warn("[claudback] pairing exchange failed:", error);
 
 		return { ok: false, state: "offline", error: "offline" };
 	}
@@ -528,7 +540,9 @@ chrome.runtime.onInstalled.addListener(({ reason }) => {
 });
 
 chrome.tabs.onRemoved.addListener((tabId) => {
-	void setTabDisabled(tabId);
+	setTabDisabled(tabId).catch((error: unknown) => {
+		console.error("[claudback] failed to clear closed tab's enabled state:", error);
+	});
 	pendingEnables.delete(tabId);
 });
 
@@ -550,7 +564,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 		}
 
 		const stillGranted =
-			`${new URL(url).origin}/*` === originPattern &&
+			originMatches(url, originPattern) &&
 			(await chrome.permissions.contains({ origins: [originPattern] }));
 
 		if (!stillGranted) {
@@ -561,7 +575,10 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 
 		await chrome.scripting.executeScript({ target: { tabId }, files: ["content.js"] });
 	})().catch((error: unknown) => {
+		// If the overlay couldn't be injected, the tab must not stay marked
+		// enabled — the popup would claim it's on while nothing is running.
 		console.error("[claudback] failed to re-inject overlay:", error);
+		setTabDisabled(tabId).catch(() => {});
 	});
 });
 

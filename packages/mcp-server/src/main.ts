@@ -1,3 +1,5 @@
+import type { Server } from "node:http";
+
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 
@@ -7,6 +9,36 @@ import { createPairingManager } from "./pairing.js";
 import { STORE_FILE } from "./paths.js";
 import { createStore } from "./store.js";
 import { registerTools } from "./tools.js";
+
+// Keep trying to bind so the extension always has a live collector: when the
+// owning session exits, the first surviving process wins the port and service
+// continues without the user restarting anything. unref'd so the loop never
+// keeps an otherwise-finished process alive.
+export function retryTakeover(
+	start: () => Promise<{ server: Server; port: number } | undefined>,
+	intervalMs: number,
+	onTaken: (port: number) => void,
+): NodeJS.Timeout {
+	const retry = setInterval(() => {
+		void start()
+			.then((taken) => {
+				if (taken) {
+					clearInterval(retry);
+					onTaken(taken.port);
+				}
+			})
+			.catch((error: unknown) => {
+				// EADDRINUSE resolves undefined; anything that rejects here is
+				// unexpected (EACCES, EPERM, …) and must not vanish, or the
+				// loop spins silently forever while the extension shows offline.
+				console.error("[claudback] collector takeover attempt failed:", error);
+			});
+	}, intervalMs);
+
+	retry.unref();
+
+	return retry;
+}
 
 export async function main(): Promise<void> {
 	const token = await loadOrCreateToken();
@@ -19,22 +51,9 @@ export async function main(): Promise<void> {
 		console.error(`[claudback] collector listening on http://127.0.0.1:${collector.port}`);
 	} else {
 		console.error("[claudback] another instance owns the collector port; will take over if it frees up");
-		// Keep trying to bind so the extension always has a live collector:
-		// when the owning session exits, the first surviving process wins the
-		// port and service continues without the user restarting anything.
-		const retry = setInterval(() => {
-			void startCollector(store, token, pairing)
-				.then((taken) => {
-					if (taken) {
-						clearInterval(retry);
-						console.error(`[claudback] took over collector on http://127.0.0.1:${taken.port}`);
-					}
-				})
-				.catch(() => {});
-		}, 2_000);
-
-		// Don't let the retry loop keep an otherwise-finished process alive.
-		retry.unref();
+		retryTakeover(() => startCollector(store, token, pairing), 2_000, (port) => {
+			console.error(`[claudback] took over collector on http://127.0.0.1:${port}`);
+		});
 	}
 
 	const server = new McpServer({ name: "claudback", version: "0.0.1" });

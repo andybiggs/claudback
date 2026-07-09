@@ -236,7 +236,18 @@ function mountClaudback(): void {
 	// --- worker I/O ---------------------------------------------------------
 
 	async function refresh(): Promise<void> {
-		const res = await send<ListResponse>({ type: "list", origin: window.location.origin });
+		let res: ListResponse | undefined;
+
+		try {
+			res = await send<ListResponse>({ type: "list", origin: window.location.origin });
+		} catch {
+			// The extension was reloaded or updated out from under this page,
+			// so this orphaned copy can never reach the worker again. Remove
+			// the overlay; re-enabling injects a fresh script that can.
+			teardown();
+
+			return;
+		}
 
 		if (res && res.ok) {
 			store = { mode: res.mode, comments: res.comments };
@@ -559,6 +570,11 @@ function mountClaudback(): void {
 	}
 
 	function render(): void {
+		// The teardown below removes any open popover node, so drop the anchor
+		// tracking with it or a later scroll would reposition a detached node.
+		anchor = null;
+		highlight.style.display = "none";
+
 		shadow.querySelectorAll(":not(style):not(link)").forEach((node) => {
 			node.remove();
 		});
