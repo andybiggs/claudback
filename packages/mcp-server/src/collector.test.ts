@@ -454,6 +454,9 @@ describe("startCollector", () => {
 		await rm(dir, { recursive: true, force: true });
 	});
 
+	// startCollector always binds DEFAULT_PORT (the extension only ever talks
+	// to that fixed port), so this test needs it free rather than an ephemeral
+	// port like the rest of the file.
 	it("returns undefined instead of throwing when the port is already taken", async () => {
 		const first = await startCollector(store, TOKEN, pairing);
 
