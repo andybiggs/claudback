@@ -8,6 +8,8 @@ Everything stays on your machine: comments sync to a loopback-only collector and
 
 **Docs & 101:** https://andybiggs.github.io/Claudback/ · **Status:** pre-v1. See [PLAN.md](./PLAN.md) for architecture and the security model, [RELEASING.md](./RELEASING.md) for the release process.
 
+Made by [Andy Biggs](https://www.andybiggs.net) (NZ).
+
 ## Quick start
 
 1. **Install the extension** — from the Chrome Web Store (link coming soon — until then, see [Load the extension from source](#load-the-extension-from-source) below). A setup guide opens on install.
@@ -72,7 +74,7 @@ Pairing normally happens by asking Claude for a code, but to grab the long-lived
 
 ```sh
 node packages/mcp-server/dist/bin.js
-# ^C once you see "collector listening on http://127.0.0.1:4319"
+# ^C once you see "collector listening on http://127.0.0.1:57463"
 cat ~/.claudback/token
 ```
 
@@ -87,6 +89,6 @@ If you want *live* sync to `~/.claudback/` while Claude is closed, you can run t
 node packages/mcp-server/dist/bin.js
 ```
 
-One caveat: the collector binds port 4319 exclusively, so while a standalone instance is running, a Claude session **cannot spawn its own** — the Claudback MCP tools (including `get_pairing_code`) will be unavailable in that session. Stop the standalone instance before working with Claude. For this reason, don't run it under a keep-alive supervisor (LaunchAgent/systemd): it will permanently starve Claude's own instance of the port.
+One caveat: the collector binds port 57463 exclusively, so while a standalone instance is running, a Claude session **cannot spawn its own** — the Claudback MCP tools (including `get_pairing_code`) will be unavailable in that session. Stop the standalone instance before working with Claude. For this reason, don't run it under a keep-alive supervisor (LaunchAgent/systemd): it will permanently starve Claude's own instance of the port.
 
 </details>

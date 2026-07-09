@@ -31,7 +31,9 @@ Claude starts and stops the server itself — there is nothing to run manually.
 
 ### Pair the extension
 
-On first run the server generates a pairing token, prints it to stderr, and stores it at `~/.claudback/token`. Paste it into the Claudback extension's setup page (it opens automatically when you install the [extension](https://github.com/andybiggs/Claudback#readme)) and you're connected.
+Ask Claude for a pairing code — *"Give me a Claudback pairing code"* — and type it into the Claudback extension's setup page (it opens automatically when you install the [extension](https://github.com/andybiggs/Claudback#readme)). Codes expire in 10 minutes and work once.
+
+Prefer doing it by hand? The server also generates a long-lived token on first run, printed to stderr and stored at `~/.claudback/token` — paste that into the setup page instead.
 
 ## Tools
 
@@ -40,6 +42,7 @@ On first run the server generates a pairing token, prints it to stderr, and stor
 | `get_comments` | Fetch comments, filterable by origin or URL substring |
 | `list_origins` | List sites with comments and counts |
 | `resolve_comment` | Mark a comment resolved (removed or kept, per store mode) |
+| `get_pairing_code` | Mint a short-lived, single-use code for pairing the extension |
 | `clear_comments` | Wipe the store, optionally per origin |
 
 ## Security
@@ -52,4 +55,4 @@ Full architecture and threat model: [github.com/andybiggs/Claudback](https://git
 
 ## License
 
-MIT
+[PolyForm Noncommercial 1.0.0](./LICENSE) — free for personal, internal, and noncommercial use. Not licensed for resale or as a paid product/service.
