@@ -224,14 +224,25 @@ interface OkResponse {
 	ok: boolean;
 }
 
-// Sends a message and reports failure (rejected ok, or a thrown "extension
-// context invalidated" error) uniformly via onError, without ever throwing.
-// Returns whether the call succeeded, so callers can decide what to do next.
+// The extension was reloaded or updated out from under this page: the
+// runtime rejects every message with this exact error. It isn't a real
+// failure to report — the orphaned overlay should tear itself down instead.
+function isContextInvalidated(error: unknown): boolean {
+	return error instanceof Error && error.message.includes("Extension context invalidated");
+}
+
+// Sends a message and reports failure uniformly via onError, without ever
+// throwing. A thrown "extension context invalidated" error routes to
+// onInvalidated instead (when given) so the caller can tear down rather than
+// show a misleading "couldn't save" toast for what is really an orphaned
+// overlay. Returns whether the call succeeded, so callers can decide what to
+// do next.
 async function sendGuarded<T extends OkResponse>(
 	message: ContentRequest,
 	label: string,
 	errorMessage: string,
 	onError: (message: string) => void,
+	onInvalidated?: () => void,
 ): Promise<boolean> {
 	try {
 		const res = await send<T>(message);
@@ -244,6 +255,12 @@ async function sendGuarded<T extends OkResponse>(
 
 		return true;
 	} catch (error) {
+		if (onInvalidated && isContextInvalidated(error)) {
+			onInvalidated();
+
+			return false;
+		}
+
 		console.error(`[claudback] ${label} failed:`, error);
 		onError(errorMessage);
 
@@ -519,6 +536,7 @@ function mountClaudback(): void {
 					"create",
 					"Couldn't save — comment not stored.",
 					showError,
+					teardown,
 				);
 
 				if (ok) {
@@ -592,6 +610,7 @@ function mountClaudback(): void {
 					"delete",
 					"Couldn't delete — change not stored.",
 					showError,
+					teardown,
 				);
 
 				if (ok) {
@@ -614,6 +633,7 @@ function mountClaudback(): void {
 					"update",
 					"Couldn't save — change not stored.",
 					showError,
+					teardown,
 				);
 
 				if (ok) {
@@ -743,6 +763,12 @@ function mountClaudback(): void {
 					showError("Couldn't clear — comments not removed.");
 				}
 			} catch (error) {
+				if (isContextInvalidated(error)) {
+					teardown();
+
+					return;
+				}
+
 				console.error("[claudback] clear failed:", error);
 				showError("Couldn't clear — comments not removed.");
 			}
@@ -782,6 +808,7 @@ function mountClaudback(): void {
 						"openOnboarding",
 						"Couldn't open the setup guide.",
 						showError,
+						teardown,
 					);
 				});
 				status.append(action);
@@ -808,6 +835,12 @@ function mountClaudback(): void {
 					showError("Couldn't change mode — change not stored.");
 				}
 			} catch (error) {
+				if (isContextInvalidated(error)) {
+					teardown();
+
+					return;
+				}
+
 				console.error("[claudback] setMode failed:", error);
 				showError("Couldn't change mode — change not stored.");
 			}
@@ -856,6 +889,12 @@ function mountClaudback(): void {
 							showError("Couldn't delete — change not stored.");
 						}
 					} catch (error) {
+						if (isContextInvalidated(error)) {
+							teardown();
+
+							return;
+						}
+
 						console.error("[claudback] delete failed:", error);
 						showError("Couldn't delete — change not stored.");
 					}
@@ -871,6 +910,12 @@ function mountClaudback(): void {
 							showError("Couldn't unresolve — change not stored.");
 						}
 					} catch (error) {
+						if (isContextInvalidated(error)) {
+							teardown();
+
+							return;
+						}
+
 						console.error("[claudback] unresolve failed:", error);
 						showError("Couldn't unresolve — change not stored.");
 					}
@@ -984,6 +1029,7 @@ function mountClaudback(): void {
 					"update",
 					"Couldn't save — change not stored.",
 					showError,
+					teardown,
 				);
 
 				if (ok) {
@@ -1083,7 +1129,15 @@ function mountClaudback(): void {
 		}
 	};
 
+	let tornDown = false;
+
 	function teardown(): void {
+		if (tornDown) {
+			return;
+		}
+
+		tornDown = true;
+
 		window.removeEventListener("mousemove", onMouseMove);
 		window.removeEventListener("click", onClickCapture, true);
 		window.removeEventListener("pointerdown", blockPageClicks, true);
@@ -1095,7 +1149,17 @@ function mountClaudback(): void {
 		window.removeEventListener("resize", reposition);
 		document.removeEventListener("visibilitychange", backgroundRefresh);
 		window.removeEventListener("focus", backgroundRefresh);
-		chrome.runtime.onMessage.removeListener(unmountHandler);
+
+		try {
+			// chrome.runtime itself can throw "Extension context invalidated"
+			// on touch once the extension has been reloaded or updated — this
+			// is the very case teardown() exists to handle, so it must not be
+			// able to throw its way out of running.
+			chrome.runtime.onMessage.removeListener(unmountHandler);
+		} catch {
+			// Nothing to remove from — the runtime is already gone.
+		}
+
 		host.remove();
 	}
 
@@ -1110,7 +1174,16 @@ function mountClaudback(): void {
 	window.addEventListener("resize", reposition);
 	document.addEventListener("visibilitychange", backgroundRefresh);
 	window.addEventListener("focus", backgroundRefresh);
-	chrome.runtime.onMessage.addListener(unmountHandler);
+
+	try {
+		chrome.runtime.onMessage.addListener(unmountHandler);
+	} catch {
+		// The context was invalidated between injection and this line — an
+		// unlikely race, but teardown() below still runs the DOM cleanup.
+		teardown();
+
+		return;
+	}
 
 	// Finishes an edit that started on another page: find the pending comment
 	// and open its popover. The target element may render late (client-side
