@@ -87,6 +87,7 @@
 			}
 			header {
 				display: flex;
+				flex-wrap: wrap;
 				align-items: center;
 				gap: 12px;
 				padding: 28px 0;
@@ -110,7 +111,8 @@
 			header nav {
 				margin-left: auto;
 				display: flex;
-				gap: 18px;
+				flex-wrap: wrap;
+				gap: 8px 18px;
 			}
 			header nav a {
 				color: var(--secondary-text);
@@ -323,6 +325,16 @@
 				font-size: 16px;
 				flex-shrink: 0;
 			}
+			.footer-brand {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+			}
+			.footer-links {
+				display: flex;
+				align-items: center;
+				gap: 20px;
+			}
 			@media (max-width: 560px) {
 				.diagram {
 					flex-direction: column;
@@ -331,6 +343,35 @@
 					justify-content: center;
 					padding: 6px 0;
 					transform: rotate(90deg);
+				}
+				header {
+					justify-content: center;
+				}
+				header nav {
+					margin-left: 0;
+					width: 100%;
+					justify-content: center;
+					gap: 6px 16px;
+				}
+				footer {
+					padding-top: 22px;
+				}
+				footer {
+					justify-content: center;
+					text-align: center;
+				}
+				.footer-brand {
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					gap: 12px;
+					width: 100%;
+				}
+				.footer-links {
+					display: flex;
+					justify-content: center;
+					gap: 16px;
+					width: 100%;
 				}
 			}
 			.card {
@@ -364,6 +405,7 @@
 				padding: 26px 0 0;
 				display: flex;
 				flex-wrap: wrap;
+				justify-content: space-between;
 				gap: 8px 20px;
 				align-items: center;
 				font-size: 13px;
@@ -391,7 +433,7 @@
 				<nav>
 					<a href="#how">How it works</a>
 					<a href="#start">Quick start</a>
-					<a href="https://github.com/andybiggs/Claudback">GitHub</a>
+					<a href="https://github.com/andybiggs/claudback">GitHub</a>
 				</nav>
 			</header>
 
@@ -473,19 +515,19 @@
 							<rect x="604" y="86" width="304" height="286" rx="14" fill="#191c1f" stroke="#2b3036" />
 						</g>
 						<line x1="604" y1="122" x2="908" y2="122" stroke="#2b3036" />
-						<circle cx="628" cy="104" r="5" fill="#3a3f44" />
-						<circle cx="646" cy="104" r="5" fill="#3a3f44" />
-						<circle cx="664" cy="104" r="5" fill="#3a3f44" />
+						<circle cx="628" cy="104" r="5" fill="#F26D5F" />
+						<circle cx="646" cy="104" r="5" fill="#F2BE4C" />
+						<circle cx="664" cy="104" r="5" fill="#57C25B" />
 						<text x="756" y="108" font-size="11.5" text-anchor="middle" fill="#6e757c" class="brand">Claude Code</text>
 
 						<text x="630" y="154" font-size="12.5" class="mono" fill="#9aa1a8">&gt; Hey Claude, check my</text>
 						<text x="630" y="172" font-size="12.5" class="mono" fill="#9aa1a8">  claudback comments</text>
-						<text x="630" y="204" font-size="12.5" class="mono" fill="#3fc479">● get_comments</text>
+						<text x="630" y="204" font-size="12.5" class="mono" fill="#f0913a">● get_comments</text>
 						<text x="630" y="234" font-size="12.5" class="mono" fill="#e9ecee">1 · “Make this bigger”</text>
 						<text x="630" y="252" font-size="11.5" class="mono" fill="#6e757c">#app › div › button</text>
 						<text x="630" y="284" font-size="12.5" class="mono" fill="#9aa1a8">editing button.css…</text>
-						<text x="630" y="316" font-size="12.5" class="mono" fill="#3fc479">✓ resolved</text>
-						<rect x="630" y="334" width="8" height="14" fill="#3fc479">
+						<text x="630" y="316" font-size="12.5" class="mono" fill="#f0913a">✓ resolved</text>
+						<rect x="630" y="334" width="8" height="14" fill="#f0913a">
 							<animate attributeName="opacity" values="1;1;0;0" dur="1.1s" repeatCount="indefinite" />
 						</rect>
 					</svg>
@@ -575,7 +617,7 @@
 			</section>
 
 			<section>
-				<h2 class="brand-font">Private by design</h2>
+				<h2 class="brand-font">Privacy</h2>
 				<div class="card">
 					<span class="tag">Local only</span>
 					<p>
@@ -600,18 +642,22 @@
 						Comments never enter Claude's context automatically. Claude reads them only when
 						you ask it to call the tools, and each comment is wrapped in an untrusted-data
 						envelope. Full threat model in the
-						<a href="https://github.com/andybiggs/Claudback">repo</a>.
+						<a href="https://github.com/andybiggs/claudback">repo</a>.
 					</p>
 				</div>
 			</section>
 
 			<footer>
-				<span class="mark" style="width: 18px; height: 18px; border-radius: 50% 50% 50% 2px"></span>
-				<span>Claudback <span class="note">by <a href="https://www.andybiggs.net">Andy Biggs</a> (NZ)</span></span>
-				<a href="https://github.com/andybiggs/Claudback">GitHub</a>
-				<a href="https://www.npmjs.com/package/claudback-mcp">npm</a>
-				<a href="privacy.html">Privacy</a>
-				<span class="note" style="margin-left: auto; white-space: nowrap">Requires Node 20+ and Claude</span>
+				<span class="footer-brand">
+					<span class="mark" style="width: 18px; height: 18px; border-radius: 50% 50% 50% 2px"></span>
+					<span>Claudback <span class="note">by <a href="https://www.andybiggs.net">Andy Biggs</a> (NZ)</span></span>
+				</span>
+				<span class="footer-links">
+					<a href="https://github.com/andybiggs/claudback">GitHub</a>
+					<a href="https://github.com/andybiggs/claudback/issues/new/choose">Feedback</a>
+					<a href="https://www.npmjs.com/package/claudback-mcp">Npm</a>
+					<a href="privacy.html">Privacy</a>
+				</span>
 			</footer>
 		</main>
 	</body>
