@@ -472,6 +472,11 @@ async function dispatch(message: ExtensionRequest): Promise<unknown> {
 		case "status": {
 			return computeStatus();
 		}
+		case "openOnboarding": {
+			await chrome.tabs.create({ url: chrome.runtime.getURL("onboarding.html") });
+
+			return { ok: true };
+		}
 		case "getTabState": {
 			return { enabled: (await getEnabledOrigin(message.tabId)) !== undefined } satisfies TabStateResponse;
 		}

@@ -22,7 +22,7 @@ Draft copy for the Web Store submission form. Not shipped in the extension zip.
 >
 > Claudback lets you pin visual-feedback comments to elements on any web page, a button that's the wrong colour, a layout that breaks on mobile, copy that needs a rewrite. Claude reads your comments through a local MCP server and makes the changes. Claudback gives Claude all the details it needs to know exactly what your comment was on.
 >
-> **The main use case:** you're iterating on a local build or prototype with Claude Code. Instead of screenshotting and describing where things are, enable Claudback on the Chrome tab where your site is, click the elements you want changed, and say why. Each comment carries the exact element selector. Then ask Claude: "check my claudback comments and make the changes."
+> **The main use case:** you're iterating on a local build or prototype with Claude Code. Instead of screenshotting and describing where things are, enable Claudback on the Chrome tab where your site is, click the elements you want changed, and say why. Each comment carries the exact element selector. Then ask Claude: "Grab my Claudback comments."
 >
 > It's not just for code changes. You can pin comments while browsing any site (a competitor's product, a reference design, a client's current site) you can then ask Claude to turn them into a doc: A competitor teardown, a PRD, a slide deck, whatever your needs are.
 >

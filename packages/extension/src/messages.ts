@@ -20,7 +20,8 @@ export type ContentRequest =
 	| { type: "unresolve"; id: string }
 	| { type: "clear"; origin: string }
 	| { type: "setMode"; mode: StoreMode }
-	| { type: "status" };
+	| { type: "status" }
+	| { type: "openOnboarding" };
 
 export type PopupRequest =
 	| { type: "getTabState"; tabId: number }

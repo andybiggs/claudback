@@ -23,7 +23,7 @@ Made by [Andy Biggs](https://www.andybiggs.net) (NZ).
 
 3. **Pair** — ask Claude for a pairing code ("Give me a Claudback pairing code") and type it into the extension's setup page. Codes expire in 10 minutes and work once. Fallback: paste the long-lived token from `~/.claudback/token` (saved on the server's first run, also printed to stderr) instead.
 4. **Annotate** — click the Claudback icon on any tab → **Enable**, grant the per-site permission, and pin comments with the floating button.
-5. **Ask Claude** — "check my claudback comments and make the changes." Claude reads them via the `get_comments` tool; `list_origins`, `resolve_comment`, and `clear_comments` are also available.
+5. **Ask Claude** — "Grab my Claudback comments." Claude reads them via the `get_comments` tool; `list_origins`, `resolve_comment`, and `clear_comments` are also available.
 
 ## Development
 

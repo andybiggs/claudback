@@ -11,6 +11,7 @@ import { buildSelector, type Comment, type NewCommentInput, type StoreMode } fro
 
 import { excerptFromNames } from "./lib/excerpt.js";
 import type { ContentRequest, CreateResponse, ListResponse, SimpleResponse, SyncState } from "./messages.js";
+import { CLAUDE_RESTART_PROMPT } from "./prompts.js";
 
 interface Store {
 	mode: StoreMode;
@@ -36,6 +37,7 @@ const STYLES = `
 		--green: #0f8a46; --green-active: #0c6e38; --green-strong: #3fc479; --green-tint: rgba(63,196,121,.14);
 		--ghost-bg: #2b3036; --ghost-text: #c9ced3;
 		--danger: #f08578; --danger-tint: rgba(192,39,27,.18);
+		--warning-text: #dfa64a; --warning-dot: #c88a04; --warning-bg: rgba(200,138,4,.14); --warning-border: rgba(200,138,4,.3);
 		--surface: #1c1f23; --shadow-alpha: .4;
 	}
 }
@@ -143,8 +145,9 @@ button.btn:disabled { opacity: .5; cursor: default; }
 .panel header .hostname { font-size: 11px; color: var(--faint-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .panel .clear-all { font-size: 12px; font-weight: 600; color: var(--danger); background: var(--danger-tint); border: none; border-radius: 6px; padding: 4px 10px; cursor: pointer; flex-shrink: 0; }
 .panel .clear-all:disabled { opacity: .5; cursor: default; }
-.panel .sync-strip { display: flex; align-items: center; gap: 7px; padding: 8px 14px; font-size: 12px; font-weight: 600; border-bottom: 1px solid var(--warning-border); background: var(--warning-bg); color: var(--warning-text); }
+.panel .sync-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 7px; padding: 8px 14px; font-size: 12px; font-weight: 600; border-bottom: 1px solid var(--warning-border); background: var(--warning-bg); color: var(--warning-text); }
 .panel .sync-strip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--warning-dot); flex-shrink: 0; }
+.panel .sync-strip .sync-action { margin-left: 14px; border: none; background: none; padding: 0; font-size: 12px; font-weight: 600; color: var(--warning-text); text-decoration: underline; cursor: pointer; text-align: left; }
 .panel .mode { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 10px 14px; border-bottom: 1px solid var(--hairline); }
 .panel .mode select { font-size: 12px; padding: 3px 6px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); }
 .item { padding: 10px 14px; border-bottom: 1px solid var(--divider); }
@@ -173,6 +176,45 @@ button.btn:disabled { opacity: .5; cursor: default; }
 const ADD_ICON = `<span class="waypoint-icon"><svg width="14" height="14" viewBox="0 0 14 14"><line x1="7" y1="4" x2="7" y2="10" stroke="#0F8A46" stroke-width="2" stroke-linecap="round"/><line x1="4" y1="7" x2="10" y2="7" stroke="#0F8A46" stroke-width="2" stroke-linecap="round"/></svg></span>`;
 const CLOSE_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
 const LIST_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>`;
+
+// Carries an "edit this comment" intent across a same-origin navigation: the
+// panel stores the comment id here before navigating, and the fresh overlay on
+// the destination page resumes the edit. sessionStorage is per-tab and
+// per-origin, so the intent can't leak to other tabs or sites.
+const PENDING_EDIT_KEY = "claudback-pending-edit";
+
+// Clipboard write that also works where navigator.clipboard doesn't exist —
+// content scripts on insecure origins (plain-http LAN dev servers) — by
+// falling back to a scratch textarea + execCommand("copy"). Returns whether
+// the text actually made it onto the clipboard, so callers can surface
+// failure instead of showing a false "Copied!".
+async function copyToClipboard(text: string): Promise<boolean> {
+	try {
+		if (navigator.clipboard) {
+			await navigator.clipboard.writeText(text);
+
+			return true;
+		}
+	} catch {
+		// e.g. the page's Permissions-Policy blocks clipboard-write, or the
+		// document lost focus — try the legacy path below.
+	}
+
+	try {
+		const scratch = document.createElement("textarea");
+		scratch.value = text;
+		scratch.style.position = "fixed";
+		scratch.style.opacity = "0";
+		document.body.append(scratch);
+		scratch.select();
+		const ok = document.execCommand("copy");
+		scratch.remove();
+
+		return ok;
+	} catch {
+		return false;
+	}
+}
 
 function send<T>(message: ContentRequest): Promise<T> {
 	return chrome.runtime.sendMessage(message) as Promise<T>;
@@ -311,9 +353,53 @@ function mountClaudback(): void {
 		}
 
 		const rect = anchor.el.getBoundingClientRect();
-		anchor.pop.style.left = `${Math.min(rect.left + anchor.dx, window.innerWidth - 300)}px`;
-		anchor.pop.style.top = `${Math.min(rect.top + anchor.dy, window.innerHeight - 200)}px`;
+		let left = rect.left + anchor.dx;
+		let top = rect.top + anchor.dy;
+
+		// While the element is on screen, keep the popover on screen too — an
+		// element taller than the viewport puts the anchored offset far outside
+		// the visible area even though the element itself fills the screen.
+		// Only once the element leaves the viewport may the popover follow it
+		// out, and only off the top/left — the right/bottom clamps always
+		// apply, as they did before this branch existed.
+		const onScreen =
+			rect.bottom > 0 && rect.top < window.innerHeight && rect.right > 0 && rect.left < window.innerWidth;
+
+		if (onScreen) {
+			left = Math.max(10, Math.min(left, window.innerWidth - 300));
+			top = Math.max(10, Math.min(top, window.innerHeight - 200));
+		} else {
+			left = Math.min(left, window.innerWidth - 300);
+			top = Math.min(top, window.innerHeight - 200);
+		}
+
+		anchor.pop.style.left = `${left}px`;
+		anchor.pop.style.top = `${top}px`;
 		frameElement(anchor.el);
+	}
+
+	// Scrolls so the element's top lands about 30% down the viewport — in view
+	// with some context above it, and for elements taller than the viewport it
+	// keeps the top (and the popover's clamped position) on screen where
+	// centering would not. scrollIntoView (rather than window.scrollBy) so
+	// scrollable ancestors inside the page get scrolled too; the temporary
+	// scroll-margin-top supplies the 30% offset, which block: "start" alone
+	// can't express.
+	function scrollCommentIntoView(el: Element): void {
+		if (!(el instanceof HTMLElement)) {
+			el.scrollIntoView({ block: "start", behavior: "smooth" });
+
+			return;
+		}
+
+		const previous = el.style.scrollMarginTop;
+		el.style.scrollMarginTop = `${Math.round(window.innerHeight * 0.3)}px`;
+		el.scrollIntoView({ block: "start", behavior: "smooth" });
+		// The scroll target is computed at the call above; restore on the next
+		// frame so the margin never leaks into the page's own styling.
+		requestAnimationFrame(() => {
+			el.style.scrollMarginTop = previous;
+		});
 	}
 
 	function elementAtPoint(x: number, y: number): Element | null {
@@ -473,8 +559,12 @@ function mountClaudback(): void {
 		const rect = el.getBoundingClientRect();
 		const pop = document.createElement("div");
 		pop.className = "popover transient";
-		pop.style.left = `${Math.min(rect.left, window.innerWidth - 300)}px`;
-		pop.style.top = `${Math.min(rect.bottom + 6, window.innerHeight - 200)}px`;
+		// Anchor at the element's bottom-left corner, unclamped — the anchor
+		// offset must describe the true tie point so the popover tracks the
+		// bottom edge as the element moves. repositionTransient below applies
+		// the on-screen clamping for display.
+		pop.style.left = `${rect.left}px`;
+		pop.style.top = `${rect.bottom + 6}px`;
 		pop.innerHTML = `
 			<div class="meta mono">${escapeHtml(comment.selector)}${comment.resolved ? " · resolved" : ""}</div>
 			<textarea>${escapeHtml(comment.text)}</textarea>
@@ -485,6 +575,7 @@ function mountClaudback(): void {
 			</div>`;
 		shadow.append(pop);
 		anchorTransient(el, pop);
+		repositionTransient();
 
 		const textarea = pop.querySelector("textarea") as HTMLTextAreaElement;
 
@@ -552,10 +643,10 @@ function mountClaudback(): void {
 	function statusLabel(): string | null {
 		switch (syncState) {
 			case "unpaired": {
-				return "Not paired — set the token in the extension options.";
+				return "Claudback isn't set up on this computer yet.";
 			}
 			case "offline": {
-				return "Collector offline — comments saved locally, retrying.";
+				return "Can't reach the local Claudback server.";
 			}
 			case "unauthorized": {
 				return "Pairing token rejected — re-pair from the extension options page.";
@@ -665,6 +756,37 @@ function mountClaudback(): void {
 			const status = document.createElement("div");
 			status.className = "sync-strip";
 			status.innerHTML = `<span class="dot"></span>${escapeHtml(syncLabel)}`;
+
+			if (syncState === "offline") {
+				const action = document.createElement("button");
+				action.className = "sync-action";
+				action.textContent = "Copy restart prompt for Claude";
+				action.addEventListener("click", async () => {
+					if (await copyToClipboard(CLAUDE_RESTART_PROMPT)) {
+						action.textContent = "Copied!";
+						setTimeout(() => {
+							action.textContent = "Copy restart prompt for Claude";
+						}, 1500);
+					} else {
+						showError("Couldn't copy — this page blocks clipboard access.");
+					}
+				});
+				status.append(action);
+			} else if (syncState === "unpaired") {
+				const action = document.createElement("button");
+				action.className = "sync-action";
+				action.textContent = "Open setup guide";
+				action.addEventListener("click", () => {
+					void sendGuarded<SimpleResponse>(
+						{ type: "openOnboarding" },
+						"openOnboarding",
+						"Couldn't open the setup guide.",
+						showError,
+					);
+				});
+				status.append(action);
+			}
+
 			panel.append(status);
 		}
 
@@ -755,14 +877,30 @@ function mountClaudback(): void {
 				}
 
 				if (act === "edit") {
-					const el = comment.url === window.location.href ? resolveElement(comment.selector) : null;
+					const onThisPage = comment.url === window.location.href;
+					const el = onThisPage ? resolveElement(comment.selector) : null;
 
 					if (el) {
-						el.scrollIntoView({ block: "center", behavior: "smooth" });
+						scrollCommentIntoView(el);
 						openPinPopover(comment, el);
+					} else if (!onThisPage) {
+						// The comment lives on another page of this origin —
+						// navigate there and let the freshly injected overlay
+						// pick the edit back up via sessionStorage.
+						try {
+							sessionStorage.setItem(PENDING_EDIT_KEY, comment.id);
+						} catch (error) {
+							// Storage unavailable (e.g. blocked) — fall back to
+							// editing in place rather than losing the click.
+							console.error("[claudback] sessionStorage unavailable:", error);
+							openInlineEdit(item, comment);
+
+							return;
+						}
+						window.location.href = comment.url;
 					} else {
-						// The element lives on another page (or is gone), so
-						// there's nothing to anchor a popover to — edit in place.
+						// On the right page but the element is gone, so there's
+						// nothing to anchor a popover to — edit in place.
 						openInlineEdit(item, comment);
 					}
 				}
@@ -771,7 +909,7 @@ function mountClaudback(): void {
 		});
 
 		if (store.comments.length > 0) {
-			const PROMPT = "Grab my Claudback comments and make the changes";
+			const PROMPT = "Grab my Claudback comments";
 			const footer = document.createElement("div");
 			footer.className = "prompt-footer";
 			footer.innerHTML = `
@@ -786,8 +924,10 @@ function mountClaudback(): void {
 						Copy
 					</button>
 				</div>`;
-			footer.querySelector(".copy-prompt")?.addEventListener("click", () => {
-				navigator.clipboard.writeText(PROMPT).catch(() => {});
+			footer.querySelector(".copy-prompt")?.addEventListener("click", async () => {
+				if (!(await copyToClipboard(PROMPT))) {
+					showError("Couldn't copy — this page blocks clipboard access.");
+				}
 			});
 			panel.append(footer);
 		}
@@ -972,7 +1112,72 @@ function mountClaudback(): void {
 	window.addEventListener("focus", backgroundRefresh);
 	chrome.runtime.onMessage.addListener(unmountHandler);
 
-	void refresh();
+	// Finishes an edit that started on another page: find the pending comment
+	// and open its popover. The target element may render late (client-side
+	// hydration), so retry briefly before giving up and opening the panel.
+	function resumePendingEdit(): void {
+		let id: string | null = null;
+
+		try {
+			id = sessionStorage.getItem(PENDING_EDIT_KEY);
+
+			if (id !== null) {
+				sessionStorage.removeItem(PENDING_EDIT_KEY);
+			}
+		} catch (error) {
+			console.error("[claudback] sessionStorage unavailable:", error);
+
+			return;
+		}
+
+		if (id === null) {
+			return;
+		}
+
+		const comment = store.comments.find((candidate) => candidate.id === id);
+
+		if (!comment) {
+			// Cleared out-of-band during the navigation (e.g. Claude read and
+			// cleared it) — say so rather than landing the user on a page with
+			// no acknowledgment of their click.
+			showError("That comment is gone — it may have been cleared after Claude read it.");
+
+			return;
+		}
+
+		let tries = 0;
+		const attempt = (): void => {
+			if (!host.isConnected) {
+				return;
+			}
+
+			const el = resolveElement(comment.selector);
+
+			if (el) {
+				scrollCommentIntoView(el);
+				openPinPopover(comment, el);
+
+				return;
+			}
+
+			tries += 1;
+
+			if (tries < 10) {
+				setTimeout(attempt, 300);
+			} else {
+				// The element never appeared — show the panel so the comment
+				// is still reachable for an inline edit. showError after
+				// render(), which tears down every non-style shadow node.
+				panelOpen = true;
+				render();
+				showError("Couldn't find that element on this page — edit the comment from the panel.");
+			}
+		};
+
+		attempt();
+	}
+
+	void refresh().then(resumePendingEdit);
 }
 
 function escapeHtml(value: string): string {
