@@ -52,6 +52,8 @@ npm run build --workspace=@claudback/extension
 
 Open `chrome://extensions`, enable Developer mode, click **Load unpacked**, select `packages/extension/dist/`. The setup guide opens automatically on first install (or via **Pairing & options → Open setup guide**).
 
+An unpacked build gets a random per-machine extension ID, which won't match the published ID pinned in `packages/mcp-server/src/security.ts` — the collector will reject its requests with a 403. To test against a local `claudback-mcp` build, either add a `"key"` field to `manifest.json` matching the published ID, or test against the packed Web Store build instead.
+
 ### Run the server from source
 
 ```sh
