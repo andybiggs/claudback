@@ -24,6 +24,8 @@
 				--mark-dot: #fff;
 				--danger: #c0271b;
 				--warning: #8a5a00;
+				--warning-bg: #fbf3e0;
+				--warning-border: #f2e4c4;
 				--surface: #fff;
 			}
 			@media (prefers-color-scheme: dark) {
@@ -42,6 +44,8 @@
 					--mark-dot: #1c1f23;
 					--danger: #f08578;
 					--warning: #dfa64a;
+					--warning-bg: rgba(200, 138, 4, 0.14);
+					--warning-border: rgba(200, 138, 4, 0.3);
 					--surface: #1c1f23;
 				}
 			}
@@ -150,8 +154,12 @@
 			}
 			.hint {
 				font-size: 13px;
-				color: var(--faint-text);
-				margin: -6px 0 10px;
+				color: var(--warning);
+				background: var(--warning-bg);
+				border: 1px solid var(--warning-border);
+				border-radius: 8px;
+				padding: 8px 10px;
+				margin: -2px 0 10px;
 			}
 			.hint .copy-btn {
 				display: block;
@@ -160,9 +168,13 @@
 				padding: 0;
 				margin-top: 4px;
 				font-size: 13px;
-				color: var(--green-strong);
+				color: var(--warning);
+				font-weight: 600;
 				text-decoration: underline;
 				cursor: pointer;
+			}
+			.hint .copy-btn[hidden] {
+				display: none;
 			}
 			.switch {
 				position: relative;
