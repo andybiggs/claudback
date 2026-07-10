@@ -163,4 +163,9 @@ document.getElementById("options")?.addEventListener("click", () => {
 	chrome.runtime.openOptionsPage();
 });
 
+document.getElementById("feedback")?.addEventListener("click", () => {
+	chrome.tabs.create({ url: "https://andybiggs.github.io/claudback/" });
+	window.close();
+});
+
 void render();

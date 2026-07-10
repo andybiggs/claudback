@@ -27,12 +27,12 @@
 	"license": "SEE LICENSE IN LICENSE",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/andybiggs/Claudback.git",
+		"url": "git+https://github.com/andybiggs/claudback.git",
 		"directory": "packages/mcp-server"
 	},
-	"homepage": "https://andybiggs.github.io/Claudback/",
+	"homepage": "https://andybiggs.github.io/claudback/",
 	"bugs": {
-		"url": "https://github.com/andybiggs/Claudback/issues"
+		"url": "https://github.com/andybiggs/claudback/issues"
 	},
 	"engines": {
 		"node": ">=20"

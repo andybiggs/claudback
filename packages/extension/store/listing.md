@@ -7,8 +7,8 @@ Draft copy for the Web Store submission form. Not shipped in the extension zip.
 - **Name**: Claudback
 - **Category**: Developer Tools
 - **Language**: English
-- **Homepage URL**: https://andybiggs.github.io/Claudback/
-- **Privacy policy URL**: https://andybiggs.github.io/Claudback/privacy.html
+- **Homepage URL**: https://andybiggs.github.io/claudback/
+- **Privacy policy URL**: https://andybiggs.github.io/claudback/privacy.html
 
 ## Short description (max 132 chars)
 
@@ -29,7 +29,7 @@ Draft copy for the Web Store submission form. Not shipped in the extension zip.
 > **How it works**
 > - The extension is off by default and you enable it per tab.
 > - Comments sync to a local collector on 127.0.0.1 run by the `claudback-mcp` server (installed via `npx` the first-run guide walks you through it).
-> - Claude reads the comments via MCP tools (`get_comments`, `list_origins`, `resolve_comment`, `clear_comments`).
+> - Claude reads the comments via MCP tools (`get_comments`, `list_origins`, `resolve_comment`, `clear_comments`), plus `get_pairing_code` for setup.
 >
 > **Private and secure**
 > - There are no remote servers, no accounts, no analytics.
@@ -37,7 +37,7 @@ Draft copy for the Web Store submission form. Not shipped in the extension zip.
 > - Your comments live in `~/.claudback/` on your own machine.
 > - I've no interest in commercialising this, it's just a helpful tool for the people.
 >
-> Requires the free `claudback-mcp` npm package (Node 20+) and Claude Code or Claude Desktop. Setup guide opens on install.
+> Requires the free `claudback-mcp` npm package (Node 20+) and Claude Code (CLI or Desktop App). Setup guide opens on install.
 >
 > Made by Andy Biggs (NZ) — www.andybiggs.net
 

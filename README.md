@@ -6,7 +6,7 @@ Claudback is a Chrome extension for pinning visual-feedback comments to elements
 
 Everything stays on your machine: comments sync to a loopback-only collector and live in `~/.claudback/`.
 
-**Docs & 101:** https://andybiggs.github.io/Claudback/ · **Status:** pre-v1. See [PLAN.md](./PLAN.md) for architecture and the security model, [RELEASING.md](./RELEASING.md) for the release process.
+**Docs & 101:** https://andybiggs.github.io/claudback/ · **Status:** pre-v1. See [PLAN.md](./PLAN.md) for architecture and the security model, [RELEASING.md](./RELEASING.md) for the release process.
 
 Made by [Andy Biggs](https://www.andybiggs.net) (NZ).
 
