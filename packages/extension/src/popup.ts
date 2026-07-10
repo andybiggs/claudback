@@ -34,7 +34,7 @@ function statusText(state: SyncState): string {
 
 // Neutral (unpaired) / amber (offline) / red (unauthorized) / blue (pending —
 // in progress, not wrong) / green (synced) — the same palette as the rest of
-// the popup and overlay.
+// the popup.
 function statusClass(state: SyncState): string {
 	return `status-${state}`;
 }
@@ -135,8 +135,15 @@ async function render(): Promise<void> {
 
 	copyBtn.hidden = status.state !== "offline";
 	copyBtn.onclick = async () => {
-		await navigator.clipboard.writeText(CLAUDE_RESTART_PROMPT);
-		copyBtn.textContent = "Copied!";
+		try {
+			await navigator.clipboard.writeText(CLAUDE_RESTART_PROMPT);
+			copyBtn.textContent = "Copied!";
+		} catch (error) {
+			// writeText rejects if the popup loses focus mid-write — carry the
+			// failure on the button itself; the popup has no toast machinery.
+			console.error("[claudback] clipboard write failed:", error);
+			copyBtn.textContent = "Couldn't copy — try again";
+		}
 		setTimeout(() => {
 			copyBtn.textContent = "Copy restart prompt for Claude";
 		}, 1500);

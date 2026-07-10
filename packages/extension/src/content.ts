@@ -37,6 +37,7 @@ const STYLES = `
 		--green: #0f8a46; --green-active: #0c6e38; --green-strong: #3fc479; --green-tint: rgba(63,196,121,.14);
 		--ghost-bg: #2b3036; --ghost-text: #c9ced3;
 		--danger: #f08578; --danger-tint: rgba(192,39,27,.18);
+		--warning-text: #dfa64a; --warning-dot: #c88a04; --warning-bg: rgba(200,138,4,.14); --warning-border: rgba(200,138,4,.3);
 		--surface: #1c1f23; --shadow-alpha: .4;
 	}
 }
@@ -182,6 +183,39 @@ const LIST_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 // per-origin, so the intent can't leak to other tabs or sites.
 const PENDING_EDIT_KEY = "claudback-pending-edit";
 
+// Clipboard write that also works where navigator.clipboard doesn't exist —
+// content scripts on insecure origins (plain-http LAN dev servers) — by
+// falling back to a scratch textarea + execCommand("copy"). Returns whether
+// the text actually made it onto the clipboard, so callers can surface
+// failure instead of showing a false "Copied!".
+async function copyToClipboard(text: string): Promise<boolean> {
+	try {
+		if (navigator.clipboard) {
+			await navigator.clipboard.writeText(text);
+
+			return true;
+		}
+	} catch {
+		// e.g. the page's Permissions-Policy blocks clipboard-write, or the
+		// document lost focus — try the legacy path below.
+	}
+
+	try {
+		const scratch = document.createElement("textarea");
+		scratch.value = text;
+		scratch.style.position = "fixed";
+		scratch.style.opacity = "0";
+		document.body.append(scratch);
+		scratch.select();
+		const ok = document.execCommand("copy");
+		scratch.remove();
+
+		return ok;
+	} catch {
+		return false;
+	}
+}
+
 function send<T>(message: ContentRequest): Promise<T> {
 	return chrome.runtime.sendMessage(message) as Promise<T>;
 }
@@ -325,7 +359,9 @@ function mountClaudback(): void {
 		// While the element is on screen, keep the popover on screen too — an
 		// element taller than the viewport puts the anchored offset far outside
 		// the visible area even though the element itself fills the screen.
-		// Only once the element leaves the viewport may the popover follow it out.
+		// Only once the element leaves the viewport may the popover follow it
+		// out, and only off the top/left — the right/bottom clamps always
+		// apply, as they did before this branch existed.
 		const onScreen =
 			rect.bottom > 0 && rect.top < window.innerHeight && rect.right > 0 && rect.left < window.innerWidth;
 
@@ -726,11 +762,14 @@ function mountClaudback(): void {
 				action.className = "sync-action";
 				action.textContent = "Copy restart prompt for Claude";
 				action.addEventListener("click", async () => {
-					await navigator.clipboard.writeText(CLAUDE_RESTART_PROMPT);
-					action.textContent = "Copied!";
-					setTimeout(() => {
-						action.textContent = "Copy restart prompt for Claude";
-					}, 1500);
+					if (await copyToClipboard(CLAUDE_RESTART_PROMPT)) {
+						action.textContent = "Copied!";
+						setTimeout(() => {
+							action.textContent = "Copy restart prompt for Claude";
+						}, 1500);
+					} else {
+						showError("Couldn't copy — this page blocks clipboard access.");
+					}
 				});
 				status.append(action);
 			} else if (syncState === "unpaired") {
@@ -850,9 +889,10 @@ function mountClaudback(): void {
 						// pick the edit back up via sessionStorage.
 						try {
 							sessionStorage.setItem(PENDING_EDIT_KEY, comment.id);
-						} catch {
+						} catch (error) {
 							// Storage unavailable (e.g. blocked) — fall back to
 							// editing in place rather than losing the click.
+							console.error("[claudback] sessionStorage unavailable:", error);
 							openInlineEdit(item, comment);
 
 							return;
@@ -884,8 +924,10 @@ function mountClaudback(): void {
 						Copy
 					</button>
 				</div>`;
-			footer.querySelector(".copy-prompt")?.addEventListener("click", () => {
-				navigator.clipboard.writeText(PROMPT).catch(() => {});
+			footer.querySelector(".copy-prompt")?.addEventListener("click", async () => {
+				if (!(await copyToClipboard(PROMPT))) {
+					showError("Couldn't copy — this page blocks clipboard access.");
+				}
 			});
 			panel.append(footer);
 		}
@@ -1078,7 +1120,13 @@ function mountClaudback(): void {
 
 		try {
 			id = sessionStorage.getItem(PENDING_EDIT_KEY);
-		} catch {
+
+			if (id !== null) {
+				sessionStorage.removeItem(PENDING_EDIT_KEY);
+			}
+		} catch (error) {
+			console.error("[claudback] sessionStorage unavailable:", error);
+
 			return;
 		}
 
@@ -1086,11 +1134,14 @@ function mountClaudback(): void {
 			return;
 		}
 
-		sessionStorage.removeItem(PENDING_EDIT_KEY);
-
 		const comment = store.comments.find((candidate) => candidate.id === id);
 
 		if (!comment) {
+			// Cleared out-of-band during the navigation (e.g. Claude read and
+			// cleared it) — say so rather than landing the user on a page with
+			// no acknowledgment of their click.
+			showError("That comment is gone — it may have been cleared after Claude read it.");
+
 			return;
 		}
 
@@ -1115,9 +1166,11 @@ function mountClaudback(): void {
 				setTimeout(attempt, 300);
 			} else {
 				// The element never appeared — show the panel so the comment
-				// is still reachable for an inline edit.
+				// is still reachable for an inline edit. showError after
+				// render(), which tears down every non-style shadow node.
 				panelOpen = true;
 				render();
+				showError("Couldn't find that element on this page — edit the comment from the panel.");
 			}
 		};
 
