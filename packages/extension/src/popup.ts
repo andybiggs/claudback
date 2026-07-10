@@ -10,11 +10,7 @@ function send<T>(message: PopupRequest | { type: "status" } | { type: "list"; or
 	return chrome.runtime.sendMessage(message) as Promise<T>;
 }
 
-const CLAUDE_START_SERVER_PROMPT =
-	"The Claudback MCP server (claudback-mcp) isn't running — check that it is " +
-	"registered with this Claude client (for Claude Code: claude mcp add --scope " +
-	"user claudback -- npx -y claudback-mcp) and confirm its collector is up by calling the " +
-	"list_origins tool.";
+import { CLAUDE_RESTART_PROMPT } from "./prompts.js";
 
 function statusText(state: SyncState): string {
 	switch (state) {
@@ -36,9 +32,9 @@ function statusText(state: SyncState): string {
 	}
 }
 
-// Neutral (unpaired) / red (offline) / blue (pending — in progress, not
-// wrong) / green (synced) — the same palette as the rest of the popup and
-// overlay.
+// Neutral (unpaired) / amber (offline) / red (unauthorized) / blue (pending —
+// in progress, not wrong) / green (synced) — the same palette as the rest of
+// the popup and overlay.
 function statusClass(state: SyncState): string {
 	return `status-${state}`;
 }
@@ -49,7 +45,7 @@ function statusHint(state: SyncState): string | null {
 			return "Can't reach the local Claudback server.";
 		}
 		case "unpaired": {
-			return "Ask Claude for a pairing code, then enter it via the gear icon above.";
+			return "Claudback isn't set up on this computer yet.";
 		}
 		case "unauthorized": {
 			return "The collector rejected the pairing token — ask Claude for a pairing code and re-pair via the gear icon above.";
@@ -75,6 +71,7 @@ async function render(): Promise<void> {
 	const hintEl = document.getElementById("status-hint") as HTMLDivElement;
 	const hintTextEl = document.getElementById("status-hint-text") as HTMLSpanElement;
 	const copyBtn = document.getElementById("copy-prompt") as HTMLButtonElement;
+	const setupBtn = document.getElementById("open-setup") as HTMLButtonElement;
 
 	const tab = await activeTab();
 
@@ -138,11 +135,17 @@ async function render(): Promise<void> {
 
 	copyBtn.hidden = status.state !== "offline";
 	copyBtn.onclick = async () => {
-		await navigator.clipboard.writeText(CLAUDE_START_SERVER_PROMPT);
+		await navigator.clipboard.writeText(CLAUDE_RESTART_PROMPT);
 		copyBtn.textContent = "Copied!";
 		setTimeout(() => {
-			copyBtn.textContent = "Copy prompt for Claude";
+			copyBtn.textContent = "Copy restart prompt for Claude";
 		}, 1500);
+	};
+
+	setupBtn.hidden = status.state !== "unpaired";
+	setupBtn.onclick = async () => {
+		await chrome.tabs.create({ url: chrome.runtime.getURL("onboarding.html") });
+		window.close();
 	};
 
 	const list = await send<ListResponse>({ type: "list", origin });

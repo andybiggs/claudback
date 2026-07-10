@@ -23,6 +23,7 @@
 				--mark-bg: #0f8a46;
 				--mark-dot: #fff;
 				--danger: #c0271b;
+				--warning: #8a5a00;
 				--surface: #fff;
 			}
 			@media (prefers-color-scheme: dark) {
@@ -40,6 +41,7 @@
 					--mark-bg: #3fc479;
 					--mark-dot: #1c1f23;
 					--danger: #f08578;
+					--warning: #dfa64a;
 					--surface: #1c1f23;
 				}
 			}
@@ -118,7 +120,9 @@
 			.status-pending {
 				color: #2563eb;
 			}
-			.status-offline,
+			.status-offline {
+				color: var(--warning);
+			}
 			.status-unauthorized {
 				color: var(--danger);
 			}
@@ -145,7 +149,7 @@
 				}
 			}
 			.hint {
-				font-size: 11px;
+				font-size: 13px;
 				color: var(--faint-text);
 				margin: -6px 0 10px;
 			}
@@ -155,7 +159,7 @@
 				background: none;
 				padding: 0;
 				margin-top: 4px;
-				font-size: 11px;
+				font-size: 13px;
 				color: var(--green-strong);
 				text-decoration: underline;
 				cursor: pointer;
@@ -255,7 +259,8 @@
 		</div>
 		<div id="status-hint" class="hint" hidden>
 			<span id="status-hint-text"></span>
-			<button id="copy-prompt" class="copy-btn" hidden>Copy prompt for Claude</button>
+			<button id="copy-prompt" class="copy-btn" hidden>Copy restart prompt for Claude</button>
+			<button id="open-setup" class="copy-btn" hidden>Open setup guide</button>
 		</div>
 		<script type="module" src="popup.js"></script>
 	</body>

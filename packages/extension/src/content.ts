@@ -11,6 +11,7 @@ import { buildSelector, type Comment, type NewCommentInput, type StoreMode } fro
 
 import { excerptFromNames } from "./lib/excerpt.js";
 import type { ContentRequest, CreateResponse, ListResponse, SimpleResponse, SyncState } from "./messages.js";
+import { CLAUDE_RESTART_PROMPT } from "./prompts.js";
 
 interface Store {
 	mode: StoreMode;
@@ -143,8 +144,9 @@ button.btn:disabled { opacity: .5; cursor: default; }
 .panel header .hostname { font-size: 11px; color: var(--faint-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .panel .clear-all { font-size: 12px; font-weight: 600; color: var(--danger); background: var(--danger-tint); border: none; border-radius: 6px; padding: 4px 10px; cursor: pointer; flex-shrink: 0; }
 .panel .clear-all:disabled { opacity: .5; cursor: default; }
-.panel .sync-strip { display: flex; align-items: center; gap: 7px; padding: 8px 14px; font-size: 12px; font-weight: 600; border-bottom: 1px solid var(--warning-border); background: var(--warning-bg); color: var(--warning-text); }
+.panel .sync-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 7px; padding: 8px 14px; font-size: 12px; font-weight: 600; border-bottom: 1px solid var(--warning-border); background: var(--warning-bg); color: var(--warning-text); }
 .panel .sync-strip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--warning-dot); flex-shrink: 0; }
+.panel .sync-strip .sync-action { margin-left: 14px; border: none; background: none; padding: 0; font-size: 12px; font-weight: 600; color: var(--warning-text); text-decoration: underline; cursor: pointer; text-align: left; }
 .panel .mode { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 10px 14px; border-bottom: 1px solid var(--hairline); }
 .panel .mode select { font-size: 12px; padding: 3px 6px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); }
 .item { padding: 10px 14px; border-bottom: 1px solid var(--divider); }
@@ -552,10 +554,10 @@ function mountClaudback(): void {
 	function statusLabel(): string | null {
 		switch (syncState) {
 			case "unpaired": {
-				return "Not paired — set the token in the extension options.";
+				return "Claudback isn't set up on this computer yet.";
 			}
 			case "offline": {
-				return "Collector offline — comments saved locally, retrying.";
+				return "Can't reach the local Claudback server.";
 			}
 			case "unauthorized": {
 				return "Pairing token rejected — re-pair from the extension options page.";
@@ -665,6 +667,29 @@ function mountClaudback(): void {
 			const status = document.createElement("div");
 			status.className = "sync-strip";
 			status.innerHTML = `<span class="dot"></span>${escapeHtml(syncLabel)}`;
+
+			if (syncState === "offline") {
+				const action = document.createElement("button");
+				action.className = "sync-action";
+				action.textContent = "Copy restart prompt for Claude";
+				action.addEventListener("click", async () => {
+					await navigator.clipboard.writeText(CLAUDE_RESTART_PROMPT);
+					action.textContent = "Copied!";
+					setTimeout(() => {
+						action.textContent = "Copy restart prompt for Claude";
+					}, 1500);
+				});
+				status.append(action);
+			} else if (syncState === "unpaired") {
+				const action = document.createElement("button");
+				action.className = "sync-action";
+				action.textContent = "Open setup guide";
+				action.addEventListener("click", () => {
+					void send<SimpleResponse>({ type: "openOnboarding" });
+				});
+				status.append(action);
+			}
+
 			panel.append(status);
 		}
 
@@ -771,7 +796,7 @@ function mountClaudback(): void {
 		});
 
 		if (store.comments.length > 0) {
-			const PROMPT = "Grab my Claudback comments and make the changes";
+			const PROMPT = "Grab my Claudback comments";
 			const footer = document.createElement("div");
 			footer.className = "prompt-footer";
 			footer.innerHTML = `
