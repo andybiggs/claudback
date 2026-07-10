@@ -60,6 +60,7 @@ Draft copy for the Web Store submission form. Not shipped in the extension zip.
 
 ## Assets (manual task)
 
+- **Store icon (128×128)** — `design/Listing Images/claudback-icon.png`. Uploaded separately in the dashboard's Store Listing tab; distinct from the icons packaged in the extension zip.
 - **Screenshots (1280×800, at least 1, up to 5)** — suggested shots:
   1. Overlay + composer pinned to an element on a localhost app.
   2. The comment list panel with a few comments.
