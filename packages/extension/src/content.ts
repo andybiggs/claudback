@@ -319,9 +319,51 @@ function mountClaudback(): void {
 		}
 
 		const rect = anchor.el.getBoundingClientRect();
-		anchor.pop.style.left = `${Math.min(rect.left + anchor.dx, window.innerWidth - 300)}px`;
-		anchor.pop.style.top = `${Math.min(rect.top + anchor.dy, window.innerHeight - 200)}px`;
+		let left = rect.left + anchor.dx;
+		let top = rect.top + anchor.dy;
+
+		// While the element is on screen, keep the popover on screen too — an
+		// element taller than the viewport puts the anchored offset far outside
+		// the visible area even though the element itself fills the screen.
+		// Only once the element leaves the viewport may the popover follow it out.
+		const onScreen =
+			rect.bottom > 0 && rect.top < window.innerHeight && rect.right > 0 && rect.left < window.innerWidth;
+
+		if (onScreen) {
+			left = Math.max(10, Math.min(left, window.innerWidth - 300));
+			top = Math.max(10, Math.min(top, window.innerHeight - 200));
+		} else {
+			left = Math.min(left, window.innerWidth - 300);
+			top = Math.min(top, window.innerHeight - 200);
+		}
+
+		anchor.pop.style.left = `${left}px`;
+		anchor.pop.style.top = `${top}px`;
 		frameElement(anchor.el);
+	}
+
+	// Scrolls so the element's top lands about 30% down the viewport — in view
+	// with some context above it, and for elements taller than the viewport it
+	// keeps the top (and the popover's clamped position) on screen where
+	// centering would not. scrollIntoView (rather than window.scrollBy) so
+	// scrollable ancestors inside the page get scrolled too; the temporary
+	// scroll-margin-top supplies the 30% offset, which block: "start" alone
+	// can't express.
+	function scrollCommentIntoView(el: Element): void {
+		if (!(el instanceof HTMLElement)) {
+			el.scrollIntoView({ block: "start", behavior: "smooth" });
+
+			return;
+		}
+
+		const previous = el.style.scrollMarginTop;
+		el.style.scrollMarginTop = `${Math.round(window.innerHeight * 0.3)}px`;
+		el.scrollIntoView({ block: "start", behavior: "smooth" });
+		// The scroll target is computed at the call above; restore on the next
+		// frame so the margin never leaks into the page's own styling.
+		requestAnimationFrame(() => {
+			el.style.scrollMarginTop = previous;
+		});
 	}
 
 	function elementAtPoint(x: number, y: number): Element | null {
@@ -481,8 +523,12 @@ function mountClaudback(): void {
 		const rect = el.getBoundingClientRect();
 		const pop = document.createElement("div");
 		pop.className = "popover transient";
-		pop.style.left = `${Math.min(rect.left, window.innerWidth - 300)}px`;
-		pop.style.top = `${Math.min(rect.bottom + 6, window.innerHeight - 200)}px`;
+		// Anchor at the element's bottom-left corner, unclamped — the anchor
+		// offset must describe the true tie point so the popover tracks the
+		// bottom edge as the element moves. repositionTransient below applies
+		// the on-screen clamping for display.
+		pop.style.left = `${rect.left}px`;
+		pop.style.top = `${rect.bottom + 6}px`;
 		pop.innerHTML = `
 			<div class="meta mono">${escapeHtml(comment.selector)}${comment.resolved ? " · resolved" : ""}</div>
 			<textarea>${escapeHtml(comment.text)}</textarea>
@@ -493,6 +539,7 @@ function mountClaudback(): void {
 			</div>`;
 		shadow.append(pop);
 		anchorTransient(el, pop);
+		repositionTransient();
 
 		const textarea = pop.querySelector("textarea") as HTMLTextAreaElement;
 
@@ -795,7 +842,7 @@ function mountClaudback(): void {
 					const el = onThisPage ? resolveElement(comment.selector) : null;
 
 					if (el) {
-						el.scrollIntoView({ block: "center", behavior: "smooth" });
+						scrollCommentIntoView(el);
 						openPinPopover(comment, el);
 					} else if (!onThisPage) {
 						// The comment lives on another page of this origin —
@@ -1056,7 +1103,7 @@ function mountClaudback(): void {
 			const el = resolveElement(comment.selector);
 
 			if (el) {
-				el.scrollIntoView({ block: "center", behavior: "smooth" });
+				scrollCommentIntoView(el);
 				openPinPopover(comment, el);
 
 				return;
