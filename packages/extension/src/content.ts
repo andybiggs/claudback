@@ -176,6 +176,12 @@ const ADD_ICON = `<span class="waypoint-icon"><svg width="14" height="14" viewBo
 const CLOSE_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
 const LIST_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>`;
 
+// Carries an "edit this comment" intent across a same-origin navigation: the
+// panel stores the comment id here before navigating, and the fresh overlay on
+// the destination page resumes the edit. sessionStorage is per-tab and
+// per-origin, so the intent can't leak to other tabs or sites.
+const PENDING_EDIT_KEY = "claudback-pending-edit";
+
 function send<T>(message: ContentRequest): Promise<T> {
 	return chrome.runtime.sendMessage(message) as Promise<T>;
 }
@@ -685,7 +691,12 @@ function mountClaudback(): void {
 				action.className = "sync-action";
 				action.textContent = "Open setup guide";
 				action.addEventListener("click", () => {
-					void send<SimpleResponse>({ type: "openOnboarding" });
+					void sendGuarded<SimpleResponse>(
+						{ type: "openOnboarding" },
+						"openOnboarding",
+						"Couldn't open the setup guide.",
+						showError,
+					);
 				});
 				status.append(action);
 			}
@@ -780,14 +791,29 @@ function mountClaudback(): void {
 				}
 
 				if (act === "edit") {
-					const el = comment.url === window.location.href ? resolveElement(comment.selector) : null;
+					const onThisPage = comment.url === window.location.href;
+					const el = onThisPage ? resolveElement(comment.selector) : null;
 
 					if (el) {
 						el.scrollIntoView({ block: "center", behavior: "smooth" });
 						openPinPopover(comment, el);
+					} else if (!onThisPage) {
+						// The comment lives on another page of this origin —
+						// navigate there and let the freshly injected overlay
+						// pick the edit back up via sessionStorage.
+						try {
+							sessionStorage.setItem(PENDING_EDIT_KEY, comment.id);
+						} catch {
+							// Storage unavailable (e.g. blocked) — fall back to
+							// editing in place rather than losing the click.
+							openInlineEdit(item, comment);
+
+							return;
+						}
+						window.location.href = comment.url;
 					} else {
-						// The element lives on another page (or is gone), so
-						// there's nothing to anchor a popover to — edit in place.
+						// On the right page but the element is gone, so there's
+						// nothing to anchor a popover to — edit in place.
 						openInlineEdit(item, comment);
 					}
 				}
@@ -997,7 +1023,61 @@ function mountClaudback(): void {
 	window.addEventListener("focus", backgroundRefresh);
 	chrome.runtime.onMessage.addListener(unmountHandler);
 
-	void refresh();
+	// Finishes an edit that started on another page: find the pending comment
+	// and open its popover. The target element may render late (client-side
+	// hydration), so retry briefly before giving up and opening the panel.
+	function resumePendingEdit(): void {
+		let id: string | null = null;
+
+		try {
+			id = sessionStorage.getItem(PENDING_EDIT_KEY);
+		} catch {
+			return;
+		}
+
+		if (id === null) {
+			return;
+		}
+
+		sessionStorage.removeItem(PENDING_EDIT_KEY);
+
+		const comment = store.comments.find((candidate) => candidate.id === id);
+
+		if (!comment) {
+			return;
+		}
+
+		let tries = 0;
+		const attempt = (): void => {
+			if (!host.isConnected) {
+				return;
+			}
+
+			const el = resolveElement(comment.selector);
+
+			if (el) {
+				el.scrollIntoView({ block: "center", behavior: "smooth" });
+				openPinPopover(comment, el);
+
+				return;
+			}
+
+			tries += 1;
+
+			if (tries < 10) {
+				setTimeout(attempt, 300);
+			} else {
+				// The element never appeared — show the panel so the comment
+				// is still reachable for an inline edit.
+				panelOpen = true;
+				render();
+			}
+		};
+
+		attempt();
+	}
+
+	void refresh().then(resumePendingEdit);
 }
 
 function escapeHtml(value: string): string {
