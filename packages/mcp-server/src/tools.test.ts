@@ -63,12 +63,40 @@ describe("tools", () => {
 			expect(text).toContain("Store mode: clear (0 comments)");
 		});
 
-		it("consume=true in clear mode empties the store", async () => {
+		it("clear mode appends resolve guidance outside the untrusted envelope", async () => {
+			await store.addComment(newCommentInput());
+
+			const result = await getCommentsHandler(store, {});
+			const text = result.content[0].text;
+
+			expect(text).toContain("call resolve_comment with its id");
+			expect(text.indexOf("call resolve_comment with its id")).toBeGreaterThan(
+				text.indexOf("</untrusted-claudback-comments"),
+			);
+		});
+
+		it("omits the resolve guidance when there is nothing to resolve", async () => {
+			const result = await getCommentsHandler(store, {});
+
+			expect(result.content[0].text).not.toContain("call resolve_comment with its id");
+		});
+
+		it("omits the resolve guidance in keep mode", async () => {
+			await store.setMode("keep");
+			await store.addComment(newCommentInput());
+
+			const result = await getCommentsHandler(store, {});
+
+			expect(result.content[0].text).not.toContain("call resolve_comment with its id");
+		});
+
+		it("consume=true in clear mode empties the store and says so", async () => {
 			await store.addComment(newCommentInput());
 
 			const result = await getCommentsHandler(store, { consume: true });
 
 			expect(result.content[0].text).toContain("This is confusing feedback");
+			expect(result.content[0].text).toContain("now been removed from the store");
 			expect(await store.getComments()).toHaveLength(0);
 		});
 
