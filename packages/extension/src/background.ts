@@ -578,10 +578,31 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 			return;
 		}
 
+		try {
+			await chrome.scripting.executeScript({ target: { tabId }, files: ["content.js"] });
+
+			return;
+		} catch (error) {
+			// Dev-server reloads can navigate the tab again mid-injection,
+			// making executeScript reject transiently ("Frames were removed").
+			// That isn't the user turning Claudback off — retry once before
+			// treating the failure as real.
+			console.warn("[claudback] overlay injection failed, retrying:", error);
+		}
+
+		await new Promise((resolve) => setTimeout(resolve, 500));
+
+		// A newer navigation may have disabled the tab meanwhile; don't
+		// resurrect the overlay past that decision. If its handler instead
+		// already injected, content.js no-ops on a second injection.
+		if ((await getEnabledOrigin(tabId)) !== originPattern) {
+			return;
+		}
+
 		await chrome.scripting.executeScript({ target: { tabId }, files: ["content.js"] });
 	})().catch((error: unknown) => {
-		// If the overlay couldn't be injected, the tab must not stay marked
-		// enabled — the popup would claim it's on while nothing is running.
+		// Injection failed twice — the tab must not stay marked enabled, or
+		// the popup would claim it's on while nothing is running.
 		console.error("[claudback] failed to re-inject overlay:", error);
 		setTabDisabled(tabId).catch(() => {});
 	});
