@@ -2,12 +2,25 @@ import type { ServerResponse } from "node:http";
 
 import { TOKEN_HEADER } from "@claudback/shared";
 
-// Chrome extension IDs are 32 chars drawn from a-p. Unpacked extensions get a
-// machine-specific ID, so we can't pin a single ID until a store listing
-// exists; instead we accept only syntactically valid extension origins. Web
+// The Web Store listing fixes the published extension's ID, so browser
+// requests are pinned to it. Unpacked dev builds get a machine-specific ID;
+// developers opt theirs in explicitly via CLAUDBACK_DEV_EXTENSION_ID. Web
 // pages always send an http(s) Origin, so drive-by requests are rejected here
 // regardless of whether they somehow obtained the token.
-const EXTENSION_ORIGIN_PATTERN = /^chrome-extension:\/\/[a-p]{32}$/;
+const PUBLISHED_EXTENSION_ID = "dbnmlcmmgnchigedlglfmchkendlcfgc";
+
+// Chrome extension IDs are 32 chars drawn from a-p.
+const EXTENSION_ID_PATTERN = /^[a-p]{32}$/;
+
+function allowedOrigins(): Set<string> {
+	const origins = new Set([`chrome-extension://${PUBLISHED_EXTENSION_ID}`]);
+	const devId = process.env.CLAUDBACK_DEV_EXTENSION_ID;
+	if (devId !== undefined && EXTENSION_ID_PATTERN.test(devId)) {
+		origins.add(`chrome-extension://${devId}`);
+	}
+
+	return origins;
+}
 
 // Requests with no Origin header come from non-browser local processes (curl,
 // scripts). Those can't be meaningfully blocked by an origin check — they can
@@ -17,7 +30,7 @@ export function originAllowed(origin: string | undefined): boolean {
 		return true;
 	}
 
-	return EXTENSION_ORIGIN_PATTERN.test(origin);
+	return allowedOrigins().has(origin);
 }
 
 // Only ever called with an allowed chrome-extension:// origin: the allowed
