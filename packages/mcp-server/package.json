@@ -1,6 +1,6 @@
 {
 	"name": "claudback-mcp",
-	"version": "0.1.4",
+	"version": "0.2.0",
 	"description": "Local MCP server that lets Claude read visual-feedback comments pinned to web pages with the Claudback Chrome extension.",
 	"type": "module",
 	"bin": {
