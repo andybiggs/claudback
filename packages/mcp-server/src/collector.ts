@@ -78,10 +78,16 @@ function asObjectBody(body: unknown): Record<string, unknown> | undefined {
 function sanitizeCommentFields<T extends Record<string, unknown>>(body: T): T {
 	const cleaned: Record<string, unknown> = { ...body };
 
-	for (const key of ["text", "textSnippet", "htmlExcerpt", "selector", "tag", "url", "origin"]) {
+	for (const key of ["text", "textSnippet", "htmlExcerpt", "selector", "tag", "url", "origin", "framework"]) {
 		if (typeof cleaned[key] === "string") {
 			cleaned[key] = sanitizeText(cleaned[key] as string);
 		}
+	}
+
+	if (Array.isArray(cleaned.componentPath)) {
+		cleaned.componentPath = cleaned.componentPath.map((entry) =>
+			typeof entry === "string" ? sanitizeText(entry) : entry,
+		);
 	}
 
 	return cleaned as T;

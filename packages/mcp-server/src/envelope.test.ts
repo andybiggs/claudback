@@ -65,4 +65,21 @@ describe("renderCommentsEnvelope", () => {
 		expect(output).toContain("00000000-0000-4000-8000-000000000000");
 		expect(nonce).not.toBe("00000000-0000-4000-8000-000000000000");
 	});
+
+	it("includes a component line when componentPath is present", () => {
+		const rendered = renderCommentsEnvelope(
+			[comment({ framework: "react", componentPath: ["SubmitButton", "CheckoutForm", "App"] })],
+			"clear",
+		);
+
+		expect(rendered).toContain('"component": "SubmitButton (in CheckoutForm < App)"');
+		expect(rendered).toContain('"framework": "react"');
+	});
+
+	it("omits component fields when componentPath is empty", () => {
+		const rendered = renderCommentsEnvelope([comment({})], "clear");
+
+		expect(rendered).not.toContain('"component"');
+		expect(rendered).not.toContain('"framework"');
+	});
 });

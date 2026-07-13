@@ -128,6 +128,20 @@ describe("collector", () => {
 		expect(body.comments.some((comment) => comment.id === created.id)).toBe(true);
 	});
 
+	it("sanitizes componentPath entries on POST", async () => {
+		const postRes = await fetch(`${baseUrl}/comments`, {
+			method: "POST",
+			headers: { [TOKEN_HEADER]: TOKEN, "content-type": "application/json" },
+			body: JSON.stringify(validCommentPayload({ framework: "react", componentPath: ["Submit​Button"] })),
+		});
+
+		expect(postRes.status).toBe(201);
+
+		const created = (await postRes.json()) as { componentPath: string[] };
+
+		expect(created.componentPath[0]).toBe("SubmitButton");
+	});
+
 	it("rejects POST with text over 4096 chars", async () => {
 		const res = await fetch(`${baseUrl}/comments`, {
 			method: "POST",
