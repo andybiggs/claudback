@@ -122,9 +122,11 @@ const STYLES = `
 .popover .componentchip {
 	display: inline-flex; align-items: center; gap: 4px;
 	font-size: 11px; font-weight: 700; background: var(--green-tint); color: var(--green-strong);
-	padding: 2px 7px; border-radius: 4px; flex-shrink: 0;
+	padding: 2px 7px; border-radius: 4px; flex-shrink: 0; margin-bottom: 8px;
 }
 .popover .componentchip svg { flex: none; }
+.item .meta-line .component-meta { display: inline-flex; align-items: center; gap: 3px; vertical-align: -1px; }
+.item .meta-line .component-meta svg { width: 10px; height: 10px; flex: none; }
 .popover .selector-line { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; min-width: 0; }
 .popover .selector-path {
 	font-size: 11px; color: var(--faint-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1;
@@ -562,8 +564,10 @@ function mountClaudback(): void {
 				return;
 			}
 
+			// Own line under the selector: sharing the selector's row crushes
+			// both into ellipsis soup.
 			pop.querySelector(".selector-line")?.insertAdjacentHTML(
-				"beforeend",
+				"afterend",
 				componentChipHtml(component.framework, component.components),
 			);
 		});
@@ -941,7 +945,7 @@ function mountClaudback(): void {
 			item.innerHTML = `
 				<div class="top">
 					<span class="num">${index + 1}</span>
-					<span class="meta-line"><span class="mono">${escapeHtml(comment.tag)}</span> · ${onThisPage ? "this page" : escapeHtml(shortUrl(comment.url))}${comment.resolved ? " · resolved" : ""}</span>
+					<span class="meta-line"><span class="mono">${escapeHtml(comment.tag)}</span>${componentMetaHtml(comment.framework ?? "", comment.componentPath ?? [])} · ${onThisPage ? "this page" : escapeHtml(shortUrl(comment.url))}${comment.resolved ? " · resolved" : ""}</span>
 				</div>
 				<div class="txt">${escapeHtml(comment.text)}</div>
 				<div class="ref mono" title="${escapeHtml(comment.selector)}">${escapeHtml(comment.selector)}</div>
@@ -1343,6 +1347,19 @@ function componentChipHtml(framework: string, components: string[]): string {
 	const chain = components.join(" < ");
 
 	return `<span class="componentchip mono" title="${escapeHtml(chain)}">${icon}&lt;${escapeHtml(components[0])}&gt;</span>`;
+}
+
+// List-density variant: no chip box, just icon + name folded into the item's
+// faint meta line (leading separator included so callers can concatenate).
+function componentMetaHtml(framework: string, components: string[]): string {
+	if (components.length === 0) {
+		return "";
+	}
+
+	const icon = FRAMEWORK_ICONS[framework] ?? "";
+	const chain = components.join(" < ");
+
+	return ` · <span class="component-meta mono" title="${escapeHtml(chain)}">${icon}${escapeHtml(components[0])}</span>`;
 }
 
 function escapeHtml(value: string): string {
