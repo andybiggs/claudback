@@ -118,6 +118,12 @@ const STYLES = `
 	font-size: 11px; font-weight: 700; background: var(--green-tint); color: var(--green-strong);
 	padding: 2px 7px; border-radius: 4px; flex-shrink: 0;
 }
+.popover .componentchip {
+	display: inline-flex; align-items: center; gap: 4px;
+	font-size: 11px; font-weight: 700; background: var(--green-tint); color: var(--green-strong);
+	padding: 2px 7px; border-radius: 4px; flex-shrink: 0;
+}
+.popover .componentchip svg { flex: none; }
 .popover .selector-line { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; min-width: 0; }
 .popover .selector-path {
 	font-size: 11px; color: var(--faint-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1;
@@ -539,6 +545,17 @@ function mountClaudback(): void {
 		shadow.append(pop);
 		anchorTransient(el, pop);
 
+		void componentPromise.then((component) => {
+			if (!component || !pop.isConnected) {
+				return;
+			}
+
+			pop.querySelector(".selector-line")?.insertAdjacentHTML(
+				"beforeend",
+				componentChipHtml(component.framework, component.components),
+			);
+		});
+
 		const textarea = pop.querySelector("textarea") as HTMLTextAreaElement;
 		textarea.focus();
 
@@ -628,6 +645,7 @@ function mountClaudback(): void {
 		pop.style.top = `${rect.bottom + 6}px`;
 		pop.innerHTML = `
 			<div class="meta mono">${escapeHtml(comment.selector)}${comment.resolved ? " · resolved" : ""}</div>
+			${componentChipHtml(comment.framework ?? "", comment.componentPath ?? [])}
 			<textarea>${escapeHtml(comment.text)}</textarea>
 			<div class="row">
 				<button class="btn danger" data-act="delete">Delete</button>
@@ -1294,6 +1312,25 @@ function mountClaudback(): void {
 	}
 
 	void refresh().then(resumePendingEdit);
+}
+
+// 12px inline framework marks, currentColor so they follow chip text color.
+const FRAMEWORK_ICONS: Record<string, string> = {
+	react:
+		'<svg viewBox="-11 -11 22 22" width="12" height="12" aria-hidden="true"><circle r="2" fill="currentColor"/><g stroke="currentColor" fill="none"><ellipse rx="10" ry="4.2"/><ellipse rx="10" ry="4.2" transform="rotate(60)"/><ellipse rx="10" ry="4.2" transform="rotate(120)"/></g></svg>',
+	vue:
+		'<svg viewBox="0 0 24 22" width="12" height="12" aria-hidden="true"><path fill="currentColor" d="M14.8 0L12 4.8 9.2 0H0l12 21 12-21h-9.2zM3.6 2.1h3.2L12 11l5.2-8.9h3.2L12 16.9 3.6 2.1z"/></svg>',
+};
+
+function componentChipHtml(framework: string, components: string[]): string {
+	if (components.length === 0) {
+		return "";
+	}
+
+	const icon = FRAMEWORK_ICONS[framework] ?? "";
+	const chain = components.join(" < ");
+
+	return `<span class="componentchip mono" title="${escapeHtml(chain)}">${icon}&lt;${escapeHtml(components[0])}&gt;</span>`;
 }
 
 function escapeHtml(value: string): string {
