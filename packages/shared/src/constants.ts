@@ -3,6 +3,8 @@ export const COMMENT_TEXT_MAX_LENGTH = 4096;
 export const HTML_EXCERPT_MAX_LENGTH = 2048;
 export const TEXT_SNIPPET_MAX_LENGTH = 512;
 export const TOKEN_HEADER = "x-claudback-token";
+export const COMPONENT_NAME_MAX_LENGTH = 128;
+export const COMPONENT_PATH_MAX_DEPTH = 5;
 
 export const PAIR_PATH = "/pair";
 export const PAIRING_CODE_LENGTH = 8;

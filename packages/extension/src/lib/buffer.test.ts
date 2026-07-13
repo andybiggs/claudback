@@ -16,6 +16,8 @@ function makeInput(text: string): NewCommentInput {
 		htmlExcerpt: "<button>",
 		rect: null,
 		viewport: null,
+		framework: null,
+		componentPath: [],
 	};
 }
 

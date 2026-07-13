@@ -27,6 +27,8 @@ function newCommentInput(overrides: Partial<NewCommentInput> = {}): NewCommentIn
 		htmlExcerpt: "<div>",
 		rect: null,
 		viewport: null,
+		framework: null,
+		componentPath: [],
 		...overrides,
 	};
 }

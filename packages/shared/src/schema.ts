@@ -1,6 +1,8 @@
 import { z } from "zod";
 import {
 	COMMENT_TEXT_MAX_LENGTH,
+	COMPONENT_NAME_MAX_LENGTH,
+	COMPONENT_PATH_MAX_DEPTH,
 	HTML_EXCERPT_MAX_LENGTH,
 	TEXT_SNIPPET_MAX_LENGTH,
 } from "./constants.js";
@@ -27,6 +29,11 @@ const newCommentFieldsSchema = z.object({
 	htmlExcerpt: z.string().max(HTML_EXCERPT_MAX_LENGTH),
 	rect: rectSchema.nullable().default(null),
 	viewport: viewportSchema.nullable().default(null),
+	framework: z.string().max(32).nullable().default(null),
+	componentPath: z
+		.array(z.string().min(1).max(COMPONENT_NAME_MAX_LENGTH))
+		.max(COMPONENT_PATH_MAX_DEPTH)
+		.default([]),
 });
 
 export const newCommentInputSchema = newCommentFieldsSchema;

@@ -566,6 +566,8 @@ function mountClaudback(): void {
 				height: rect.height,
 			},
 			viewport: { width: window.innerWidth, height: window.innerHeight },
+			framework: null,
+			componentPath: [],
 		};
 	}
 

@@ -27,6 +27,8 @@ const input: NewCommentInput = {
 	htmlExcerpt: "<button>",
 	rect: null,
 	viewport: null,
+	framework: null,
+	componentPath: [],
 };
 
 describe("collector client", () => {
