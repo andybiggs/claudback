@@ -11,6 +11,7 @@ import { buildSelector, type Comment, type NewCommentInput, type StoreMode } fro
 
 import { excerptFromNames } from "./lib/excerpt.js";
 import { parseDetectReply } from "./lib/detect-reply.js";
+import { generateNonce } from "./lib/nonce.js";
 import type { ContentRequest, CreateResponse, ListResponse, SimpleResponse, SyncState } from "./messages.js";
 import { CLAUDE_RESTART_PROMPT } from "./prompts.js";
 
@@ -494,30 +495,41 @@ function mountClaudback(): void {
 	function requestComponentInfo(
 		el: Element,
 	): Promise<{ framework: string; components: string[] } | null> {
+		// Component detection is best-effort: this promise must never reject, or
+		// callers awaiting it (e.g. the save handler) would throw before the
+		// comment is ever sent. Any failure here degrades to null instead.
 		return new Promise((resolve) => {
-			const nonce = crypto.randomUUID();
+			try {
+				const nonce = generateNonce(crypto);
 
-			const finish = (value: { framework: string; components: string[] } | null): void => {
-				document.removeEventListener("claudback:detect-result", onResult);
-				el.removeAttribute("data-claudback-probe");
-				clearTimeout(timer);
-				resolve(value);
-			};
+				const finish = (value: { framework: string; components: string[] } | null): void => {
+					document.removeEventListener("claudback:detect-result", onResult);
+					el.removeAttribute("data-claudback-probe");
+					clearTimeout(timer);
+					resolve(value);
+				};
 
-			const onResult = (event: Event): void => {
-				const reply = parseDetectReply((event as CustomEvent<unknown>).detail, nonce);
+				const onResult = (event: Event): void => {
+					try {
+						const reply = parseDetectReply((event as CustomEvent<unknown>).detail, nonce);
 
-				if (reply) {
-					finish(reply);
-				}
-				// Wrong nonce/shape: keep listening until our reply or timeout.
-			};
+						if (reply) {
+							finish(reply);
+						}
+						// Wrong nonce/shape: keep listening until our reply or timeout.
+					} catch {
+						finish(null);
+					}
+				};
 
-			const timer = setTimeout(() => finish(null), DETECT_TIMEOUT_MS);
+				const timer = setTimeout(() => finish(null), DETECT_TIMEOUT_MS);
 
-			document.addEventListener("claudback:detect-result", onResult);
-			el.setAttribute("data-claudback-probe", nonce);
-			document.dispatchEvent(new CustomEvent("claudback:detect", { detail: nonce }));
+				document.addEventListener("claudback:detect-result", onResult);
+				el.setAttribute("data-claudback-probe", nonce);
+				document.dispatchEvent(new CustomEvent("claudback:detect", { detail: nonce }));
+			} catch {
+				resolve(null);
+			}
 		});
 	}
 

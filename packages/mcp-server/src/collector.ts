@@ -85,9 +85,13 @@ function sanitizeCommentFields<T extends Record<string, unknown>>(body: T): T {
 	}
 
 	if (Array.isArray(cleaned.componentPath)) {
-		cleaned.componentPath = cleaned.componentPath.map((entry) =>
-			typeof entry === "string" ? sanitizeText(entry) : entry,
-		);
+		cleaned.componentPath = cleaned.componentPath
+			.map((entry) => (typeof entry === "string" ? sanitizeText(entry) : entry))
+			// Zero-width/control-only names sanitize down to "" and would fail
+			// componentPath's min(1) check, rejecting the whole comment even
+			// though component detection is best-effort. Drop only strings
+			// that became empty; non-strings are left for zod to reject.
+			.filter((entry) => typeof entry !== "string" || entry.length > 0);
 	}
 
 	return cleaned as T;
