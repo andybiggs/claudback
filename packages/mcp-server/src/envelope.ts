@@ -28,6 +28,15 @@ export function renderCommentsEnvelope(comments: Comment[], mode: StoreMode): st
 		resolved: comment.resolved,
 		createdAt: comment.createdAt,
 		text: comment.text,
+		...(comment.componentPath.length > 0 && comment.framework !== null
+			? {
+					framework: comment.framework,
+					component:
+						comment.componentPath.length === 1
+							? comment.componentPath[0]
+							: `${comment.componentPath[0]} (in ${comment.componentPath.slice(1).join(" < ")})`,
+				}
+			: {}),
 	}));
 
 	return [

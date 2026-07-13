@@ -2,7 +2,7 @@
 
 **Comment on your page. Claude reads it.**
 
-Claudback is a Chrome extension for pinning visual-feedback comments to elements on any web page, plus a local MCP server (`claudback-mcp`) that lets Claude read them and make the changes. The main use case: iterate on a local build or prototype with Claude Code without screenshots or "the third button in the sidebar" descriptions — click the thing, say what you want, ask Claude to check your comments.
+Claudback is a Chrome extension for pinning visual-feedback comments to elements on any web page, plus a local MCP server (`claudback-mcp`) that lets Claude read them and make the changes. The main use case: iterate on a local build or prototype with Claude Code without screenshots or "the third button in the sidebar" descriptions — click the thing, say what you want, ask Claude to check your comments. On React and Vue apps, comments also name the component that rendered the element, so Claude can jump straight to the source.
 
 Everything stays on your machine: comments sync to a loopback-only collector and live in `~/.claudback/`.
 
@@ -51,6 +51,23 @@ npm run build --workspace=@claudback/extension
 ```
 
 Open `chrome://extensions`, enable Developer mode, click **Load unpacked**, select `packages/extension/dist/`. The setup guide opens automatically on first install (or via **Pairing & options → Open setup guide**).
+
+Disable the Web Store copy of Claudback while testing an unpacked build — they're separate extensions and would both inject overlays. Note the unpacked copy's ID from `chrome://extensions` (it stays stable as long as you load it from the same directory); you'll need it to allowlist the extension with the server below.
+
+### Allowlist an unpacked extension (`CLAUDBACK_DEV_EXTENSION_ID`)
+
+The collector's CORS allowlist is pinned to the published extension ID, so an unpacked build's requests are rejected with a 403/CORS preflight error (`No 'Access-Control-Allow-Origin' header`) — including pairing. Opt your dev extension in by registering the server with the `CLAUDBACK_DEV_EXTENSION_ID` environment variable set to the unpacked copy's ID:
+
+```sh
+claude mcp remove --scope user claudback
+claude mcp add --scope user claudback \
+  --env CLAUDBACK_DEV_EXTENSION_ID=<your-unpacked-extension-id> \
+  -- node /absolute/path/to/Claudback/packages/mcp-server/dist/bin.js
+```
+
+Restart your Claude Code session afterwards so it launches the re-registered server, then pair the unpacked extension as normal. To go back to production, re-register without the variable: `claude mcp add --scope user claudback -- npx -y claudback-mcp`.
+
+Still blocked? Another Claude session's server may be holding the collector port — only one server can bind 57463, and the extension talks to whichever got there first, regardless of what you just registered. Find it with `lsof -nP -i :57463`, kill the stale process, and the right server takes the port over within a couple of seconds.
 
 ### Run the server from source
 

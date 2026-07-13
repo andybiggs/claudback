@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
 	COMMENT_TEXT_MAX_LENGTH,
+	COMPONENT_NAME_MAX_LENGTH,
 	HTML_EXCERPT_MAX_LENGTH,
 } from "./constants.js";
 import { commentSchema, newCommentInputSchema, storeSchema } from "./schema.js";
@@ -17,6 +18,8 @@ function validComment() {
 		htmlExcerpt: "<button>Submit</button>",
 		rect: { x: 1, y: 2, width: 3, height: 4 },
 		viewport: { width: 1280, height: 800 },
+		framework: null,
+		componentPath: [],
 		resolved: false,
 		createdAt: "2026-07-06T00:00:00.000Z",
 		updatedAt: "2026-07-06T00:00:00.000Z",
@@ -34,6 +37,8 @@ function validNewCommentInput() {
 		htmlExcerpt: "<button>Submit</button>",
 		rect: { x: 1, y: 2, width: 3, height: 4 },
 		viewport: { width: 1280, height: 800 },
+		framework: null,
+		componentPath: [],
 	};
 }
 
@@ -91,6 +96,78 @@ describe("newCommentInputSchema", () => {
 		};
 
 		expect(() => newCommentInputSchema.parse(input)).toThrow();
+	});
+
+	describe("component fields", () => {
+		it("defaults framework and componentPath when absent (old payloads)", () => {
+			const input = validNewCommentInput() as Record<string, unknown>;
+			delete input.framework;
+			delete input.componentPath;
+
+			const parsed = newCommentInputSchema.parse(input);
+			expect(parsed.framework).toBeNull();
+			expect(parsed.componentPath).toEqual([]);
+		});
+
+		it("accepts a react component chain", () => {
+			const parsed = newCommentInputSchema.parse({
+				...validNewCommentInput(),
+				framework: "react",
+				componentPath: ["SubmitButton", "CheckoutForm", "CheckoutPage", "App"],
+			});
+			expect(parsed.componentPath).toHaveLength(4);
+		});
+
+		it("rejects more than 5 components", () => {
+			const result = newCommentInputSchema.safeParse({
+				...validNewCommentInput(),
+				framework: "react",
+				componentPath: ["A1", "B2", "C3", "D4", "E5", "F6"],
+			});
+			expect(result.success).toBe(false);
+		});
+
+		it("rejects component names over COMPONENT_NAME_MAX_LENGTH", () => {
+			const result = newCommentInputSchema.safeParse({
+				...validNewCommentInput(),
+				componentPath: ["x".repeat(COMPONENT_NAME_MAX_LENGTH + 1)],
+			});
+			expect(result.success).toBe(false);
+		});
+
+		it("rejects a componentPath without a framework", () => {
+			const result = newCommentInputSchema.safeParse({
+				...validNewCommentInput(),
+				framework: null,
+				componentPath: ["SubmitButton"],
+			});
+			expect(result.success).toBe(false);
+		});
+
+		it("accepts a framework with an empty componentPath (sanitize can empty it)", () => {
+			const parsed = newCommentInputSchema.parse({
+				...validNewCommentInput(),
+				framework: "react",
+				componentPath: [],
+			});
+			expect(parsed.framework).toBe("react");
+		});
+
+		it("rejects a framework over 32 chars and non-string componentPath entries", () => {
+			expect(
+				newCommentInputSchema.safeParse({
+					...validNewCommentInput(),
+					framework: "x".repeat(33),
+				}).success,
+			).toBe(false);
+			expect(
+				newCommentInputSchema.safeParse({
+					...validNewCommentInput(),
+					framework: "react",
+					componentPath: [42],
+				}).success,
+			).toBe(false);
+		});
 	});
 });
 

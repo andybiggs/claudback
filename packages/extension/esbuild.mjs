@@ -30,6 +30,7 @@ const buildOptions = {
 	entryPoints: {
 		background: root("./src/background.ts"),
 		content: root("./src/content.ts"),
+		detector: root("./src/detector.ts"),
 		popup: root("./src/popup.ts"),
 		options: root("./src/options.ts"),
 		onboarding: root("./src/onboarding.ts"),

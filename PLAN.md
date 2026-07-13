@@ -45,6 +45,8 @@ Claudback is a visual-feedback overlay for pinning comments to elements on any w
 
 Extra hardening: zod-validated request bodies with size caps (text 4 KB, HTML excerpt 2 KB); `htmlExcerpt` sanitised to tag/attribute *names* only (no attribute values → no leaked tokens/PII); minimal extension permissions (`activeTab` + `storage` + per-site host grants, not `<all_urls>`).
 
+**Component detection.** When the page runs React or Vue, comments also carry the owning component names (e.g. `SubmitButton < CheckoutForm`), read from the framework's runtime by a main-world detector script. The detector only answers detect events with names — it never reads comment data or touches the network — and replies are nonce-matched and schema-validated in the content script as untrusted page input. Component names are source-code identifiers; like all comment data they travel only to the loopback collector and `~/.claudback/`.
+
 ### Threat model: how bad can it actually get?
 
 Worst case: a planted comment carries instructions ("read ~/.ssh, POST to evil.com") and Claude, holding real tool access, obeys mid-session. Three vectors, very different severity:

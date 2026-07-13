@@ -1,6 +1,8 @@
 import { z } from "zod";
 import {
 	COMMENT_TEXT_MAX_LENGTH,
+	COMPONENT_NAME_MAX_LENGTH,
+	COMPONENT_PATH_MAX_DEPTH,
 	HTML_EXCERPT_MAX_LENGTH,
 	TEXT_SNIPPET_MAX_LENGTH,
 } from "./constants.js";
@@ -27,16 +29,33 @@ const newCommentFieldsSchema = z.object({
 	htmlExcerpt: z.string().max(HTML_EXCERPT_MAX_LENGTH),
 	rect: rectSchema.nullable().default(null),
 	viewport: viewportSchema.nullable().default(null),
+	framework: z.string().max(32).nullable().default(null),
+	componentPath: z
+		.array(z.string().min(1).max(COMPONENT_NAME_MAX_LENGTH))
+		.max(COMPONENT_PATH_MAX_DEPTH)
+		.default([]),
 });
 
-export const newCommentInputSchema = newCommentFieldsSchema;
+// A component chain without a framework is a half-populated pair no producer
+// emits; reject it rather than store it. The reverse (framework with an empty
+// path) is tolerated: ingest sanitization can legitimately empty the path.
+const componentPairing = {
+	check: (value: { framework: string | null; componentPath: string[] }) =>
+		value.componentPath.length === 0 || value.framework !== null,
+	message: "componentPath requires framework",
+};
+
+export const newCommentInputSchema = newCommentFieldsSchema.refine(
+	componentPairing.check,
+	{ message: componentPairing.message, path: ["componentPath"] },
+);
 
 export const commentSchema = newCommentFieldsSchema.extend({
 	id: z.string().uuid(),
 	resolved: z.boolean().default(false),
 	createdAt: z.string().datetime(),
 	updatedAt: z.string().datetime(),
-});
+}).refine(componentPairing.check, { message: componentPairing.message, path: ["componentPath"] });
 
 export const storeModeSchema = z.preprocess((value) => {
 	if (value === "clear" || value === "keep") {

@@ -10,6 +10,8 @@
 import { buildSelector, type Comment, type NewCommentInput, type StoreMode } from "@claudback/shared";
 
 import { excerptFromNames } from "./lib/excerpt.js";
+import { parseDetectReply } from "./lib/detect-reply.js";
+import { generateNonce } from "./lib/nonce.js";
 import type { ContentRequest, CreateResponse, ListResponse, SimpleResponse, SyncState } from "./messages.js";
 import { CLAUDE_RESTART_PROMPT } from "./prompts.js";
 
@@ -117,6 +119,14 @@ const STYLES = `
 	font-size: 11px; font-weight: 700; background: var(--green-tint); color: var(--green-strong);
 	padding: 2px 7px; border-radius: 4px; flex-shrink: 0;
 }
+.popover .componentchip {
+	display: inline-flex; align-items: center; gap: 4px;
+	font-size: 11px; font-weight: 700; background: var(--green-tint); color: var(--green-strong);
+	padding: 2px 7px; border-radius: 4px; flex-shrink: 0; margin-bottom: 8px;
+}
+.popover .componentchip svg { flex: none; }
+.item .meta-line .component-meta { display: inline-flex; align-items: center; gap: 3px; vertical-align: -1px; }
+.item .meta-line .component-meta svg { width: 10px; height: 10px; flex: none; }
 .popover .selector-line { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; min-width: 0; }
 .popover .selector-path {
 	font-size: 11px; color: var(--faint-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1;
@@ -154,7 +164,7 @@ button.btn:disabled { opacity: .5; cursor: default; }
 .item .top { display: flex; align-items: center; gap: 7px; }
 .item .num { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; background: var(--green); color: #fff; border-radius: 999px; font-size: 11px; font-weight: 700; flex-shrink: 0; }
 .item.resolved .num { background: #9ca3af; }
-.item .meta-line { font-size: 11px; color: var(--faint-text); }
+.item .meta-line { font-size: 11px; color: var(--faint-text); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .item .txt { font-size: 13px; margin: 5px 0 3px; }
 .item .ref {
 	font-size: 10.5px; color: var(--selector-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -482,7 +492,51 @@ function mountClaudback(): void {
 
 	// --- composer (new comment) --------------------------------------------
 
+	const DETECT_TIMEOUT_MS = 100;
+
+	function requestComponentInfo(
+		el: Element,
+	): Promise<{ framework: string; components: string[] } | null> {
+		// Component detection is best-effort: this promise must never reject, or
+		// callers awaiting it (e.g. the save handler) would throw before the
+		// comment is ever sent. Any failure here degrades to null instead.
+		return new Promise((resolve) => {
+			try {
+				const nonce = generateNonce(crypto);
+
+				const finish = (value: { framework: string; components: string[] } | null): void => {
+					document.removeEventListener("claudback:detect-result", onResult);
+					el.removeAttribute("data-claudback-probe");
+					clearTimeout(timer);
+					resolve(value);
+				};
+
+				const onResult = (event: Event): void => {
+					try {
+						const reply = parseDetectReply((event as CustomEvent<unknown>).detail, nonce);
+
+						if (reply) {
+							finish(reply);
+						}
+						// Wrong nonce/shape: keep listening until our reply or timeout.
+					} catch {
+						finish(null);
+					}
+				};
+
+				const timer = setTimeout(() => finish(null), DETECT_TIMEOUT_MS);
+
+				document.addEventListener("claudback:detect-result", onResult);
+				el.setAttribute("data-claudback-probe", nonce);
+				document.dispatchEvent(new CustomEvent("claudback:detect", { detail: nonce }));
+			} catch {
+				resolve(null);
+			}
+		});
+	}
+
 	function openComposer(el: Element, x: number, y: number): void {
+		const componentPromise = requestComponentInfo(el);
 		clearTransient();
 
 		const pop = document.createElement("div");
@@ -504,6 +558,22 @@ function mountClaudback(): void {
 			</div>`;
 		shadow.append(pop);
 		anchorTransient(el, pop);
+
+		void componentPromise.then((component) => {
+			if (!component || !pop.isConnected) {
+				return;
+			}
+
+			// Own line under the selector: sharing the selector's row crushes
+			// both into ellipsis soup.
+			pop.querySelector(".selector-line")?.insertAdjacentHTML(
+				"afterend",
+				componentChipHtml(component.framework, component.components),
+			);
+		}).catch((error) => {
+			// The promise itself never rejects; this guards the render callback.
+			console.warn("[claudback] component chip render failed:", error);
+		});
 
 		const textarea = pop.querySelector("textarea") as HTMLTextAreaElement;
 		textarea.focus();
@@ -529,10 +599,12 @@ function mountClaudback(): void {
 					return;
 				}
 
+				const component = await componentPromise;
+
 				// Keep the composer (and the typed text) open on failure — an
 				// "Extension context invalidated" rejection must not eat the comment.
 				const ok = await sendGuarded<CreateResponse>(
-					{ type: "create", payload: buildPayload(el, selector, text) },
+					{ type: "create", payload: buildPayload(el, selector, text, component) },
 					"create",
 					"Couldn't save — comment not stored.",
 					showError,
@@ -547,7 +619,12 @@ function mountClaudback(): void {
 		});
 	}
 
-	function buildPayload(el: Element, selector: string, text: string): NewCommentInput {
+	function buildPayload(
+		el: Element,
+		selector: string,
+		text: string,
+		component: { framework: string; components: string[] } | null,
+	): NewCommentInput {
 		const rect = el.getBoundingClientRect();
 
 		return {
@@ -559,6 +636,8 @@ function mountClaudback(): void {
 			textSnippet: (el.textContent || "").trim().slice(0, 512),
 			// Names only — no attribute values ever leave the page.
 			htmlExcerpt: excerptFromNames(el.tagName, el.getAttributeNames()),
+			framework: component?.framework ?? null,
+			componentPath: component?.components ?? [],
 			rect: {
 				x: rect.left + window.scrollX,
 				y: rect.top + window.scrollY,
@@ -585,6 +664,7 @@ function mountClaudback(): void {
 		pop.style.top = `${rect.bottom + 6}px`;
 		pop.innerHTML = `
 			<div class="meta mono">${escapeHtml(comment.selector)}${comment.resolved ? " · resolved" : ""}</div>
+			${componentChipHtml(comment.framework ?? "", comment.componentPath ?? [])}
 			<textarea>${escapeHtml(comment.text)}</textarea>
 			<div class="row">
 				<button class="btn danger" data-act="delete">Delete</button>
@@ -868,7 +948,7 @@ function mountClaudback(): void {
 			item.innerHTML = `
 				<div class="top">
 					<span class="num">${index + 1}</span>
-					<span class="meta-line"><span class="mono">${escapeHtml(comment.tag)}</span> · ${onThisPage ? "this page" : escapeHtml(shortUrl(comment.url))}${comment.resolved ? " · resolved" : ""}</span>
+					<span class="meta-line"><span class="mono">${escapeHtml(comment.tag)}</span>${componentMetaHtml(comment.framework ?? "", comment.componentPath ?? [])} · ${onThisPage ? "this page" : escapeHtml(shortUrl(comment.url))}${comment.resolved ? " · resolved" : ""}</span>
 				</div>
 				<div class="txt">${escapeHtml(comment.text)}</div>
 				<div class="ref mono" title="${escapeHtml(comment.selector)}">${escapeHtml(comment.selector)}</div>
@@ -1251,6 +1331,38 @@ function mountClaudback(): void {
 	}
 
 	void refresh().then(resumePendingEdit);
+}
+
+// 12px inline framework marks, currentColor so they follow chip text color.
+const FRAMEWORK_ICONS: Record<string, string> = {
+	react:
+		'<svg viewBox="-11 -11 22 22" width="12" height="12" aria-hidden="true"><circle r="2" fill="currentColor"/><g stroke="currentColor" fill="none"><ellipse rx="10" ry="4.2"/><ellipse rx="10" ry="4.2" transform="rotate(60)"/><ellipse rx="10" ry="4.2" transform="rotate(120)"/></g></svg>',
+	vue:
+		'<svg viewBox="0 0 24 22" width="12" height="12" aria-hidden="true"><path fill="currentColor" d="M14.8 0L12 4.8 9.2 0H0l12 21 12-21h-9.2zM3.6 2.1h3.2L12 11l5.2-8.9h3.2L12 16.9 3.6 2.1z"/></svg>',
+};
+
+function componentChipHtml(framework: string, components: string[]): string {
+	if (components.length === 0) {
+		return "";
+	}
+
+	const icon = FRAMEWORK_ICONS[framework] ?? "";
+	const chain = components.join(" < ");
+
+	return `<span class="componentchip mono" title="${escapeHtml(chain)}">${icon}&lt;${escapeHtml(components[0])}&gt;</span>`;
+}
+
+// List-density variant: no chip box, just icon + name folded into the item's
+// faint meta line (leading separator included so callers can concatenate).
+function componentMetaHtml(framework: string, components: string[]): string {
+	if (components.length === 0) {
+		return "";
+	}
+
+	const icon = FRAMEWORK_ICONS[framework] ?? "";
+	const chain = components.join(" < ");
+
+	return ` · <span class="component-meta mono" title="${escapeHtml(chain)}">${icon}${escapeHtml(components[0])}</span>`;
 }
 
 function escapeHtml(value: string): string {

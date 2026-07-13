@@ -21,7 +21,7 @@ This is a local dev tool that receives user-authored text from a browser extensi
 
 - **The collector binds `127.0.0.1` only.** Never bind `0.0.0.0` or accept a host argument that could widen this.
 - **Every collector request must carry the pairing token** (`TOKEN_HEADER` from `@claudback/shared`), compared timing-safe (see `packages/mcp-server/src/auth.ts`). Never log the token itself.
-- **CORS is an allowlist, not a wildcard.** Only `chrome-extension://[a-p]{32}`-shaped origins are echoed back; any `http(s)` origin gets a bare 403 with no CORS headers. Don't relax this to fix a dev inconvenience.
+- **CORS is an allowlist, not a wildcard.** The allowlist is pinned to the published extension ID; any other origin gets a bare 403 with no CORS headers. Don't relax this to fix a dev inconvenience — the sanctioned dev path is the `CLAUDBACK_DEV_EXTENSION_ID` environment variable (see below).
 - **Comment text reaching Claude is untrusted.** It must stay behind pull-only MCP tools (never pushed into context automatically), size-capped, control/bidi-character sanitized at ingest, and wrapped in the nonce-delimited envelope (`packages/mcp-server/src/envelope.ts`) so comment content can't forge the envelope's own closing tag.
 - **`htmlExcerpt` captures tag and attribute names only — never attribute values.** Values routinely carry tokens, session IDs, or PII.
 - Any change to `packages/mcp-server/src/{auth,security,collector,sanitize,envelope}.ts` should get a security-focused review pass (a security-auditor agent or equivalent) before merging, not just a typecheck/test pass.
@@ -31,6 +31,24 @@ This is a local dev tool that receives user-authored text from a browser extensi
 - **Packages that ship a runnable binary (`mcp-server`) must be bundled with esbuild, not built with plain `tsc`.** Workspace imports like `@claudback/shared` resolve to that package's TypeScript source at the type level; a `tsc`-only build emits JS that still imports the unbuilt `.ts` source and crashes at runtime with `ERR_MODULE_NOT_FOUND`. `tsc -b` is for typechecking only in this repo — its output goes to `tsbuild/`, not `dist/`.
 - `dist/` is esbuild output (what actually ships/loads); `tsbuild/` is typecheck-only output. Both are gitignored. Every package's `vitest.config.ts` must exclude both, or compiled `.test.js` files under `tsbuild/` get picked up alongside their `.ts` sources and double-count tests.
 - After changing a package's build config, actually run the built artifact (`node dist/bin.js`, load the unpacked extension) — a clean `tsc -b` does not prove the shipped bundle works.
+
+## Manual testing with an unpacked extension
+
+An unpacked dev build has a different extension ID than the store copy, so the collector rejects it (403 with no CORS headers — the browser reports a CORS preflight failure on `/pair`). This is the pinned allowlist working as designed, not a bug; do not "fix" it by widening the allowlist. Instead:
+
+1. Build both packages and load `packages/extension/dist/` unpacked (disable the store copy of the extension while testing).
+2. Register the source-built server with the unpacked copy's ID allowlisted:
+
+   ```sh
+   claude mcp remove --scope user claudback
+   claude mcp add --scope user claudback \
+     --env CLAUDBACK_DEV_EXTENSION_ID=<unpacked-extension-id> \
+     -- node /absolute/path/to/Claudback/packages/mcp-server/dist/bin.js
+   ```
+
+3. Restart the Claude Code session (the old server process keeps running otherwise), then pair. The unpacked ID is stable as long as the extension loads from the same directory; the pairing token in `~/.claudback/` is shared between dev and production servers.
+4. Testing schema or tool changes requires the source-built server — the published `npx claudback-mcp` strips unknown comment fields at ingest and won't surface new tool output.
+5. **If the CORS error persists after all of the above, check who actually owns the port.** Every Claude session launches its own claudback server, but only one can bind 57463 — the rest sit in a 2-second takeover loop. The extension talks to whichever process holds the port, which may be a stale production server from an older session that ignores your registration entirely. Diagnose with `lsof -nP -i :57463` (the LISTEN line) and `ps -p <pid> -o command` to see which build/env it runs; kill stale servers and the right one takes over within ~2 seconds — no session restart needed.
 
 ## Testing
 

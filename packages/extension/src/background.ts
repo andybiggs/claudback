@@ -352,6 +352,13 @@ async function enableTabIfGranted(tabId: number, originPattern: string): Promise
 	}
 
 	await chrome.scripting.executeScript({ target: { tabId }, files: ["content.js"] });
+
+	try {
+		await chrome.scripting.executeScript({ target: { tabId }, files: ["detector.js"], world: "MAIN" });
+	} catch {
+		// Detection is best-effort; a failed injection must not block enabling.
+	}
+
 	await setTabEnabled(tabId, originPattern);
 
 	return true;
@@ -581,6 +588,13 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 		try {
 			await chrome.scripting.executeScript({ target: { tabId }, files: ["content.js"] });
 
+			try {
+				await chrome.scripting.executeScript({ target: { tabId }, files: ["detector.js"], world: "MAIN" });
+			} catch {
+				// Detection is best-effort; a failed injection must not trigger
+				// the content.js retry/disable path below.
+			}
+
 			return;
 		} catch (error) {
 			// Dev-server reloads can navigate the tab again mid-injection,
@@ -600,6 +614,12 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 		}
 
 		await chrome.scripting.executeScript({ target: { tabId }, files: ["content.js"] });
+
+		try {
+			await chrome.scripting.executeScript({ target: { tabId }, files: ["detector.js"], world: "MAIN" });
+		} catch {
+			// Detection is best-effort; a failed injection must not disable the tab.
+		}
 	})().catch((error: unknown) => {
 		// Injection failed twice — the tab must not stay marked enabled, or
 		// the popup would claim it's on while nothing is running.
