@@ -5,6 +5,7 @@ import {
 	detectComponents,
 	reactComponentsFromFiber,
 	vueComponentsFromInstance,
+	vueComponentsFromVnodeTree,
 } from "./component-detect.js";
 
 // Minimal fiber mocks. tag numbers per react-reconciler: 0 FunctionComponent,
@@ -22,17 +23,19 @@ describe("reactComponentsFromFiber", () => {
 		expect(reactComponentsFromFiber(tree)).toEqual(["SubmitButton", "CheckoutForm", "App"]);
 	});
 
-	it("skips host elements, fragments, providers, and minified single-letter names", () => {
-		const tree = fiber(0, { name: "t" }, fiber(7, null, fiber(10, {}, fiber(0, { name: "Page" }))));
+	it("skips host elements, fragments, providers, and minified short names", () => {
+		// "t" and "er" are minifier output (real example: production React
+		// chains polluted with "er"/"Tr"/"Ke"); anything under 3 chars goes.
+		const tree = fiber(0, { name: "t" }, fiber(7, null, fiber(0, { name: "er" }, fiber(10, {}, fiber(0, { name: "Page" })))));
 		expect(reactComponentsFromFiber(tree)).toEqual(["Page"]);
 	});
 
 	it("caps the chain at 5 names", () => {
 		let node: Record<string, unknown> | null = null;
-		for (const name of ["G7", "F6", "E5", "D4", "C3", "B2", "A1"]) {
+		for (const name of ["Ggg", "Fff", "Eee", "Ddd", "Ccc", "Bbb", "Aaa"]) {
 			node = fiber(0, { name }, node);
 		}
-		expect(reactComponentsFromFiber(node)).toEqual(["A1", "B2", "C3", "D4", "E5"]);
+		expect(reactComponentsFromFiber(node)).toEqual(["Aaa", "Bbb", "Ccc", "Ddd", "Eee"]);
 	});
 
 	it("truncates names longer than COMPONENT_NAME_MAX_LENGTH", () => {
@@ -60,6 +63,81 @@ describe("vueComponentsFromInstance", () => {
 	});
 });
 
+// Production Vue 3 attaches no per-element instance refs; detection walks the
+// vnode tree from the app root by DOM containment instead. Mock instances
+// mirror the runtime-core shape: { type, subTree: { el, children, component } }.
+describe("vueComponentsFromVnodeTree", () => {
+	function nest(): { root: Record<string, unknown>; target: Element } {
+		const rootEl = document.createElement("div");
+		const pageEl = document.createElement("main");
+		const cardEl = document.createElement("section");
+		const target = document.createElement("button");
+		cardEl.append(target);
+		pageEl.append(cardEl);
+		rootEl.append(pageEl);
+		document.body.append(rootEl);
+
+		const card = { type: { name: "ProjectCard" }, subTree: { el: cardEl, children: [] } };
+		const sidebar = {
+			type: { name: "Sidebar" },
+			subTree: { el: document.createElement("aside"), children: [] },
+		};
+		const page = {
+			type: { __name: "Explore" },
+			subTree: { el: pageEl, children: [{ component: sidebar }, { component: card }] },
+		};
+		const routerView = {
+			type: { name: "RouterView" },
+			subTree: { el: pageEl, children: [{ component: page }] },
+		};
+		const root = {
+			type: { name: "App" },
+			subTree: { el: rootEl, children: [{ component: routerView }] },
+		};
+
+		return { root, target };
+	}
+
+	it("collects the containment chain nearest-first, skipping vue built-ins", () => {
+		const { root, target } = nest();
+		expect(vueComponentsFromVnodeTree(root, target)).toEqual(["ProjectCard", "Explore", "App"]);
+	});
+
+	it("keeps the 5 nearest names on deep chains", () => {
+		const target = document.createElement("button");
+		let el: Element = target;
+		let child: Record<string, unknown> | null = null;
+		for (const name of ["Lv1", "Lv2", "Lv3", "Lv4", "Lv5", "Lv6", "Lv7"]) {
+			const wrap = document.createElement("div");
+			wrap.append(el);
+			el = wrap;
+			child = {
+				type: { name },
+				subTree: { el: wrap, children: child ? [{ component: child }] : [] },
+			};
+		}
+		document.body.append(el);
+		expect(vueComponentsFromVnodeTree(child, target)).toEqual(["Lv1", "Lv2", "Lv3", "Lv4", "Lv5"]);
+	});
+
+	it("returns [] for garbage input", () => {
+		expect(vueComponentsFromVnodeTree(null, document.createElement("div"))).toEqual([]);
+		expect(vueComponentsFromVnodeTree({ subTree: "junk" }, document.createElement("div"))).toEqual([]);
+	});
+
+	it("terminates on cyclic trees and respects the depth cap", () => {
+		const target = document.createElement("button");
+		document.body.append(target);
+		// A self-referential component whose subtree always contains the target
+		// would descend forever without the depth/budget bounds.
+		const cyclic: Record<string, unknown> = { type: { name: "Loop" } };
+		cyclic.subTree = { el: document.body, children: [{ component: cyclic }] };
+		const result = vueComponentsFromVnodeTree(cyclic, target);
+		expect(result.length).toBeLessThanOrEqual(5);
+		expect(result.every((name) => name === "Loop")).toBe(true);
+	});
+});
+
 describe("detectComponents", () => {
 	it("finds react via the __reactFiber$ expando", () => {
 		const el = document.createElement("button");
@@ -78,6 +156,23 @@ describe("detectComponents", () => {
 
 	it("returns null on a plain element", () => {
 		expect(detectComponents(document.createElement("div"))).toBeNull();
+	});
+
+	it("finds production vue via __vue_app__ + _vnode on an ancestor", () => {
+		const rootEl = document.createElement("div");
+		const target = document.createElement("button");
+		rootEl.append(target);
+		document.body.append(rootEl);
+
+		const rootComponent = {
+			type: { name: "App" },
+			subTree: { el: rootEl, children: [] },
+		};
+		const record = rootEl as unknown as Record<string, unknown>;
+		record.__vue_app__ = {};
+		record._vnode = { component: rootComponent };
+
+		expect(detectComponents(target)).toEqual({ framework: "vue", components: ["App"] });
 	});
 
 	it("survives a hostile expando getter", () => {

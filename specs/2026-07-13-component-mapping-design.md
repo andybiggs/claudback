@@ -29,6 +29,7 @@ Detectors run in order; first non-null result wins. Each `detect()` call is wrap
 
 - **React detector:** locate the `__reactFiber$…` expando (legacy `__reactInternalInstance$…` for React 16/17), walk `fiber.return`, collect `type.displayName || type.name` for function/class components. Skip host elements, fragments, context providers, and unnamed or single-letter (minified) names. Note: `_debugSource` was removed in React 19, so component *names* are the reliable primitive; file paths are out of scope.
 - **Vue detector:** read `el.__vueParentComponent` (Vue 3) or `el.__vue__` (Vue 2), walk `.parent`, collect component names.
+- **Vue production fallback (amendment, 2026-07-13):** production Vue 3 builds attach no per-element instance refs — `__vueParentComponent` is dev/devtools-only — so the original detector found nothing on real Vue sites (discovered on behance.net). When the expando is absent, find the ancestor holding `__vue_app__`/`_vnode`, walk the vnode tree top-down descending into the child component whose rendered subtree contains the target, and collect names nearest-first. Vue built-in wrappers (RouterView, Transition, etc.) are skipped. The minified-name filter is ≥3 chars for both frameworks (production React chains showed 2-letter junk like `er`/`Tr`/`Ke`).
 
 Chain is capped at **5** named components. The detector bundle never touches comments, storage, or the network; it only answers detect events.
 
