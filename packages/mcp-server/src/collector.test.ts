@@ -13,7 +13,7 @@ import { createStore } from "./store.js";
 import type { StoreApi } from "./store-api.js";
 
 const TOKEN = "a".repeat(32);
-const VALID_EXTENSION_ORIGIN = `chrome-extension://${"a".repeat(32)}`;
+const VALID_EXTENSION_ORIGIN = "chrome-extension://dbnmlcmmgnchigedlglfmchkendlcfgc";
 
 function validCommentPayload(overrides: Record<string, unknown> = {}): Record<string, unknown> {
 	return {
