@@ -52,6 +52,21 @@ npm run build --workspace=@claudback/extension
 
 Open `chrome://extensions`, enable Developer mode, click **Load unpacked**, select `packages/extension/dist/`. The setup guide opens automatically on first install (or via **Pairing & options → Open setup guide**).
 
+Disable the Web Store copy of Claudback while testing an unpacked build — they're separate extensions and would both inject overlays. Note the unpacked copy's ID from `chrome://extensions` (it stays stable as long as you load it from the same directory); you'll need it to allowlist the extension with the server below.
+
+### Allowlist an unpacked extension (`CLAUDBACK_DEV_EXTENSION_ID`)
+
+The collector's CORS allowlist is pinned to the published extension ID, so an unpacked build's requests are rejected with a 403/CORS preflight error (`No 'Access-Control-Allow-Origin' header`) — including pairing. Opt your dev extension in by registering the server with the `CLAUDBACK_DEV_EXTENSION_ID` environment variable set to the unpacked copy's ID:
+
+```sh
+claude mcp remove --scope user claudback
+claude mcp add --scope user claudback \
+  --env CLAUDBACK_DEV_EXTENSION_ID=<your-unpacked-extension-id> \
+  -- node /absolute/path/to/Claudback/packages/mcp-server/dist/bin.js
+```
+
+Restart your Claude Code session afterwards so it launches the re-registered server, then pair the unpacked extension as normal. To go back to production, re-register without the variable: `claude mcp add --scope user claudback -- npx -y claudback-mcp`.
+
 ### Run the server from source
 
 ```sh
