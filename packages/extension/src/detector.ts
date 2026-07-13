@@ -1,7 +1,7 @@
 // Main-world detector. Injected alongside content.js (which runs isolated)
 // because React/Vue internals are main-world expandos on DOM nodes. This file
 // must stay a thin event-answering shell: it never touches comments, storage,
-// or the network, and only ever replies with component names.
+// or the network, and replies only with the nonce, framework, and component names.
 
 import { detectComponents } from "./lib/component-detect.js";
 

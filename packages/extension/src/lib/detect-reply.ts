@@ -8,7 +8,8 @@ import { COMPONENT_NAME_MAX_LENGTH, COMPONENT_PATH_MAX_DEPTH } from "@claudback/
 
 const replySchema = z.object({
 	nonce: z.string().min(1),
-	framework: z.string().min(1).max(32),
+	// Only frameworks our own detector emits; anything else is a forgery.
+	framework: z.enum(["react", "vue"]),
 	components: z
 		.array(z.string().min(1).max(COMPONENT_NAME_MAX_LENGTH))
 		.min(1)

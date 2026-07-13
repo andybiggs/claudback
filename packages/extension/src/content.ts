@@ -570,6 +570,9 @@ function mountClaudback(): void {
 				"afterend",
 				componentChipHtml(component.framework, component.components),
 			);
+		}).catch((error) => {
+			// The promise itself never rejects; this guards the render callback.
+			console.warn("[claudback] component chip render failed:", error);
 		});
 
 		const textarea = pop.querySelector("textarea") as HTMLTextAreaElement;

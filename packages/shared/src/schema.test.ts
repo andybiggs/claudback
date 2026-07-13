@@ -134,6 +134,40 @@ describe("newCommentInputSchema", () => {
 			});
 			expect(result.success).toBe(false);
 		});
+
+		it("rejects a componentPath without a framework", () => {
+			const result = newCommentInputSchema.safeParse({
+				...validNewCommentInput(),
+				framework: null,
+				componentPath: ["SubmitButton"],
+			});
+			expect(result.success).toBe(false);
+		});
+
+		it("accepts a framework with an empty componentPath (sanitize can empty it)", () => {
+			const parsed = newCommentInputSchema.parse({
+				...validNewCommentInput(),
+				framework: "react",
+				componentPath: [],
+			});
+			expect(parsed.framework).toBe("react");
+		});
+
+		it("rejects a framework over 32 chars and non-string componentPath entries", () => {
+			expect(
+				newCommentInputSchema.safeParse({
+					...validNewCommentInput(),
+					framework: "x".repeat(33),
+				}).success,
+			).toBe(false);
+			expect(
+				newCommentInputSchema.safeParse({
+					...validNewCommentInput(),
+					framework: "react",
+					componentPath: [42],
+				}).success,
+			).toBe(false);
+		});
 	});
 });
 

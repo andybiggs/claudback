@@ -1,4 +1,4 @@
-// @vitest-environment jsdom
+// @vitest-environment happy-dom
 import { describe, expect, it } from "vitest";
 
 import {
@@ -173,6 +173,44 @@ describe("detectComponents", () => {
 		record._vnode = { component: rootComponent };
 
 		expect(detectComponents(target)).toEqual({ framework: "vue", components: ["App"] });
+	});
+
+	it("climbs to an ancestor carrying the react fiber", () => {
+		const wrapper = document.createElement("div");
+		const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+		wrapper.append(svg);
+		(wrapper as unknown as Record<string, unknown>)["__reactFiber$abc123"] = fiber(0, { name: "IconButton" });
+		expect(detectComponents(svg)).toEqual({ framework: "react", components: ["IconButton"] });
+	});
+
+	it("climbs to an ancestor carrying the vue instance", () => {
+		const wrapper = document.createElement("div");
+		const child = document.createElement("span");
+		wrapper.append(child);
+		(wrapper as unknown as Record<string, unknown>).__vueParentComponent = {
+			type: { name: "IconButton" },
+			parent: null,
+		};
+		expect(detectComponents(child)).toEqual({ framework: "vue", components: ["IconButton"] });
+	});
+
+	it("gives up past the 5-level ancestor cap", () => {
+		const target = document.createElement("span");
+		let el: Element = target;
+		for (let i = 0; i < 5; i += 1) {
+			const wrap = document.createElement("div");
+			wrap.append(el);
+			el = wrap;
+		}
+		// el is now the 5th ancestor — one past the walk's last probe (self + 4).
+		(el as unknown as Record<string, unknown>)["__reactFiber$abc123"] = fiber(0, { name: "TooFarUp" });
+		expect(detectComponents(target)).toBeNull();
+	});
+
+	it("terminates on a cyclic react fiber chain at the name cap", () => {
+		const node = fiber(0, { name: "Loop" });
+		node.return = node;
+		expect(reactComponentsFromFiber(node)).toEqual(["Loop", "Loop", "Loop", "Loop", "Loop"]);
 	});
 
 	it("survives a hostile expando getter", () => {

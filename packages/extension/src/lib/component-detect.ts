@@ -7,7 +7,9 @@
 // schemas, which would bloat the main-world detector bundle by ~125KB.
 import { COMPONENT_NAME_MAX_LENGTH, COMPONENT_PATH_MAX_DEPTH } from "@claudback/shared/constants";
 
-export type DetectResult = { framework: string; components: string[] };
+export type Framework = "react" | "vue";
+
+export type DetectResult = { framework: Framework; components: string[] };
 
 // react-reconciler work tags for renderable user components.
 const REACT_FUNCTION_COMPONENT = 0;
@@ -208,7 +210,7 @@ function findVueRootComponent(el: Element): unknown {
 	return null;
 }
 
-type Detector = { framework: string; detect(el: Element): string[] | null };
+type Detector = { framework: Framework; detect(el: Element): string[] | null };
 
 const reactDetector: Detector = {
 	framework: "react",

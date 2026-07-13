@@ -36,14 +36,26 @@ const newCommentFieldsSchema = z.object({
 		.default([]),
 });
 
-export const newCommentInputSchema = newCommentFieldsSchema;
+// A component chain without a framework is a half-populated pair no producer
+// emits; reject it rather than store it. The reverse (framework with an empty
+// path) is tolerated: ingest sanitization can legitimately empty the path.
+const componentPairing = {
+	check: (value: { framework: string | null; componentPath: string[] }) =>
+		value.componentPath.length === 0 || value.framework !== null,
+	message: "componentPath requires framework",
+};
+
+export const newCommentInputSchema = newCommentFieldsSchema.refine(
+	componentPairing.check,
+	{ message: componentPairing.message, path: ["componentPath"] },
+);
 
 export const commentSchema = newCommentFieldsSchema.extend({
 	id: z.string().uuid(),
 	resolved: z.boolean().default(false),
 	createdAt: z.string().datetime(),
 	updatedAt: z.string().datetime(),
-});
+}).refine(componentPairing.check, { message: componentPairing.message, path: ["componentPath"] });
 
 export const storeModeSchema = z.preprocess((value) => {
 	if (value === "clear" || value === "keep") {
