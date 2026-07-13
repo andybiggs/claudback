@@ -100,7 +100,11 @@ describe("newCommentInputSchema", () => {
 
 	describe("component fields", () => {
 		it("defaults framework and componentPath when absent (old payloads)", () => {
-			const parsed = newCommentInputSchema.parse(validNewCommentInput());
+			const input = validNewCommentInput() as Record<string, unknown>;
+			delete input.framework;
+			delete input.componentPath;
+
+			const parsed = newCommentInputSchema.parse(input);
 			expect(parsed.framework).toBeNull();
 			expect(parsed.componentPath).toEqual([]);
 		});
