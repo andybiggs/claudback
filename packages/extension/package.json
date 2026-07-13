@@ -9,7 +9,8 @@
 		"zip": "node esbuild.mjs && node scripts/zip.mjs"
 	},
 	"dependencies": {
-		"@claudback/shared": "*"
+		"@claudback/shared": "*",
+		"zod": "^3.25.76"
 	},
 	"devDependencies": {
 		"@types/chrome": "^0.1.15",

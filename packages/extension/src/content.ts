@@ -10,6 +10,7 @@
 import { buildSelector, type Comment, type NewCommentInput, type StoreMode } from "@claudback/shared";
 
 import { excerptFromNames } from "./lib/excerpt.js";
+import { parseDetectReply } from "./lib/detect-reply.js";
 import type { ContentRequest, CreateResponse, ListResponse, SimpleResponse, SyncState } from "./messages.js";
 import { CLAUDE_RESTART_PROMPT } from "./prompts.js";
 
@@ -482,7 +483,40 @@ function mountClaudback(): void {
 
 	// --- composer (new comment) --------------------------------------------
 
+	const DETECT_TIMEOUT_MS = 100;
+
+	function requestComponentInfo(
+		el: Element,
+	): Promise<{ framework: string; components: string[] } | null> {
+		return new Promise((resolve) => {
+			const nonce = crypto.randomUUID();
+
+			const finish = (value: { framework: string; components: string[] } | null): void => {
+				document.removeEventListener("claudback:detect-result", onResult);
+				el.removeAttribute("data-claudback-probe");
+				clearTimeout(timer);
+				resolve(value);
+			};
+
+			const onResult = (event: Event): void => {
+				const reply = parseDetectReply((event as CustomEvent<unknown>).detail, nonce);
+
+				if (reply) {
+					finish(reply);
+				}
+				// Wrong nonce/shape: keep listening until our reply or timeout.
+			};
+
+			const timer = setTimeout(() => finish(null), DETECT_TIMEOUT_MS);
+
+			document.addEventListener("claudback:detect-result", onResult);
+			el.setAttribute("data-claudback-probe", nonce);
+			document.dispatchEvent(new CustomEvent("claudback:detect", { detail: nonce }));
+		});
+	}
+
 	function openComposer(el: Element, x: number, y: number): void {
+		const componentPromise = requestComponentInfo(el);
 		clearTransient();
 
 		const pop = document.createElement("div");
@@ -529,10 +563,12 @@ function mountClaudback(): void {
 					return;
 				}
 
+				const component = await componentPromise;
+
 				// Keep the composer (and the typed text) open on failure — an
 				// "Extension context invalidated" rejection must not eat the comment.
 				const ok = await sendGuarded<CreateResponse>(
-					{ type: "create", payload: buildPayload(el, selector, text) },
+					{ type: "create", payload: buildPayload(el, selector, text, component) },
 					"create",
 					"Couldn't save — comment not stored.",
 					showError,
@@ -547,7 +583,12 @@ function mountClaudback(): void {
 		});
 	}
 
-	function buildPayload(el: Element, selector: string, text: string): NewCommentInput {
+	function buildPayload(
+		el: Element,
+		selector: string,
+		text: string,
+		component: { framework: string; components: string[] } | null,
+	): NewCommentInput {
 		const rect = el.getBoundingClientRect();
 
 		return {
@@ -559,6 +600,8 @@ function mountClaudback(): void {
 			textSnippet: (el.textContent || "").trim().slice(0, 512),
 			// Names only — no attribute values ever leave the page.
 			htmlExcerpt: excerptFromNames(el.tagName, el.getAttributeNames()),
+			framework: component?.framework ?? null,
+			componentPath: component?.components ?? [],
 			rect: {
 				x: rect.left + window.scrollX,
 				y: rect.top + window.scrollY,
@@ -566,8 +609,6 @@ function mountClaudback(): void {
 				height: rect.height,
 			},
 			viewport: { width: window.innerWidth, height: window.innerHeight },
-			framework: null,
-			componentPath: [],
 		};
 	}
 
