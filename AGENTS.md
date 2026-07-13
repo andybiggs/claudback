@@ -48,6 +48,7 @@ An unpacked dev build has a different extension ID than the store copy, so the c
 
 3. Restart the Claude Code session (the old server process keeps running otherwise), then pair. The unpacked ID is stable as long as the extension loads from the same directory; the pairing token in `~/.claudback/` is shared between dev and production servers.
 4. Testing schema or tool changes requires the source-built server — the published `npx claudback-mcp` strips unknown comment fields at ingest and won't surface new tool output.
+5. **If the CORS error persists after all of the above, check who actually owns the port.** Every Claude session launches its own claudback server, but only one can bind 57463 — the rest sit in a 2-second takeover loop. The extension talks to whichever process holds the port, which may be a stale production server from an older session that ignores your registration entirely. Diagnose with `lsof -nP -i :57463` (the LISTEN line) and `ps -p <pid> -o command` to see which build/env it runs; kill stale servers and the right one takes over within ~2 seconds — no session restart needed.
 
 ## Testing
 

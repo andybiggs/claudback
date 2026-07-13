@@ -67,6 +67,8 @@ claude mcp add --scope user claudback \
 
 Restart your Claude Code session afterwards so it launches the re-registered server, then pair the unpacked extension as normal. To go back to production, re-register without the variable: `claude mcp add --scope user claudback -- npx -y claudback-mcp`.
 
+Still blocked? Another Claude session's server may be holding the collector port — only one server can bind 57463, and the extension talks to whichever got there first, regardless of what you just registered. Find it with `lsof -nP -i :57463`, kill the stale process, and the right server takes the port over within a couple of seconds.
+
 ### Run the server from source
 
 ```sh
