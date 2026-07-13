@@ -125,8 +125,8 @@ const STYLES = `
 	padding: 2px 7px; border-radius: 4px; flex-shrink: 0; margin-bottom: 8px;
 }
 .popover .componentchip svg { flex: none; }
-.item .meta-line .component-meta { display: inline-flex; align-items: center; gap: 3px; vertical-align: -1px; font-size: 10.5px; }
-.item .meta-line .component-meta svg { width: 9px; height: 9px; flex: none; }
+.item .meta-line .component-meta { display: inline-flex; align-items: center; gap: 3px; vertical-align: -1px; }
+.item .meta-line .component-meta svg { width: 10px; height: 10px; flex: none; }
 .popover .selector-line { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; min-width: 0; }
 .popover .selector-path {
 	font-size: 11px; color: var(--faint-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1;
@@ -164,7 +164,7 @@ button.btn:disabled { opacity: .5; cursor: default; }
 .item .top { display: flex; align-items: center; gap: 7px; }
 .item .num { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; background: var(--green); color: #fff; border-radius: 999px; font-size: 11px; font-weight: 700; flex-shrink: 0; }
 .item.resolved .num { background: #9ca3af; }
-.item .meta-line { font-size: 11px; color: var(--faint-text); }
+.item .meta-line { font-size: 11px; color: var(--faint-text); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .item .txt { font-size: 13px; margin: 5px 0 3px; }
 .item .ref {
 	font-size: 10.5px; color: var(--selector-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
