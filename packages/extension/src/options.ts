@@ -1,6 +1,7 @@
 import type { PairResponse, TestConnectionResponse } from "./messages.js";
 
 const TOKEN_KEY = "claudback_token";
+const CONVERT_KEY = "convertComponents";
 
 async function hasToken(): Promise<boolean> {
 	const result = await chrome.storage.local.get(TOKEN_KEY);
@@ -106,6 +107,17 @@ function initCopyPrompt(): void {
 	});
 }
 
+// Mirrors content.ts: defaults on, only the explicit `false` turns it off.
+async function initConvertToggle(): Promise<void> {
+	const toggle = document.getElementById("convert-toggle") as HTMLInputElement;
+	const stored = await chrome.storage.local.get(CONVERT_KEY);
+	toggle.checked = stored[CONVERT_KEY] !== false;
+
+	toggle.addEventListener("change", () => {
+		void chrome.storage.local.set({ [CONVERT_KEY]: toggle.checked });
+	});
+}
+
 async function init(): Promise<void> {
 	const codeInput = document.getElementById("pair-code") as HTMLInputElement;
 	const pairBtn = document.getElementById("pair") as HTMLButtonElement;
@@ -118,6 +130,7 @@ async function init(): Promise<void> {
 	}
 
 	initCopyPrompt();
+	await initConvertToggle();
 	pairBtn.addEventListener("click", () => {
 		void pairWithCode(codeInput).catch(reportError);
 	});

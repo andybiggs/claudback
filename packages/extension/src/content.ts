@@ -119,14 +119,15 @@ const STYLES = `
 	font-size: 11px; font-weight: 700; background: var(--green-tint); color: var(--green-strong);
 	padding: 2px 7px; border-radius: 4px; flex-shrink: 0;
 }
-.popover .componentchip {
-	display: inline-flex; align-items: center; gap: 4px;
+.component-pill {
+	display: inline-flex; align-items: center; gap: 4px; max-width: 100%; vertical-align: middle;
 	font-size: 11px; font-weight: 700; background: var(--green-tint); color: var(--green-strong);
-	padding: 2px 7px; border-radius: 4px; flex-shrink: 0; margin-bottom: 8px;
+	padding: 2px 7px; border-radius: 4px;
 }
-.popover .componentchip svg { flex: none; }
-.item .meta-line .component-meta { display: inline-flex; align-items: center; gap: 3px; vertical-align: -1px; }
-.item .meta-line .component-meta svg { width: 10px; height: 10px; flex: none; }
+.component-pill svg { flex: none; }
+.component-pill .pill-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.selector-line .component-pill { flex: 0 1 auto; }
+.selector-line .component-pill.path { flex: 1 1 auto; min-width: 0; }
 .popover .selector-line { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; min-width: 0; }
 .popover .selector-path {
 	font-size: 11px; color: var(--faint-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1;
@@ -146,7 +147,9 @@ button.btn:disabled { opacity: .5; cursor: default; }
 }
 .panel > :not(.items) { flex-shrink: 0; }
 .panel .items { overflow-y: auto; flex: 1; min-height: 0; }
-.panel header { padding: 12px 14px; border-bottom: 1px solid var(--hairline); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.panel header { position: relative; padding: 12px 14px; border-bottom: 1px solid var(--hairline); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.panel header .cog { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 26px; padding: 0; border: 1px solid transparent; border-radius: 6px; background: none; color: var(--faint-text); cursor: pointer; flex-shrink: 0; }
+.panel header .cog:hover, .panel header .cog.open { background: var(--surface); color: var(--ink); border-color: var(--border); }
 .panel header .identity { display: flex; align-items: center; gap: 9px; min-width: 0; flex: 1; }
 .panel header .identity .mark { width: 30px; height: 30px; }
 .panel header .identity .mark::after { width: 9px; height: 9px; }
@@ -158,8 +161,21 @@ button.btn:disabled { opacity: .5; cursor: default; }
 .panel .sync-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 7px; padding: 8px 14px; font-size: 12px; font-weight: 600; border-bottom: 1px solid var(--warning-border); background: var(--warning-bg); color: var(--warning-text); }
 .panel .sync-strip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--warning-dot); flex-shrink: 0; }
 .panel .sync-strip .sync-action { margin-left: 14px; border: none; background: none; padding: 0; font-size: 12px; font-weight: 600; color: var(--warning-text); text-decoration: underline; cursor: pointer; text-align: left; }
-.panel .mode { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 10px 14px; border-bottom: 1px solid var(--hairline); }
-.panel .mode select { font-size: 12px; padding: 3px 6px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); }
+.panel .settings-menu { position: absolute; top: 100%; right: 8px; margin-top: 4px; z-index: 20; width: max-content; max-width: 300px; padding: 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); box-shadow: 0 8px 30px rgba(0,0,0,var(--shadow-alpha)); }
+.panel .settings-menu select { font-size: 12px; padding: 3px 6px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); }
+.panel .settings-menu .settings-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 12px; color: var(--ink); cursor: pointer; }
+.panel .settings-menu .settings-row + .settings-row { margin-top: 10px; }
+.panel .settings-menu .settings-row > span:first-child { white-space: nowrap; }
+.switch { position: relative; flex-shrink: 0; width: 34px; height: 20px; }
+.switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+.switch .slider { position: absolute; inset: 0; border-radius: 999px; background: var(--border); transition: background .15s; }
+.switch .slider::before { content: ""; position: absolute; left: 2px; top: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.3); transition: transform .15s; }
+.switch input:checked + .slider { background: var(--green); }
+.switch input:checked + .slider::before { transform: translateX(14px); }
+.cb-tooltip { position: fixed; z-index: 2147483647; max-width: 360px; padding: 5px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--ink); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; line-height: 1.4; word-break: break-all; box-shadow: 0 8px 30px rgba(0,0,0,var(--shadow-alpha)); opacity: 0; pointer-events: none; transition: opacity .1s; }
+.cb-tooltip.show { opacity: 1; }
+.cb-tooltip .tip-sep { color: var(--green-strong); font-weight: 700; }
+[data-tip] { cursor: pointer; }
 .item { padding: 10px 14px; border-bottom: 1px solid var(--divider); }
 .item .top { display: flex; align-items: center; gap: 7px; }
 .item .num { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; background: var(--green); color: #fff; border-radius: 999px; font-size: 11px; font-weight: 700; flex-shrink: 0; }
@@ -297,10 +313,83 @@ function mountClaudback(): void {
 	shadow.append(style);
 	document.body.append(host);
 
+	// Custom tooltip: one node, event-delegated off the shadow root (which
+	// survives re-renders) so any [data-tip] element gets a styled, untruncated
+	// hover label instead of the browser's native title.
+	const tooltip = document.createElement("div");
+	tooltip.className = "cb-tooltip";
+
+	function showTooltip(target: Element): void {
+		const text = target.getAttribute("data-tip");
+
+		if (!text) {
+			return;
+		}
+
+		// Escape first, then paint the path separators (component "›" and CSS ">")
+		// green so the breadcrumb reads as segments.
+		tooltip.innerHTML = escapeHtml(text)
+			.replace(/ › /g, ' <span class="tip-sep">›</span> ')
+			.replace(/ &gt; /g, ' <span class="tip-sep">&gt;</span> ');
+
+		// render() nukes every non-style shadow node, so re-attach on demand.
+		if (!tooltip.isConnected) {
+			shadow.append(tooltip);
+		}
+
+		tooltip.classList.add("show");
+
+		const anchor = target.getBoundingClientRect();
+		const tip = tooltip.getBoundingClientRect();
+		const left = Math.max(8, Math.min(anchor.left, window.innerWidth - tip.width - 8));
+		const above = anchor.top - tip.height - 6;
+		const top = above < 8 ? anchor.bottom + 6 : above;
+
+		tooltip.style.left = `${left}px`;
+		tooltip.style.top = `${top}px`;
+	}
+
+	shadow.addEventListener("mouseover", (ev) => {
+		const target = (ev.target as HTMLElement).closest?.("[data-tip]");
+
+		if (target) {
+			showTooltip(target);
+		}
+	});
+
+	shadow.addEventListener("mouseout", (ev) => {
+		if ((ev.target as HTMLElement).closest?.("[data-tip]")) {
+			tooltip.classList.remove("show");
+		}
+	});
+
 	let store: Store = { mode: "clear", comments: [] };
 	let syncState: SyncState = "synced";
 	let commentMode = false;
 	let panelOpen = false;
+	let settingsOpen = false;
+	// Setting (persisted in chrome.storage.local, not the worker store): when on,
+	// list/composer/pin swap raw HTML tags + selectors for mapped component names
+	// and the component tree. Off = raw HTML everywhere.
+	let convertComponents = true;
+
+	const CONVERT_KEY = "convertComponents";
+	const localStore = (() => {
+		try {
+			return chrome?.storage?.local ?? null;
+		} catch {
+			return null;
+		}
+	})();
+
+	function persistConvert(): void {
+		try {
+			localStore?.set({ [CONVERT_KEY]: convertComponents });
+		} catch {
+			// Storage can be unavailable if the extension is being torn down; the
+			// in-memory value still drives this session's rendering.
+		}
+	}
 
 	// --- worker I/O ---------------------------------------------------------
 
@@ -549,7 +638,7 @@ function mountClaudback(): void {
 		pop.innerHTML = `
 			<div class="selector-line">
 				<span class="tagchip mono">&lt;${escapeHtml(tag)}&gt;</span>
-				<span class="selector-path mono" title="${escapeHtml(selector)}">${escapeHtml(selector)}</span>
+				<span class="selector-path mono" data-tip="${escapeHtml(selector)}">${escapeHtml(selector)}</span>
 			</div>
 			<textarea placeholder="What needs fixing here?"></textarea>
 			<div class="row">
@@ -560,19 +649,22 @@ function mountClaudback(): void {
 		anchorTransient(el, pop);
 
 		void componentPromise.then((component) => {
-			if (!component || !pop.isConnected) {
+			// Setting off: leave the raw <tag> + selector, no component name in the
+			// picker at all.
+			if (!convertComponents || !component || !component.components.length || !pop.isConnected) {
 				return;
 			}
 
-			// Own line under the selector: sharing the selector's row crushes
-			// both into ellipsis soup.
-			pop.querySelector(".selector-line")?.insertAdjacentHTML(
-				"afterend",
-				componentChipHtml(component.framework, component.components),
-			);
+			// Setting on: swap the raw <tag> + selector for just the component name
+			// pill (no path in the picker).
+			const line = pop.querySelector(".selector-line");
+
+			if (line) {
+				line.innerHTML = componentNamePill(component.framework, component.components);
+			}
 		}).catch((error) => {
 			// The promise itself never rejects; this guards the render callback.
-			console.warn("[claudback] component chip render failed:", error);
+			console.warn("[claudback] component render failed:", error);
 		});
 
 		const textarea = pop.querySelector("textarea") as HTMLTextAreaElement;
@@ -662,9 +754,14 @@ function mountClaudback(): void {
 		// the on-screen clamping for display.
 		pop.style.left = `${rect.left}px`;
 		pop.style.top = `${rect.bottom + 6}px`;
+		const pinPath = convertComponents ? comment.componentPath ?? [] : [];
+		const resolvedSuffix = comment.resolved ? " · resolved" : "";
+		const pinHead =
+			pinPath.length > 0
+				? `<div class="selector-line">${componentNamePill(comment.framework ?? "", pinPath, componentTreeText(pinPath))}</div>${comment.resolved ? `<div class="meta mono">resolved</div>` : ""}`
+				: `<div class="meta mono" data-tip="${escapeHtml(comment.selector)}">${escapeHtml(comment.selector)}${resolvedSuffix}</div>`;
 		pop.innerHTML = `
-			<div class="meta mono">${escapeHtml(comment.selector)}${comment.resolved ? " · resolved" : ""}</div>
-			${componentChipHtml(comment.framework ?? "", comment.componentPath ?? [])}
+			${pinHead}
 			<textarea>${escapeHtml(comment.text)}</textarea>
 			<div class="row">
 				<button class="btn danger" data-act="delete">Delete</button>
@@ -853,7 +950,74 @@ function mountClaudback(): void {
 				showError("Couldn't clear — comments not removed.");
 			}
 		});
+		const cog = document.createElement("button");
+		cog.className = `cog${settingsOpen ? " open" : ""}`;
+		cog.setAttribute("aria-label", "Settings");
+		cog.title = "Settings";
+		cog.innerHTML = COG_ICON;
+		cog.addEventListener("click", () => {
+			settingsOpen = !settingsOpen;
+			render();
+		});
+		header.append(cog);
 		header.append(clearAllBtn);
+
+		if (settingsOpen) {
+			// Absolute popover anchored to the header — floats over the list instead
+			// of pushing it down. Holds the "after Claude reads" mode + view toggle.
+			const menu = document.createElement("div");
+			menu.className = "settings-menu";
+
+			const modeRow = document.createElement("label");
+			modeRow.className = "settings-row";
+			modeRow.innerHTML = "<span>After Claude reads</span>";
+			const modeSelect = document.createElement("select");
+			modeSelect.innerHTML = `
+				<option value="clear">Clear comments</option>
+				<option value="keep">Keep comments</option>`;
+			modeSelect.value = store.mode;
+			modeSelect.addEventListener("change", async () => {
+				try {
+					const res = await send<SimpleResponse>({ type: "setMode", mode: modeSelect.value as StoreMode });
+
+					await refresh();
+
+					if (!res || !res.ok) {
+						showError("Couldn't change mode — change not stored.");
+					}
+				} catch (error) {
+					if (isContextInvalidated(error)) {
+						teardown();
+
+						return;
+					}
+
+					console.error("[claudback] setMode failed:", error);
+					showError("Couldn't change mode — change not stored.");
+				}
+			});
+			modeRow.append(modeSelect);
+			menu.append(modeRow);
+
+			const switchRow = document.createElement("label");
+			switchRow.className = "settings-row";
+			switchRow.innerHTML = `
+				<span>Convert HTML to Component Names</span>
+				<span class="switch">
+					<input type="checkbox" ${convertComponents ? "checked" : ""}>
+					<span class="slider"></span>
+				</span>`;
+			const toggle = switchRow.querySelector("input") as HTMLInputElement;
+			toggle.addEventListener("change", () => {
+				convertComponents = toggle.checked;
+				persistConvert();
+				render();
+			});
+			menu.append(switchRow);
+
+			header.append(menu);
+		}
+
 		panel.append(header);
 
 		const syncLabel = statusLabel();
@@ -897,37 +1061,6 @@ function mountClaudback(): void {
 			panel.append(status);
 		}
 
-		const mode = document.createElement("div");
-		mode.className = "mode";
-		mode.innerHTML = "<span>After Claude reads:</span>";
-		const select = document.createElement("select");
-		select.innerHTML = `
-			<option value="clear">Clear comments</option>
-			<option value="keep">Keep comments</option>`;
-		select.value = store.mode;
-		select.addEventListener("change", async () => {
-			try {
-				const res = await send<SimpleResponse>({ type: "setMode", mode: select.value as StoreMode });
-
-				await refresh();
-
-				if (!res || !res.ok) {
-					showError("Couldn't change mode — change not stored.");
-				}
-			} catch (error) {
-				if (isContextInvalidated(error)) {
-					teardown();
-
-					return;
-				}
-
-				console.error("[claudback] setMode failed:", error);
-				showError("Couldn't change mode — change not stored.");
-			}
-		});
-		mode.append(select);
-		panel.append(mode);
-
 		// Header, sync strip, and mode stay pinned; only this list scrolls, so
 		// Clear all and the prompt footer are always reachable.
 		const items = document.createElement("div");
@@ -945,13 +1078,16 @@ function mountClaudback(): void {
 			const item = document.createElement("div");
 			item.className = `item${comment.resolved ? " resolved" : ""}`;
 			const onThisPage = comment.url === window.location.href;
+			// Empty path forces the helpers' raw HTML fallback when the setting is
+			// off or the element was never mapped to a component.
+			const path = convertComponents ? comment.componentPath ?? [] : [];
 			item.innerHTML = `
 				<div class="top">
 					<span class="num">${index + 1}</span>
-					<span class="meta-line"><span class="mono">${escapeHtml(comment.tag)}</span>${componentMetaHtml(comment.framework ?? "", comment.componentPath ?? [])} · ${onThisPage ? "this page" : escapeHtml(shortUrl(comment.url))}${comment.resolved ? " · resolved" : ""}</span>
+					<span class="meta-line">${componentNameHtml(comment.framework ?? "", path, comment.tag)} · ${onThisPage ? "this page" : escapeHtml(shortUrl(comment.url))}${comment.resolved ? " · resolved" : ""}</span>
 				</div>
 				<div class="txt">${escapeHtml(comment.text)}</div>
-				<div class="ref mono" title="${escapeHtml(comment.selector)}">${escapeHtml(comment.selector)}</div>
+				<div class="ref mono" data-tip="${escapeHtml(pathTipText(path, comment.selector))}">${componentTreeHtml(comment.framework ?? "", path, comment.selector)}</div>
 				<div class="acts">
 					${comment.resolved ? `<a data-act="unresolve">Unresolve</a>` : `<a data-act="edit">Edit</a>`}
 					<a class="del" data-act="delete">Delete</a>
@@ -1330,7 +1466,21 @@ function mountClaudback(): void {
 		attempt();
 	}
 
-	void refresh().then(resumePendingEdit);
+	function start(): void {
+		void refresh().then(resumePendingEdit);
+	}
+
+	if (localStore) {
+		localStore.get(CONVERT_KEY, (values) => {
+			if (typeof values?.[CONVERT_KEY] === "boolean") {
+				convertComponents = values[CONVERT_KEY];
+			}
+
+			start();
+		});
+	} else {
+		start();
+	}
 }
 
 // 12px inline framework marks, currentColor so they follow chip text color.
@@ -1341,29 +1491,63 @@ const FRAMEWORK_ICONS: Record<string, string> = {
 		'<svg viewBox="0 0 24 22" width="12" height="12" aria-hidden="true"><path fill="currentColor" d="M14.8 0L12 4.8 9.2 0H0l12 21 12-21h-9.2zM3.6 2.1h3.2L12 11l5.2-8.9h3.2L12 16.9 3.6 2.1z"/></svg>',
 };
 
-function componentChipHtml(framework: string, components: string[]): string {
-	if (components.length === 0) {
-		return "";
-	}
-
+// Green pill holding the nearest component name + framework icon, e.g. "⚛ <Button>".
+// Pass `tip` to attach a hover tooltip (used in the pin popover to surface the
+// full component path); omit it elsewhere so name pills stay tooltip-free.
+function componentNamePill(framework: string, components: string[], tip = ""): string {
 	const icon = FRAMEWORK_ICONS[framework] ?? "";
-	const chain = components.join(" < ");
+	const tipAttr = tip ? ` data-tip="${escapeHtml(tip)}"` : "";
 
-	return `<span class="componentchip mono" title="${escapeHtml(chain)}">${icon}&lt;${escapeHtml(components[0])}&gt;</span>`;
+	return `<span class="component-pill mono"${tipAttr}>${icon}<span class="pill-text">&lt;${escapeHtml(components[0])}&gt;</span></span>`;
 }
 
-// List-density variant: no chip box, just icon + name folded into the item's
-// faint meta line (leading separator included so callers can concatenate).
-function componentMetaHtml(framework: string, components: string[]): string {
+// Single green pill holding the whole root → leaf component tree (icon once),
+// truncating with ellipsis; the full breadcrumb lives in the tooltip.
+function componentPathPill(framework: string, components: string[]): string {
+	const icon = FRAMEWORK_ICONS[framework] ?? "";
+	const tree = componentTreeText(components);
+
+	return `<span class="component-pill path mono" data-tip="${escapeHtml(tree)}">${icon}<span class="pill-text">${escapeHtml(tree)}</span></span>`;
+}
+
+// List name cell: nearest component name pill, or raw HTML tag when unmapped/off.
+function componentNameHtml(framework: string, components: string[], tag: string): string {
 	if (components.length === 0) {
-		return "";
+		return `<span class="mono">${escapeHtml(tag)}</span>`;
 	}
 
-	const icon = FRAMEWORK_ICONS[framework] ?? "";
-	const chain = components.join(" < ");
-
-	return ` · <span class="component-meta mono" title="${escapeHtml(chain)}">${icon}${escapeHtml(components[0])}</span>`;
+	return componentNamePill(framework, components);
 }
+
+// Path cell body: single component-tree pill, or the raw DOM selector when
+// unmapped/off. Untruncated text lives in the tooltip either way.
+function componentTreeHtml(framework: string, components: string[], selector: string): string {
+	if (components.length === 0) {
+		return escapeHtml(selector);
+	}
+
+	return componentPathPill(framework, components);
+}
+
+// Plain (un-escaped) root → leaf breadcrumb of a component path, e.g.
+// "<App> › <Layout> › <Button>". Feeds both the pill body and its tooltip.
+function componentTreeText(components: string[]): string {
+	return components
+		.slice()
+		.reverse()
+		.map((name) => `<${name}>`)
+		.join(" › ");
+}
+
+// Untruncated tooltip text for a path cell: the component tree when converting,
+// otherwise the raw selector.
+function pathTipText(components: string[], selector: string): string {
+	return components.length > 0 ? componentTreeText(components) : selector;
+}
+
+// Gear icon for the settings popover trigger.
+const COG_ICON =
+	'<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
 
 function escapeHtml(value: string): string {
 	return value
