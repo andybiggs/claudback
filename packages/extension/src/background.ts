@@ -317,7 +317,25 @@ async function handleUnresolve(id: string): Promise<SimpleResponse> {
 }
 
 async function handleClear(origin: string): Promise<SimpleResponse> {
-	return withToken("clear", (token) => clearComments({ token }, origin));
+	// Drop locally buffered comments for this origin first — they live only in
+	// the extension, so the collector clear below never touches them.
+	const buffer = await readBuffer();
+	const remaining = buffer.filter((item) => item.input.origin !== origin);
+	const clearedLocal = remaining.length !== buffer.length;
+
+	if (clearedLocal) {
+		await writeBuffer(remaining);
+	}
+
+	const result = await withToken("clear", (token) => clearComments({ token }, origin));
+
+	// Unpaired means there was no remote store to clear — but if we did clear
+	// buffered comments, the user's "Clear all" still succeeded.
+	if (!result.ok && result.state === "unpaired" && clearedLocal) {
+		return { ok: true, state: "unpaired" };
+	}
+
+	return result;
 }
 
 async function handleSetMode(mode: StoreMode): Promise<SimpleResponse> {
