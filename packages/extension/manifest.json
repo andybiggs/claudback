@@ -1,7 +1,7 @@
 {
 	"manifest_version": 3,
 	"name": "Claudback",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"homepage_url": "https://andybiggs.github.io/claudback/",
 	"description": "Add comments on any webpage. Claude reads them, with pixel-perfect context it can act on.",
 	"permissions": ["storage", "activeTab", "scripting", "alarms"],

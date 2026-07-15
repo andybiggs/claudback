@@ -30,6 +30,70 @@ describe("reactComponentsFromFiber", () => {
 		expect(reactComponentsFromFiber(tree)).toEqual(["Page"]);
 	});
 
+	it("skips library wrappers and any *Route component (custom guards included)", () => {
+		// A user cell wrapped in react-router internals, a custom ProtectedRoute
+		// guard, and a redux Provider: only the user's own components surface.
+		const tree = fiber(
+			0,
+			{ name: "PriceCell" },
+			fiber(
+				0,
+				{ displayName: "RenderedRoute" },
+				fiber(0, { name: "ProtectedRoute" }, fiber(0, { name: "Provider" }, fiber(0, { name: "App" }))),
+			),
+		);
+		expect(reactComponentsFromFiber(tree)).toEqual(["PriceCell", "App"]);
+	});
+
+	it("reads names off memo/forwardRef wrappers and skips routes + links", () => {
+		// Realistic mobx chain: click inside a NavLink (forwardRef) whose parent is
+		// observer(InsightsNavigation) (memo, name on the wrapper), under a
+		// ProtectedRoutes guard, under App.
+		const app = { tag: 0, type: { name: "App" }, return: null };
+		const guard = { tag: 0, type: { name: "ProtectedRoutes" }, return: app };
+		const observed = {
+			tag: 15,
+			type: { name: "InsightsNavigation" },
+			elementType: { displayName: "InsightsNavigation" },
+			return: guard,
+		};
+		const navLink = { tag: 11, type: { render: () => undefined }, elementType: { displayName: "NavLink" }, return: observed };
+
+		expect(reactComponentsFromFiber(navLink)).toEqual(["InsightsNavigation", "App"]);
+	});
+
+	it("prefers the render-owner chain, skipping DOM wrappers in the return chain", () => {
+		// The clicked <span> is owned by HeaderActionsResync (observer/memo), which
+		// is owned by App. Its .return chain runs through an antd Wave wrapper that
+		// the owner chain never visits.
+		const app = { tag: 0, type: { name: "App" }, return: null };
+		const header = {
+			tag: 15,
+			type: { name: "HeaderActionsResync" },
+			elementType: { displayName: "HeaderActionsResync" },
+			_debugOwner: app,
+		};
+		const wave = { tag: 0, type: { name: "Wave" }, return: app };
+		const hostSpan = { tag: 5, type: "span", _debugOwner: header, return: wave };
+
+		expect(reactComponentsFromFiber(hostSpan)).toEqual(["HeaderActionsResync", "App"]);
+	});
+
+	it("falls back to the return chain when owner data is absent (production)", () => {
+		// No _debugOwner anywhere → behaves like the classic parent-chain walk.
+		const tree = fiber(0, { name: "SubmitButton" }, fiber(0, { name: "App" }));
+		expect(reactComponentsFromFiber(tree)).toEqual(["SubmitButton", "App"]);
+	});
+
+	it("reads a forwardRef component's name from its render function", () => {
+		function PriceField(): null {
+			return null;
+		}
+		const fwd = { tag: 11, type: { render: PriceField }, return: null };
+
+		expect(reactComponentsFromFiber(fwd)).toEqual(["PriceField"]);
+	});
+
 	it("caps the chain at 5 names", () => {
 		let node: Record<string, unknown> | null = null;
 		for (const name of ["Ggg", "Fff", "Eee", "Ddd", "Ccc", "Bbb", "Aaa"]) {
