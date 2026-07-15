@@ -11,9 +11,17 @@ export type Framework = "react" | "vue";
 
 export type DetectResult = { framework: Framework; components: string[] };
 
-// react-reconciler work tags for renderable user components.
-const REACT_FUNCTION_COMPONENT = 0;
-const REACT_CLASS_COMPONENT = 1;
+// react-reconciler work tags for component fibers we surface. Includes the HOC
+// wrappers (ForwardRef, Memo, SimpleMemo) so a component wrapped by
+// memo()/forwardRef()/mobx observer() — whose name lives on the wrapper, not a
+// plain function fiber — isn't skipped and mistaken for a higher ancestor.
+const RENDERABLE_FIBER_TAGS = new Set([
+	0, // FunctionComponent
+	1, // ClassComponent
+	11, // ForwardRef
+	14, // MemoComponent
+	15, // SimpleMemoComponent
+]);
 
 function validName(candidate: unknown): string | null {
 	if (typeof candidate !== "string" || candidate.length < 3) {
@@ -24,14 +32,92 @@ function validName(candidate: unknown): string | null {
 	return candidate.slice(0, COMPONENT_NAME_MAX_LENGTH);
 }
 
-function componentName(type: unknown): string | null {
-	if (typeof type !== "function" && (typeof type !== "object" || type === null)) {
+// Router/provider/boundary wrappers from common React libraries. They're real
+// fibers in the tree but carry no "which of my components is this" value, so
+// they'd otherwise mask the user's own (often minified/anonymous) components —
+// e.g. surfacing react-router's <RenderedRoute> for a table cell.
+const REACT_LIBRARY_NAMES = new Set([
+	// react-router (v5/v6 internals + public wrappers). Names ending in "Route"
+	// are handled by isRouteWrapper instead.
+	"Router",
+	"Routes",
+	"Switch",
+	"Outlet",
+	"Navigate",
+	"BrowserRouter",
+	"HashRouter",
+	"MemoryRouter",
+	"StaticRouter",
+	"RouterProvider",
+	"DataRouterProvider",
+	"DataRoutes",
+	"RenderErrorBoundary",
+	// context providers / generic wrappers
+	"Provider",
+	"Consumer",
+	"StrictMode",
+	"Suspense",
+	"Profiler",
+	"Fragment",
+	"QueryClientProvider",
+	"HelmetProvider",
+	// react-router link components — the user's own wrapping component is a more
+	// useful "where is this" than the link itself.
+	"Link",
+	"NavLink",
+	// Ant Design / rc-* internal wrappers (ripple, portals, triggers, motion).
+	// These wrap interactive elements but never locate the user's own component.
+	"Wave",
+	"Ripple",
+	"Trigger",
+	"Portal",
+	"Overlay",
+	"Align",
+	"CSSMotion",
+	"CSSMotionList",
+	"ResizeObserver",
+	"DomWrapper",
+	"Overflow",
+]);
+
+// A fiber's type/elementType can be the component directly, or a memo (.type) /
+// forwardRef (.render) wrapper object. Read the name off whichever level carries
+// it, peeling wrappers — HOCs like mobx observer set displayName on the wrapper.
+function readComponentName(candidate: unknown, depth = 0): string | null {
+	if (depth > 4 || (typeof candidate !== "function" && (typeof candidate !== "object" || candidate === null))) {
 		return null;
 	}
 
-	return validName(
-		(type as { displayName?: unknown }).displayName ?? (type as { name?: unknown }).name,
-	);
+	const direct =
+		validName((candidate as { displayName?: unknown }).displayName) ??
+		validName((candidate as { name?: unknown }).name);
+
+	if (direct) {
+		return direct;
+	}
+
+	const inner = (candidate as { type?: unknown }).type ?? (candidate as { render?: unknown }).render;
+
+	return inner ? readComponentName(inner, depth + 1) : null;
+}
+
+function componentNameFromFiber(node: { type?: unknown; elementType?: unknown }): string | null {
+	// elementType is the original element (carries a HOC's displayName); type may
+	// be the unwrapped inner component. Try the wrapper first.
+	const name = readComponentName(node.elementType) ?? readComponentName(node.type);
+
+	if (name === null || REACT_LIBRARY_NAMES.has(name) || isRouteWrapper(name)) {
+		return null;
+	}
+
+	return name;
+}
+
+// Any component whose name ends in "Route"/"Routes" is a routing wrapper — the
+// built-in RenderedRoute, or app guards like ProtectedRoute(s)/PrivateRoute.
+// None locate the user's own UI, so skip them all rather than blocklisting each.
+function isRouteWrapper(name: string): boolean {
+	return /Routes?$/.test(name);
 }
 
 // Vue's own wrapper components carry no source-locating value.
@@ -64,6 +150,39 @@ function vueName(type: unknown): string | null {
 }
 
 export function reactComponentsFromFiber(fiber: unknown): string[] {
+	// Prefer the render-owner chain: `_debugOwner` is the component that authored
+	// each element, so it names the user's own components and steps over the
+	// library DOM wrappers (antd Wave, router internals, …) that clutter the
+	// parent chain. `_debugOwner` is dev-only, so fall back to the return
+	// (DOM-parent) chain — with the same filters — when it's absent (production).
+	const viaOwner = reactComponentsViaOwner(fiber);
+
+	return viaOwner.length > 0 ? viaOwner : reactComponentsViaReturn(fiber);
+}
+
+function reactComponentsViaOwner(fiber: unknown): string[] {
+	const components: string[] = [];
+	// The passed fiber is the clicked element's (host) fiber; its owner is the
+	// nearest component that rendered it.
+	let node = (fiber as { _debugOwner?: unknown })?._debugOwner;
+	let hops = 0;
+
+	while (node && typeof node === "object" && hops < 500 && components.length < COMPONENT_PATH_MAX_DEPTH) {
+		hops += 1;
+
+		const name = componentNameFromFiber(node as { type?: unknown; elementType?: unknown });
+
+		if (name) {
+			components.push(name);
+		}
+
+		node = (node as { _debugOwner?: unknown })._debugOwner;
+	}
+
+	return components;
+}
+
+function reactComponentsViaReturn(fiber: unknown): string[] {
 	const components: string[] = [];
 	let node = fiber;
 	// Bounded walk: fiber trees are finite, but a hostile page could hand us a
@@ -73,17 +192,17 @@ export function reactComponentsFromFiber(fiber: unknown): string[] {
 	while (node && typeof node === "object" && hops < 500 && components.length < COMPONENT_PATH_MAX_DEPTH) {
 		hops += 1;
 
-		const { tag, type } = node as { tag?: unknown; type?: unknown };
+		const current = node as { tag?: unknown; type?: unknown; elementType?: unknown; return?: unknown };
 
-		if (tag === REACT_FUNCTION_COMPONENT || tag === REACT_CLASS_COMPONENT) {
-			const name = componentName(type);
+		if (RENDERABLE_FIBER_TAGS.has(current.tag as number)) {
+			const name = componentNameFromFiber(current);
 
 			if (name) {
 				components.push(name);
 			}
 		}
 
-		node = (node as { return?: unknown }).return;
+		node = current.return;
 	}
 
 	return components;
