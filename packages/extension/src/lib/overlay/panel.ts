@@ -218,7 +218,7 @@ export function renderPanel(ctx: OverlayContext): void {
 				<span class="meta-line">${componentNameHtml(comment.framework ?? "", path, comment.tag)} · ${onThisPage ? "this page" : escapeHtml(shortUrl(comment.url))}${comment.resolved ? " · resolved" : ""}</span>
 			</div>
 			<div class="txt">${escapeHtml(comment.text)}</div>
-			<div class="ref mono" data-tip="${escapeHtml(pathTipText(path, comment.selector))}">${componentTreeHtml(comment.framework ?? "", path, comment.selector)}</div>
+			<div class="ref mono" data-tip="${escapeHtml(pathTipText(path, comment.selector))}">${componentTreeHtml(path, comment.selector)}</div>
 			<div class="acts">
 				${comment.resolved ? `<a data-act="unresolve">Unresolve</a>` : `<a data-act="edit">Edit</a>`}
 				<a class="del" data-act="delete">Delete</a>

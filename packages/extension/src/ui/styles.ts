@@ -109,7 +109,6 @@ export const STYLES = `
 .component-pill svg { flex: none; }
 .component-pill .pill-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .selector-line .component-pill { flex: 0 1 auto; }
-.selector-line .component-pill.path { flex: 1 1 auto; min-width: 0; }
 .popover .selector-line { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; min-width: 0; }
 .popover .selector-path {
 	font-size: 11px; color: var(--faint-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1;

@@ -15,15 +15,6 @@ export function componentNamePill(framework: string, components: string[], tip =
 	return `<span class="component-pill mono"${tipAttr}>${icon}<span class="pill-text">&lt;${escapeHtml(components[0])}&gt;</span></span>`;
 }
 
-// Single green pill holding the whole root → leaf component tree (icon once),
-// truncating with ellipsis; the full breadcrumb lives in the tooltip.
-export function componentPathPill(framework: string, components: string[]): string {
-	const icon = FRAMEWORK_ICONS[framework] ?? "";
-	const tree = componentTreeText(components);
-
-	return `<span class="component-pill path mono" data-tip="${escapeHtml(tree)}">${icon}<span class="pill-text">${escapeHtml(tree)}</span></span>`;
-}
-
 // List name cell: nearest component name pill, or raw HTML tag when unmapped/off.
 export function componentNameHtml(framework: string, components: string[], tag: string): string {
 	if (components.length === 0) {
@@ -33,14 +24,14 @@ export function componentNameHtml(framework: string, components: string[], tag: 
 	return componentNamePill(framework, components);
 }
 
-// Path cell body: single component-tree pill, or the raw DOM selector when
-// unmapped/off. Untruncated text lives in the tooltip either way.
-export function componentTreeHtml(framework: string, components: string[], selector: string): string {
+// Path cell body: the plain (muted, ellipsis-truncated) component tree, or the
+// raw DOM selector when unmapped/off. Untruncated text lives in the tooltip.
+export function componentTreeHtml(components: string[], selector: string): string {
 	if (components.length === 0) {
 		return escapeHtml(selector);
 	}
 
-	return componentPathPill(framework, components);
+	return escapeHtml(componentTreeText(components));
 }
 
 // Plain (un-escaped) root → leaf breadcrumb of a component path, e.g.
