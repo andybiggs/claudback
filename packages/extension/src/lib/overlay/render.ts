@@ -86,7 +86,7 @@ export function render(ctx: OverlayContext): void {
 	const addBtn = document.createElement("button");
 	addBtn.className = `fab${ctx.commentMode ? " active" : ""}`;
 	addBtn.innerHTML = ctx.commentMode ? CLOSE_ICON : ADD_ICON;
-	addBtn.title = ctx.commentMode ? "Exit comment mode" : "Add a comment";
+	addBtn.title = ctx.commentMode ? "Exit comment mode (⌥C)" : "Add a comment (⌥C)";
 	addBtn.addEventListener("click", () => {
 		setCommentMode(ctx, !ctx.commentMode);
 	});
@@ -97,7 +97,8 @@ export function render(ctx: OverlayContext): void {
 	if (ctx.commentMode) {
 		const hint = document.createElement("div");
 		hint.className = "hint";
-		hint.innerHTML = 'Click any element to comment <span class="keycap">esc</span>';
+		hint.innerHTML =
+			'Click any element to comment <span class="keycap">⌥C</span> toggles <span class="keycap">esc</span> exits';
 		ctx.shadow.append(hint);
 	}
 

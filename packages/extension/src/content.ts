@@ -130,8 +130,30 @@ function mountClaudback(): void {
 	// --- wiring -------------------------------------------------------------
 
 	const keydownHandler = (event: KeyboardEvent): void => {
-		if (event.key === "Escape" && ctx.commentMode) {
-			setCommentMode(ctx, false);
+		// Alt/Option+C toggles comment mode without touching the comment list
+		// view. event.code (physical key) rather than event.key so it fires
+		// regardless of layout and of the "ç" Option+C produces on macOS.
+		if (event.altKey && !event.ctrlKey && !event.metaKey && event.code === "KeyC") {
+			event.preventDefault();
+			setCommentMode(ctx, !ctx.commentMode);
+
+			return;
+		}
+
+		// Escape dismisses every open piece of overlay UI at once — comment mode,
+		// any open composer/pin popover, and the comment list view. When nothing
+		// is open it falls through so the page still receives the key.
+		if (event.key === "Escape") {
+			if (!ctx.commentMode && !ctx.panelOpen && !shadow.querySelector(".transient")) {
+				return;
+			}
+
+			// render() removes any open popover/inline-edit node and nulls the
+			// anchor, so resetting these flags and re-rendering closes everything.
+			ctx.commentMode = false;
+			ctx.panelOpen = false;
+			ctx.settingsOpen = false;
+			render(ctx);
 		}
 	};
 
