@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Claudback: Changelog</title>
+		<meta
+			name="description"
+			content="What's new in Claudback, the Chrome extension for pinning comments to your page for Claude to read."
+		/>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&display=swap"
+			rel="stylesheet"
+		/>
+		<style>
+			:root {
+				--ink: #191c1f;
+				--secondary-text: #5c6167;
+				--faint-text: #8b9096;
+				--border: #e5e7e9;
+				--green: #0f8a46;
+				--green-strong: #0c6e38;
+				--green-tint: #eaf5ee;
+				--mark-bg: #0f8a46;
+				--mark-dot: #fff;
+				--ghost-bg: #f3f4f4;
+				--surface: #fff;
+				--card: #fff;
+				--hairline: #eff1f2;
+			}
+			@media (prefers-color-scheme: dark) {
+				:root {
+					--ink: #e9ecee;
+					--secondary-text: #9aa1a8;
+					--faint-text: #6e757c;
+					--border: #2b3036;
+					--green: #3fc479;
+					--green-strong: #3fc479;
+					--green-tint: rgba(63, 196, 121, 0.14);
+					--mark-bg: #3fc479;
+					--mark-dot: #141619;
+					--ghost-bg: #1c1f23;
+					--surface: #141619;
+					--card: #1c1f23;
+					--hairline: #2b3036;
+				}
+			}
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				margin: 0;
+				font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+				color: var(--ink);
+				background: var(--surface);
+				line-height: 1.6;
+			}
+			main {
+				max-width: 720px;
+				margin: 0 auto;
+				padding: 0 24px 80px;
+			}
+			.brand-font {
+				font-family: "Space Grotesk", ui-sans-serif, sans-serif;
+				font-weight: 600;
+				letter-spacing: -0.02em;
+			}
+			.mark {
+				background: var(--mark-bg);
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				flex-shrink: 0;
+			}
+			.mark::after {
+				content: "";
+				border-radius: 50%;
+				background: var(--mark-dot);
+				width: 29%;
+				height: 29%;
+			}
+			header {
+				display: flex;
+				flex-wrap: wrap;
+				align-items: center;
+				gap: 12px;
+				padding: 28px 0;
+			}
+			a {
+				color: var(--green-strong);
+				text-decoration-color: color-mix(in srgb, var(--green-strong) 40%, transparent);
+				text-underline-offset: 2px;
+			}
+			a:hover {
+				text-decoration-color: var(--green-strong);
+			}
+			header .mark {
+				width: 26px;
+				height: 26px;
+				border-radius: 50% 50% 50% 3px;
+			}
+			header .name {
+				font-size: 18px;
+			}
+			header nav {
+				margin-left: auto;
+				display: flex;
+				flex-wrap: wrap;
+				gap: 8px 18px;
+			}
+			header nav a {
+				color: var(--secondary-text);
+				text-decoration: none;
+				font-size: 14px;
+				font-weight: 600;
+			}
+			header nav a:hover {
+				color: var(--green-strong);
+			}
+			.hero {
+				padding: 20px 0 8px;
+			}
+			h1 {
+				font-size: clamp(28px, 5vw, 38px);
+				margin: 0 0 14px;
+				line-height: 1.15;
+			}
+			.hero p {
+				font-size: 16px;
+				color: var(--secondary-text);
+				max-width: 540px;
+				margin: 0;
+			}
+			h2 {
+				font-size: 20px;
+				margin: 0 0 4px;
+			}
+			p,
+			li {
+				font-size: 15px;
+				color: var(--secondary-text);
+			}
+			strong {
+				color: var(--ink);
+			}
+			code {
+				font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+				background: var(--ghost-bg);
+				padding: 1px 6px;
+				border-radius: 4px;
+				font-size: 13px;
+				color: var(--ink);
+			}
+			.footer-brand {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+			}
+			.footer-links {
+				display: flex;
+				align-items: center;
+				gap: 20px;
+			}
+			.card {
+				background: var(--card);
+				border: 1px solid var(--border);
+				border-radius: 12px;
+				padding: 20px 22px;
+				margin: 20px 0;
+			}
+			.card ul {
+				margin: 10px 0 0;
+				padding-left: 18px;
+			}
+			.card li {
+				margin: 4px 0;
+			}
+			.tag {
+				display: inline-block;
+				background: var(--green-tint);
+				color: var(--green-strong);
+				border-radius: 999px;
+				padding: 2px 12px;
+				font-size: 12px;
+				font-weight: 700;
+				margin-left: 10px;
+				vertical-align: middle;
+			}
+			.date {
+				font-size: 13px;
+				color: var(--faint-text);
+				font-weight: 400;
+				margin-left: 2px;
+			}
+			footer {
+				border-top: 1px solid var(--hairline);
+				margin-top: 56px;
+				padding: 26px 0 0;
+				display: flex;
+				flex-wrap: wrap;
+				justify-content: space-between;
+				gap: 8px 20px;
+				align-items: center;
+				font-size: 13px;
+				color: var(--faint-text);
+			}
+			footer a {
+				color: var(--secondary-text);
+				text-decoration: none;
+				font-weight: 600;
+			}
+			footer a:hover {
+				color: var(--green-strong);
+			}
+			.note {
+				font-size: 13px;
+				color: var(--faint-text);
+			}
+			@media (max-width: 560px) {
+				header {
+					justify-content: center;
+				}
+				header nav {
+					margin-left: 0;
+					width: 100%;
+					justify-content: center;
+					gap: 6px 16px;
+				}
+				footer {
+					padding-top: 22px;
+					justify-content: center;
+					text-align: center;
+				}
+				.footer-brand {
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					gap: 12px;
+					width: 100%;
+				}
+				.footer-links {
+					display: flex;
+					justify-content: center;
+					gap: 16px;
+					width: 100%;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<main>
+			<header>
+				<span class="mark"></span>
+				<span class="name brand-font">Claudback</span>
+				<nav>
+					<a href="index.html#how">How it works</a>
+					<a href="index.html#start">Quick start</a>
+					<a href="changelog.html">Changelog</a>
+					<a href="https://github.com/andybiggs/claudback">GitHub</a>
+				</nav>
+			</header>
+
+			<section class="hero">
+				<h1 class="brand-font">Changelog</h1>
+				<p>What's new in the Claudback extension and MCP server, release by release.</p>
+			</section>
+
+			<section>
+				<div class="card">
+					<h2 class="brand-font">0.2.3<span class="date">— July 24, 2026</span></h2>
+					<ul>
+						<li>The comment-mode hint can now be dragged and snaps to six preset dock positions, so it stays out of your way.</li>
+						<li>Plain <strong>Enter</strong> submits a comment; <strong>Shift+Enter</strong> always inserts a newline instead.</li>
+						<li><strong>Escape</strong> dismisses all open pins at once, and <strong>Alt+C</strong> toggles comment mode from the keyboard.</li>
+					</ul>
+				</div>
+
+				<div class="card">
+					<h2 class="brand-font">0.2.1<span class="date">— July 15, 2026</span></h2>
+					<ul>
+						<li>Component names now show as pills on pins and in the composer, with a settings toggle to turn them off.</li>
+						<li>When a component is wrapped by a UI library, Claudback now surfaces your own component instead of the wrapper.</li>
+					</ul>
+				</div>
+
+				<div class="card">
+					<h2 class="brand-font">0.2.0<span class="date">— July 13, 2026</span><span class="tag">Component mapping</span></h2>
+					<ul>
+						<li>Comments are now mapped to the React or Vue component they belong to, shown as a chip with a framework icon in both the composer and the pin.</li>
+						<li>The component chain is included when Claude reads your comments through the MCP server, so it knows exactly which component to edit.</li>
+					</ul>
+				</div>
+
+				<div class="card">
+					<h2 class="brand-font">0.1.4<span class="date">— July 11, 2026</span></h2>
+					<ul>
+						<li>Fixed tabs going dark after navigation by retrying overlay re-injection once before giving up.</li>
+						<li>Pinned the published extension ID in the origin allowlist, tightening who can talk to the local collector.</li>
+					</ul>
+				</div>
+
+				<div class="card">
+					<h2 class="brand-font">0.1.3<span class="date">— July 10, 2026</span></h2>
+					<ul>
+						<li>Reworked the comment panel with sticky chrome, popover element-tracking, and inline editing.</li>
+						<li>Added cross-page edit: clicking a comment from another page now navigates there and reopens its popover.</li>
+						<li>The popup and panel now recover gracefully when the local collector goes offline.</li>
+					</ul>
+				</div>
+
+				<div class="card">
+					<h2 class="brand-font">0.1.2<span class="date">— July 9, 2026</span></h2>
+					<ul>
+						<li><strong>Shift+Enter</strong> now submits a comment without losing your place.</li>
+						<li>Pairing codes work from any Claude session, not just the one that requested them.</li>
+						<li>Cleaned up orphaned overlays and collector takeover, so a stale tab can't hold the connection.</li>
+					</ul>
+				</div>
+			</section>
+
+			<footer>
+				<span class="footer-brand">
+					<span class="mark" style="width: 18px; height: 18px; border-radius: 50% 50% 50% 2px"></span>
+					<span>Claudback <span class="note">by <a href="https://www.andybiggs.net">Andy Biggs</a> (NZ)</span></span>
+				</span>
+				<span class="footer-links">
+					<a href="https://github.com/andybiggs/claudback">GitHub</a>
+					<a href="https://github.com/andybiggs/claudback/issues/new/choose">Feedback</a>
+					<a href="https://www.npmjs.com/package/claudback-mcp">Npm</a>
+					<a href="privacy.html">Privacy</a>
+				</span>
+			</footer>
+		</main>
+	</body>
+</html>
