@@ -8,6 +8,7 @@ import { escapeHtml } from "../../ui/html.js";
 import type { OverlayContext } from "./context.js";
 import { sendGuarded } from "./messaging.js";
 import { refresh, render, showError } from "./render.js";
+import { submitOnEnter } from "./submit-on-enter.js";
 
 export function openInlineEdit(ctx: OverlayContext, item: HTMLElement, comment: Comment): void {
 	if (item.querySelector(".inline-edit")) {
@@ -32,12 +33,7 @@ export function openInlineEdit(ctx: OverlayContext, item: HTMLElement, comment: 
 	const textarea = editor.querySelector("textarea") as HTMLTextAreaElement;
 	textarea.focus();
 
-	textarea.addEventListener("keydown", (ev) => {
-		if (ev.key === "Enter" && ev.shiftKey) {
-			ev.preventDefault();
-			(editor.querySelector("[data-act='save-edit']") as HTMLButtonElement)?.click();
-		}
-	});
+	submitOnEnter(textarea, () => (editor.querySelector("[data-act='save-edit']") as HTMLButtonElement)?.click());
 
 	editor.addEventListener("click", async (ev) => {
 		const act = (ev.target as HTMLElement).dataset?.act;

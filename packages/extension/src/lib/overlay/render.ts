@@ -3,6 +3,7 @@
 import { ADD_ICON, CLOSE_ICON, LIST_ICON } from "../../ui/icons.js";
 import type { ListResponse } from "../../messages.js";
 import type { OverlayContext } from "./context.js";
+import { createHint } from "./hint.js";
 import { send } from "./messaging.js";
 import { renderPanel } from "./panel.js";
 import { renderPins } from "./pins.js";
@@ -86,7 +87,7 @@ export function render(ctx: OverlayContext): void {
 	const addBtn = document.createElement("button");
 	addBtn.className = `fab${ctx.commentMode ? " active" : ""}`;
 	addBtn.innerHTML = ctx.commentMode ? CLOSE_ICON : ADD_ICON;
-	addBtn.title = ctx.commentMode ? "Exit comment mode" : "Add a comment";
+	addBtn.title = ctx.commentMode ? "Exit comment mode (⌥C)" : "Add a comment (⌥C)";
 	addBtn.addEventListener("click", () => {
 		setCommentMode(ctx, !ctx.commentMode);
 	});
@@ -95,10 +96,7 @@ export function render(ctx: OverlayContext): void {
 	ctx.shadow.append(fabs);
 
 	if (ctx.commentMode) {
-		const hint = document.createElement("div");
-		hint.className = "hint";
-		hint.innerHTML = 'Click any element to comment <span class="keycap">esc</span>';
-		ctx.shadow.append(hint);
+		ctx.shadow.append(createHint(ctx));
 	}
 
 	if (ctx.panelOpen) {

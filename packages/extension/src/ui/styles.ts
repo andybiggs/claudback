@@ -65,6 +65,8 @@ export const STYLES = `
 	white-space: nowrap;
 }
 .hint.error-toast { background: var(--danger); border-radius: 8px; font-size: 13px; }
+.hint-draggable { cursor: grab; touch-action: none; user-select: none; transition: top .15s ease, left .15s ease, right .15s ease, bottom .15s ease; }
+.hint-draggable.dragging { cursor: grabbing; transition: none; }
 .hint .keycap {
 	font-size: 12px; font-weight: 600; color: rgba(255,255,255,.9);
 	background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.3);

@@ -13,6 +13,7 @@ import type { OverlayContext } from "./context.js";
 import { sendGuarded } from "./messaging.js";
 import { anchorTransient, clearTransient } from "./transient.js";
 import { refresh, showError } from "./render.js";
+import { submitOnEnter } from "./submit-on-enter.js";
 
 const DETECT_TIMEOUT_MS = 100;
 
@@ -132,12 +133,7 @@ export function openComposer(ctx: OverlayContext, el: Element, x: number, y: num
 	const textarea = pop.querySelector("textarea") as HTMLTextAreaElement;
 	textarea.focus();
 
-	textarea.addEventListener("keydown", (ev) => {
-		if (ev.key === "Enter" && ev.shiftKey) {
-			ev.preventDefault();
-			(pop.querySelector("[data-act='save']") as HTMLButtonElement)?.click();
-		}
-	});
+	submitOnEnter(textarea, () => (pop.querySelector("[data-act='save']") as HTMLButtonElement)?.click());
 
 	pop.addEventListener("click", async (ev) => {
 		const act = (ev.target as HTMLElement).dataset?.act;
