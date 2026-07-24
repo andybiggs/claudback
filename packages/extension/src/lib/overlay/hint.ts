@@ -1,7 +1,8 @@
 // The floating "comment mode" hint banner. It's draggable: press anywhere on
-// it and drag, and on release it snaps to whichever of six preset docks
-// (three across the top, three across the bottom) it ended up closest to. The
-// chosen dock persists to chrome.storage.local so it survives reloads.
+// it and drag, and on release it snaps to whichever of five preset docks
+// (three across the top, two across the bottom — bottom-right is reserved for
+// the fabs) it ended up closest to. The chosen dock persists to
+// chrome.storage.local so it survives reloads.
 
 import { HINT_POSITION_KEY, type HintPosition, type OverlayContext } from "./context.js";
 
@@ -11,20 +12,35 @@ const DOCK_STYLES: Record<HintPosition, Partial<CSSStyleDeclaration>> = {
 	"top-right": { top: "20px", bottom: "auto", left: "auto", right: "20px", transform: "none" },
 	"bottom-left": { top: "auto", bottom: "20px", left: "20px", right: "auto", transform: "none" },
 	"bottom-center": { top: "auto", bottom: "20px", left: "50%", right: "auto", transform: "translateX(-50%)" },
-	"bottom-right": { top: "auto", bottom: "20px", left: "auto", right: "20px", transform: "none" },
 };
 
 function dockAt(hint: HTMLElement, position: HintPosition): void {
 	Object.assign(hint.style, DOCK_STYLES[position]);
 }
 
-// Splits the viewport into three horizontal bands and two vertical ones, and
-// reports whichever dock the given point falls into.
-function nearestDock(centerX: number, centerY: number): HintPosition {
-	const col = centerX < window.innerWidth / 3 ? "left" : centerX > (window.innerWidth * 2) / 3 ? "right" : "center";
-	const row = centerY < window.innerHeight / 2 ? "top" : "bottom";
+// Where each dock actually renders (matches the 20px insets and center lines
+// in DOCK_STYLES above), used to find the closest one to a drop point.
+function dockAnchor(position: HintPosition): { x: number; y: number } {
+	const x =
+		position.endsWith("left") ? 20 : position.endsWith("right") ? window.innerWidth - 20 : window.innerWidth / 2;
+	const y = position.startsWith("top") ? 20 : window.innerHeight - 20;
 
-	return `${row}-${col}` as HintPosition;
+	return { x, y };
+}
+
+// No bottom-right — the fabs (add/list buttons) live there and the hint would
+// overlap them.
+function nearestDock(centerX: number, centerY: number): HintPosition {
+	const positions: HintPosition[] = ["top-left", "top-center", "top-right", "bottom-left", "bottom-center"];
+
+	return positions.reduce((closest, candidate) => {
+		const a = dockAnchor(candidate);
+		const b = dockAnchor(closest);
+		const distA = (a.x - centerX) ** 2 + (a.y - centerY) ** 2;
+		const distB = (b.x - centerX) ** 2 + (b.y - centerY) ** 2;
+
+		return distA < distB ? candidate : closest;
+	});
 }
 
 function makeDraggable(ctx: OverlayContext, hint: HTMLElement): void {

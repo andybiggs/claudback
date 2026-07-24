@@ -69,7 +69,7 @@ function mountClaudback(): void {
 		// on, list/composer/pin swap raw HTML tags + selectors for mapped component
 		// names and the component tree. Off = raw HTML everywhere.
 		convertComponents: true,
-		// Persisted in chrome.storage.local: which of the six preset docks the
+		// Persisted in chrome.storage.local: which of the five preset docks the
 		// comment-mode hint was last dragged to.
 		hintPosition: DEFAULT_HINT_POSITION,
 		anchor: null,

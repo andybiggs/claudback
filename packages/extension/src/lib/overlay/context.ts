@@ -23,15 +23,16 @@ export interface TransientAnchor {
 }
 
 // Where the comment-mode hint banner is docked: three columns (left/center/
-// right) across the top or bottom of the viewport. Dragging the hint snaps it
-// to whichever of these six it's released closest to.
+// right) across the top or bottom of the viewport, minus bottom-right (the
+// fabs — the add/list buttons — live there and the hint would overlap them).
+// Dragging the hint snaps it to whichever of these five it's released closest
+// to.
 export type HintPosition =
 	| "top-left"
 	| "top-center"
 	| "top-right"
 	| "bottom-left"
-	| "bottom-center"
-	| "bottom-right";
+	| "bottom-center";
 
 const HINT_POSITIONS: readonly HintPosition[] = [
 	"top-left",
@@ -39,7 +40,6 @@ const HINT_POSITIONS: readonly HintPosition[] = [
 	"top-right",
 	"bottom-left",
 	"bottom-center",
-	"bottom-right",
 ];
 
 export function isHintPosition(value: unknown): value is HintPosition {
