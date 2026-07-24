@@ -3,6 +3,7 @@
 import { ADD_ICON, CLOSE_ICON, LIST_ICON } from "../../ui/icons.js";
 import type { ListResponse } from "../../messages.js";
 import type { OverlayContext } from "./context.js";
+import { createHint } from "./hint.js";
 import { send } from "./messaging.js";
 import { renderPanel } from "./panel.js";
 import { renderPins } from "./pins.js";
@@ -95,11 +96,7 @@ export function render(ctx: OverlayContext): void {
 	ctx.shadow.append(fabs);
 
 	if (ctx.commentMode) {
-		const hint = document.createElement("div");
-		hint.className = "hint";
-		hint.innerHTML =
-			'Click any element to comment <span class="keycap">⌥C</span> toggles <span class="keycap">esc</span> exits';
-		ctx.shadow.append(hint);
+		ctx.shadow.append(createHint(ctx));
 	}
 
 	if (ctx.panelOpen) {

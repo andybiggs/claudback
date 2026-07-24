@@ -14,7 +14,10 @@ import { STYLES } from "./ui/styles.js";
 import { initTooltip } from "./ui/tooltip.js";
 import {
 	CONVERT_KEY,
+	DEFAULT_HINT_POSITION,
+	HINT_POSITION_KEY,
 	PENDING_EDIT_KEY,
+	isHintPosition,
 	resolveLocalStore,
 	type OverlayContext,
 } from "./lib/overlay/context.js";
@@ -66,6 +69,9 @@ function mountClaudback(): void {
 		// on, list/composer/pin swap raw HTML tags + selectors for mapped component
 		// names and the component tree. Off = raw HTML everywhere.
 		convertComponents: true,
+		// Persisted in chrome.storage.local: which of the six preset docks the
+		// comment-mode hint was last dragged to.
+		hintPosition: DEFAULT_HINT_POSITION,
 		anchor: null,
 		// Reassigned to the real teardown below (a function declaration, so it is
 		// hoisted and safe to reference here).
@@ -330,9 +336,13 @@ function mountClaudback(): void {
 	}
 
 	if (ctx.localStore) {
-		ctx.localStore.get(CONVERT_KEY, (values) => {
+		ctx.localStore.get([CONVERT_KEY, HINT_POSITION_KEY], (values) => {
 			if (typeof values?.[CONVERT_KEY] === "boolean") {
 				ctx.convertComponents = values[CONVERT_KEY];
+			}
+
+			if (isHintPosition(values?.[HINT_POSITION_KEY])) {
+				ctx.hintPosition = values[HINT_POSITION_KEY];
 			}
 
 			start();
