@@ -14,7 +14,10 @@ import { STYLES } from "./ui/styles.js";
 import { initTooltip } from "./ui/tooltip.js";
 import {
 	CONVERT_KEY,
+	DEFAULT_HINT_POSITION,
+	HINT_POSITION_KEY,
 	PENDING_EDIT_KEY,
+	isHintPosition,
 	resolveLocalStore,
 	type OverlayContext,
 } from "./lib/overlay/context.js";
@@ -66,6 +69,9 @@ function mountClaudback(): void {
 		// on, list/composer/pin swap raw HTML tags + selectors for mapped component
 		// names and the component tree. Off = raw HTML everywhere.
 		convertComponents: true,
+		// Persisted in chrome.storage.local: which of the six preset docks the
+		// comment-mode hint was last dragged to.
+		hintPosition: DEFAULT_HINT_POSITION,
 		anchor: null,
 		// Reassigned to the real teardown below (a function declaration, so it is
 		// hoisted and safe to reference here).
@@ -130,8 +136,30 @@ function mountClaudback(): void {
 	// --- wiring -------------------------------------------------------------
 
 	const keydownHandler = (event: KeyboardEvent): void => {
-		if (event.key === "Escape" && ctx.commentMode) {
-			setCommentMode(ctx, false);
+		// Alt/Option+C toggles comment mode without touching the comment list
+		// view. event.code (physical key) rather than event.key so it fires
+		// regardless of layout and of the "ç" Option+C produces on macOS.
+		if (event.altKey && !event.ctrlKey && !event.metaKey && event.code === "KeyC") {
+			event.preventDefault();
+			setCommentMode(ctx, !ctx.commentMode);
+
+			return;
+		}
+
+		// Escape dismisses every open piece of overlay UI at once — comment mode,
+		// any open composer/pin popover, and the comment list view. When nothing
+		// is open it falls through so the page still receives the key.
+		if (event.key === "Escape") {
+			if (!ctx.commentMode && !ctx.panelOpen && !shadow.querySelector(".transient")) {
+				return;
+			}
+
+			// render() removes any open popover/inline-edit node and nulls the
+			// anchor, so resetting these flags and re-rendering closes everything.
+			ctx.commentMode = false;
+			ctx.panelOpen = false;
+			ctx.settingsOpen = false;
+			render(ctx);
 		}
 	};
 
@@ -308,9 +336,13 @@ function mountClaudback(): void {
 	}
 
 	if (ctx.localStore) {
-		ctx.localStore.get(CONVERT_KEY, (values) => {
+		ctx.localStore.get([CONVERT_KEY, HINT_POSITION_KEY], (values) => {
 			if (typeof values?.[CONVERT_KEY] === "boolean") {
 				ctx.convertComponents = values[CONVERT_KEY];
+			}
+
+			if (isHintPosition(values?.[HINT_POSITION_KEY])) {
+				ctx.hintPosition = values[HINT_POSITION_KEY];
 			}
 
 			start();

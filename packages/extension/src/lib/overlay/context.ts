@@ -22,6 +22,30 @@ export interface TransientAnchor {
 	dy: number;
 }
 
+// Where the comment-mode hint banner is docked: three columns (left/center/
+// right) across the top or bottom of the viewport. Dragging the hint snaps it
+// to whichever of these six it's released closest to.
+export type HintPosition =
+	| "top-left"
+	| "top-center"
+	| "top-right"
+	| "bottom-left"
+	| "bottom-center"
+	| "bottom-right";
+
+const HINT_POSITIONS: readonly HintPosition[] = [
+	"top-left",
+	"top-center",
+	"top-right",
+	"bottom-left",
+	"bottom-center",
+	"bottom-right",
+];
+
+export function isHintPosition(value: unknown): value is HintPosition {
+	return typeof value === "string" && (HINT_POSITIONS as readonly string[]).includes(value);
+}
+
 export interface OverlayContext {
 	// Static, created once at mount.
 	readonly host: HTMLElement;
@@ -38,6 +62,7 @@ export interface OverlayContext {
 	panelOpen: boolean;
 	settingsOpen: boolean;
 	convertComponents: boolean;
+	hintPosition: HintPosition;
 	anchor: TransientAnchor | null;
 
 	// Lifecycle teardown lives in the content script (it closes over the event
@@ -47,6 +72,12 @@ export interface OverlayContext {
 }
 
 export const CONVERT_KEY = "convertComponents";
+
+// Persisted in chrome.storage.local (not the worker store) alongside
+// convertComponents, so the hint keeps its dragged-to position across reloads
+// and other pages on the same origin.
+export const HINT_POSITION_KEY = "hintPosition";
+export const DEFAULT_HINT_POSITION: HintPosition = "top-center";
 
 // Carries an "edit this comment" intent across a same-origin navigation: the
 // panel stores the comment id here before navigating, and the fresh overlay on

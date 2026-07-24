@@ -9,6 +9,7 @@ import type { OverlayContext } from "./context.js";
 import { sendGuarded } from "./messaging.js";
 import { anchorTransient, clearTransient, repositionTransient } from "./transient.js";
 import { refresh, showError } from "./render.js";
+import { submitOnEnter } from "./submit-on-enter.js";
 
 export function openPinPopover(ctx: OverlayContext, comment: Comment, el: Element): void {
 	clearTransient(ctx);
@@ -41,6 +42,8 @@ export function openPinPopover(ctx: OverlayContext, comment: Comment, el: Elemen
 	repositionTransient(ctx);
 
 	const textarea = pop.querySelector("textarea") as HTMLTextAreaElement;
+
+	submitOnEnter(textarea, () => (pop.querySelector("[data-act='save']") as HTMLButtonElement)?.click());
 
 	pop.addEventListener("click", async (ev) => {
 		const act = (ev.target as HTMLElement).dataset?.act;
