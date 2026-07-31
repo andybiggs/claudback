@@ -37,7 +37,7 @@ teardowns, PRDs, design reviews (already in the store listing copy; keep it seco
 
 ---
 
-## Phase 0 — Fix the funnel first (do before any launch)
+## Phase 0 — Fix the funnel first (before any launch)
 
 Cheap fixes so that traffic we later earn actually converts. Roughly a day of work.
 Remaining hands-on steps live in [marketing/submissions.md](./marketing/submissions.md).
