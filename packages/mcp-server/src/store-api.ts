@@ -23,8 +23,10 @@ export interface StoreApi {
 	deleteComment(id: string): Promise<boolean>;
 	getComments(filter?: CommentFilter): Promise<Comment[]>;
 	// Returns matching comments and applies the mode to each: "clear" removes
-	// them from the store, "keep" marks them resolved.
-	consumeComments(filter?: CommentFilter): Promise<{ mode: StoreMode; comments: Comment[] }>;
+	// them from the store, "keep" marks them resolved. `actioned` counts only
+	// comments this call newly removed/resolved — a keep-mode re-fetch of
+	// already-resolved comments contributes zero.
+	consumeComments(filter?: CommentFilter): Promise<{ mode: StoreMode; comments: Comment[]; actioned: number }>;
 	// "clear" mode removes the comment ("removed"); "keep" mode retains it
 	// flagged resolved ("resolved").
 	resolveComment(id: string): Promise<ResolveOutcome>;

@@ -5,6 +5,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 
 import { loadOrCreateToken } from "./auth.js";
 import { startCollector } from "./collector.js";
+import { createFeedbackTracker } from "./feedback.js";
 import { createPairingManager } from "./pairing.js";
 import { STORE_FILE } from "./paths.js";
 import { createStore } from "./store.js";
@@ -58,7 +59,7 @@ export async function main(): Promise<void> {
 
 	const server = new McpServer({ name: "claudback", version: "0.0.1" });
 
-	registerTools(server, store, pairing);
+	registerTools(server, store, pairing, createFeedbackTracker());
 	await server.connect(new StdioServerTransport());
 	console.error("[claudback] MCP server connected on stdio");
 

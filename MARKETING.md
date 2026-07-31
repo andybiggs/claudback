@@ -63,7 +63,9 @@ Remaining hands-on steps live in [marketing/submissions.md](./marketing/submissi
 - [ ] **Ask the happy dozen for store reviews.** The listing has **zero reviews** —
       at this scale, 5 honest reviews move Chrome Web Store ranking and conversion more
       than anything else on this list. The review link is now in the README and the
-      docs-site footer; *(Andy — the personal asks.)* Never gate or nag in-product.
+      docs-site footer; *(Andy — the personal asks.)* Never gate or nag in-product —
+      the one exception is the once-ever ask the MCP server surfaces through Claude
+      after 50 actioned comments (single ask, easy to decline, never repeats).
 
 ## Phase 1 — Passive discovery (compounds while you sleep)
 

@@ -2,6 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 import { renderCommentsEnvelope } from "./envelope.js";
+import { FEEDBACK_ASK_TEXT, type FeedbackTracker } from "./feedback.js";
 import { formatPairingCode, type PairingManager } from "./pairing.js";
 import type { CommentFilter, StoreApi } from "./store-api.js";
 
@@ -32,16 +33,37 @@ function toFilter(args: { origin?: string; urlContains?: string }): CommentFilte
 	return { origin: args.origin, urlContains: args.urlContains };
 }
 
+// The ask rides along on a pull-only tool result (never pushed into context on
+// its own) and sits outside the nonce-delimited envelope as static text.
+async function appendFeedbackAsk(
+	text: string,
+	feedback: FeedbackTracker | undefined,
+	actioned: number,
+): Promise<string> {
+	if (feedback === undefined || actioned <= 0) {
+		return text;
+	}
+
+	const shouldAsk = await feedback.recordActioned(actioned);
+
+	if (!shouldAsk) {
+		return text;
+	}
+
+	return `${text}\n\n${FEEDBACK_ASK_TEXT}`;
+}
+
 export async function getCommentsHandler(
 	store: StoreApi,
 	args: { origin?: string; urlContains?: string; consume?: boolean },
+	feedback?: FeedbackTracker,
 ): Promise<ToolResult> {
 	const filter = toFilter(args);
 
 	if (args.consume) {
-		const { mode, comments } = await store.consumeComments(filter);
+		const { mode, comments, actioned } = await store.consumeComments(filter);
 
-		return textResult(renderCommentsEnvelope(comments, mode));
+		return textResult(await appendFeedbackAsk(renderCommentsEnvelope(comments, mode), feedback, actioned));
 	}
 
 	const [comments, current] = await Promise.all([store.getComments(filter), store.read()]);
@@ -60,6 +82,7 @@ export async function listOriginsHandler(
 export async function resolveCommentHandler(
 	store: StoreApi,
 	args: { id: string },
+	feedback?: FeedbackTracker,
 ): Promise<ToolResult> {
 	const outcome = await store.resolveComment(args.id);
 
@@ -68,10 +91,10 @@ export async function resolveCommentHandler(
 	}
 
 	if (outcome === "removed") {
-		return textResult(`Comment ${args.id} removed (clear mode).`);
+		return textResult(await appendFeedbackAsk(`Comment ${args.id} removed (clear mode).`, feedback, 1));
 	}
 
-	return textResult(`Comment ${args.id} resolved (keep mode).`);
+	return textResult(await appendFeedbackAsk(`Comment ${args.id} resolved (keep mode).`, feedback, 1));
 }
 
 export async function clearCommentsHandler(
@@ -95,7 +118,12 @@ export async function getPairingCodeHandler(pairing: PairingManager): Promise<To
 	);
 }
 
-export function registerTools(server: McpServer, store: StoreApi, pairing: PairingManager): void {
+export function registerTools(
+	server: McpServer,
+	store: StoreApi,
+	pairing: PairingManager,
+	feedback?: FeedbackTracker,
+): void {
 	server.registerTool(
 		"get_comments",
 		{
@@ -113,7 +141,7 @@ export function registerTools(server: McpServer, store: StoreApi, pairing: Pairi
 				consume: z.boolean().optional(),
 			},
 		},
-		(args) => guarded("get_comments", () => getCommentsHandler(store, args)),
+		(args) => guarded("get_comments", () => getCommentsHandler(store, args, feedback)),
 	);
 
 	server.registerTool(
@@ -136,7 +164,7 @@ export function registerTools(server: McpServer, store: StoreApi, pairing: Pairi
 				id: z.string(),
 			},
 		},
-		(args) => guarded("resolve_comment", () => resolveCommentHandler(store, args)),
+		(args) => guarded("resolve_comment", () => resolveCommentHandler(store, args, feedback)),
 	);
 
 	server.registerTool(
