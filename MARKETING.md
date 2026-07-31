@@ -37,57 +37,52 @@ teardowns, PRDs, design reviews (already in the store listing copy; keep it seco
 
 ---
 
-## Phase 0 — Fix the funnel first (do before any launch)
+## Phase 0 — Fix the funnel first (before any launch)
 
 Cheap fixes so that traffic we later earn actually converts. Roughly a day of work.
+Remaining hands-on steps live in [marketing/submissions.md](./marketing/submissions.md).
 
-- [ ] **Fix the README's dead-end quick start.** `README.md` step 1 still says the Web
-      Store link is "coming soon" and routes people to load-from-source. The listing is
-      live: <https://chromewebstore.google.com/detail/claudback/dbnmlcmmgnchigedlglfmchkendlcfgc>.
-      This is a straight conversion bug — anyone landing on GitHub today gets told the
-      easy path doesn't exist.
-- [ ] **Make a demo GIF.** `design/Listing Images/Claudback.mp4` (3.2 MB) exists but
-      GitHub READMEs and Reddit posts want a GIF/short loop. One 15–20s capture: pin a
-      comment on a broken button → component pill appears → Claude Code grabs it and
-      fixes it. This single asset gets reused everywhere below.
-- [ ] **Restructure the README for visitors, not contributors.** GIF + value line +
-      3-step quick start above the fold; move the unpacked-extension/CORS/dev-ID
-      troubleshooting (currently more than half the file) below the fold or into a
-      `docs/DEVELOPMENT.md`.
-- [ ] **Add social-card meta to the landing page.** `docs/index.html` has no
-      `og:image`/`twitter:card`, so shares on Reddit/Slack/Discord render bare. Reuse
-      `design/Listing Images/marquee.png` (1400×560 — already the right shape).
-- [ ] **Set GitHub repo topics + description.** Topics like `mcp`, `mcp-server`,
-      `claude`, `claude-code`, `chrome-extension`, `developer-tools`, `annotations`.
-      GitHub topic pages are a real discovery surface for MCP tooling right now.
-- [ ] **Tag releases and publish GitHub Releases.** Versions exist only in
-      package.json and the HTML changelog — no git tags, no Releases. Backfill tags for
-      0.1.2 → 0.2.3 using the changelog prose. Releases give watchers a subscribe
-      mechanism and make the project look maintained at a glance.
+- [x] **Fix the README's dead-end quick start.** ~~`README.md` step 1 still says the Web
+      Store link is "coming soon"~~ — now links the live listing:
+      <https://chromewebstore.google.com/detail/claudback/dbnmlcmmgnchigedlglfmchkendlcfgc>.
+- [x] **Make a demo GIF.** Done: `docs/demo.gif` (960px, 12fps, 2.4 MB), converted from
+      `design/Listing Images/Claudback.mp4`. Reused at the top of the README; also
+      servable from the Pages site for Reddit posts.
+- [x] **Restructure the README for visitors, not contributors.** GIF + quick start +
+      "Why Claudback" above the fold; dev/troubleshooting content moved to
+      [DEVELOPMENT.md](./DEVELOPMENT.md).
+- [x] **Add social-card meta to the landing page.** `og:*`/`twitter:*` tags added to
+      `docs/index.html` and `docs/changelog.html`, pointing at `docs/social-card.png`
+      (copy of the 1400×560 marquee).
+- [ ] **Set GitHub repo topics + description.** *(Andy — 1 minute in the GitHub UI;
+      exact values in [marketing/submissions.md](./marketing/submissions.md).)*
+- [ ] **Tag releases and publish GitHub Releases.** Annotated tags v0.1.2 → v0.2.3 are
+      prepared from the changelog prose; *(Andy — push commands + release steps in
+      [marketing/submissions.md](./marketing/submissions.md); a scoped session can't
+      push tags.)*
 - [ ] **Ask the happy dozen for store reviews.** The listing has **zero reviews** —
       at this scale, 5 honest reviews move Chrome Web Store ranking and conversion more
-      than anything else on this list. There's already a feedback funnel
-      (`.github/ISSUE_TEMPLATE/feedback.md` + the extension's feedback link); add a
-      gentle "enjoying Claudback? A Web Store review helps others find it" line to the
-      docs site footer and the next release notes. Never gate or nag in-product.
+      than anything else on this list. The review link is now in the README and the
+      docs-site footer; *(Andy — the personal asks.)* Never gate or nag in-product.
 
 ## Phase 1 — Passive discovery (compounds while you sleep)
 
 No social presence required; mostly one-off submissions. Do these the same week as
 Phase 0 — some have review queues, so start early.
 
-- [ ] **Official MCP registry** (registry.modelcontextprotocol.io) — submit
-      `claudback-mcp`. This feeds several downstream clients and directories.
-- [ ] **Community MCP directories:** PulseMCP, mcp.so, Glama, Smithery. Each is a
-      form or a PR; reuse the npm README's tools table and the store short description.
-- [ ] **Awesome lists (PRs):** `awesome-mcp-servers` (multiple popular forks — submit
-      to the top 2–3 by stars) and `awesome-claude-code`. Claudback fits "browser /
-      feedback / dev-tools" categories; the component-mapping line is the one-sentence
-      pitch to use.
-- [ ] **Chrome Web Store SEO check.** The short description is good copy but light on
-      search terms people actually type ("claude", "claude code", "MCP", "feedback",
-      "annotate"). Keep the voice, but make sure "Claude Code" and "MCP" both appear in
-      the short description and the first line of the full description.
+- [ ] **Official MCP registry** (registry.modelcontextprotocol.io) — staged:
+      `server.json` at the repo root and `mcpName` in the server's package.json. Goes
+      live with the next npm publish + `mcp-publisher publish` (steps in
+      [marketing/submissions.md](./marketing/submissions.md)).
+- [ ] **Community MCP directories:** PulseMCP, mcp.so, Glama, Smithery. Paste-ready
+      copy for all four in [marketing/submissions.md](./marketing/submissions.md).
+- [ ] **Awesome lists (PRs):** `awesome-mcp-servers` (top 2–3 forks by stars) and
+      `awesome-claude-code`. Ready-to-paste entry line in
+      [marketing/submissions.md](./marketing/submissions.md).
+- [x] **Chrome Web Store SEO check.** Short description in `store/listing.md` now
+      carries "Claude Code" + "MCP" (128 chars); manifest description says "Claude
+      Code" from the next release. *(Andy — paste the new summary into the dashboard;
+      see [marketing/submissions.md](./marketing/submissions.md).)*
 - [ ] **npm keywords** are already solid (`mcp`, `claude-code`, `annotations`…) — no
       action, just don't lose them in a future publish.
 - [ ] **Roadmap option — Claude Code plugin packaging.** There's no
