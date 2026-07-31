@@ -9,11 +9,11 @@ const dir = vi.hoisted(() => {
 	const { tmpdir } = require("node:os") as typeof import("node:os");
 	const { join } = require("node:path") as typeof import("node:path");
 
-	return mkdtempSync(join(tmpdir(), "claudback-auth-"));
+	return mkdtempSync(join(tmpdir(), "pinback-auth-"));
 });
 
 vi.mock("./paths.js", () => ({
-	CLAUDBACK_DIR: dir,
+	PINBACK_DIR: dir,
 	STORE_FILE: join(dir, "comments.json"),
 	TOKEN_FILE: join(dir, "token"),
 }));

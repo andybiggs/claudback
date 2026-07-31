@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** When a user pins a Claudback comment, detect the React or Vue component that rendered the element and attach a capped component-ancestry chain to the comment, surfaced in the composer UI and in `get_comments`.
+**Goal:** When a user pins a Pinback comment, detect the React or Vue component that rendered the element and attach a capped component-ancestry chain to the comment, surfaced in the composer UI and in `get_comments`.
 
 **Architecture:** A new main-world `detector.js` bundle hosts a framework-agnostic detector registry (React fiber walk, Vue instance walk). The isolated-world content script talks to it over a nonce-matched CustomEvent bridge with a 100 ms timeout; detection is best-effort and silent on failure. Two optional schema fields (`framework`, `componentPath`) flow through the existing collector → store → MCP pipeline.
 
@@ -32,7 +32,7 @@
 
 **Interfaces:**
 - Consumes: existing `newCommentFieldsSchema`, `commentSchema`.
-- Produces: `Comment`/`NewCommentInput` types gain `framework: string | null` and `componentPath: string[]`; constants `COMPONENT_NAME_MAX_LENGTH = 128` and `COMPONENT_PATH_MAX_DEPTH = 5` exported from `@claudback/shared`.
+- Produces: `Comment`/`NewCommentInput` types gain `framework: string | null` and `componentPath: string[]`; constants `COMPONENT_NAME_MAX_LENGTH = 128` and `COMPONENT_PATH_MAX_DEPTH = 5` exported from `@pinback/shared`.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -76,7 +76,7 @@ describe("component fields", () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `npm test --workspace=@claudback/shared`
+Run: `npm test --workspace=@pinback/shared`
 Expected: FAIL — new tests error (`framework`/`componentPath` unknown, constants not exported).
 
 - [ ] **Step 3: Implement**
@@ -100,7 +100,7 @@ export const COMPONENT_PATH_MAX_DEPTH = 5;
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `npm test --workspace=@claudback/shared && npm run typecheck`
+Run: `npm test --workspace=@pinback/shared && npm run typecheck`
 Expected: PASS. (Typecheck must pass repo-wide — downstream packages tolerate the new optional fields because they default.)
 
 - [ ] **Step 5: Commit**
@@ -119,7 +119,7 @@ git commit -m "feat(shared): add framework and componentPath comment fields"
 - Test: `packages/extension/src/lib/component-detect.test.ts`
 
 **Interfaces:**
-- Consumes: `COMPONENT_PATH_MAX_DEPTH`, `COMPONENT_NAME_MAX_LENGTH` from `@claudback/shared`.
+- Consumes: `COMPONENT_PATH_MAX_DEPTH`, `COMPONENT_NAME_MAX_LENGTH` from `@pinback/shared`.
 - Produces:
   - `type DetectResult = { framework: string; components: string[] }`
   - `detectComponents(el: Element): DetectResult | null` — runs the registry (react, then vue), first non-null wins, every detector wrapped in try/catch.
@@ -226,11 +226,11 @@ describe("detectComponents", () => {
 });
 ```
 
-Note: these tests need a DOM. Check `packages/extension/vitest.config.ts` — if `environment` is not already `jsdom` (or `happy-dom`), add `environment: "jsdom"` via a `// @vitest-environment jsdom` comment at the top of this test file only, and add `jsdom` as a devDependency of the extension package if it isn't installed (`npm install -D jsdom --workspace=@claudback/extension`).
+Note: these tests need a DOM. Check `packages/extension/vitest.config.ts` — if `environment` is not already `jsdom` (or `happy-dom`), add `environment: "jsdom"` via a `// @vitest-environment jsdom` comment at the top of this test file only, and add `jsdom` as a devDependency of the extension package if it isn't installed (`npm install -D jsdom --workspace=@pinback/extension`).
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `npm test --workspace=@claudback/extension`
+Run: `npm test --workspace=@pinback/extension`
 Expected: FAIL — module `./component-detect.js` not found.
 
 - [ ] **Step 3: Implement**
@@ -243,7 +243,7 @@ Expected: FAIL — module `./component-detect.js` not found.
 // shell and this walks are unit-testable. Runs against UNTRUSTED page
 // internals: every entry point tolerates hostile getters and garbage shapes.
 
-import { COMPONENT_NAME_MAX_LENGTH, COMPONENT_PATH_MAX_DEPTH } from "@claudback/shared";
+import { COMPONENT_NAME_MAX_LENGTH, COMPONENT_PATH_MAX_DEPTH } from "@pinback/shared";
 
 export type DetectResult = { framework: string; components: string[] };
 
@@ -380,7 +380,7 @@ export function detectComponents(el: Element): DetectResult | null {
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `npm test --workspace=@claudback/extension && npm run typecheck`
+Run: `npm test --workspace=@pinback/extension && npm run typecheck`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
@@ -404,8 +404,8 @@ git commit -m "feat(extension): add pure React/Vue component-detection walkers"
 **Interfaces:**
 - Consumes: `detectComponents` from `./lib/component-detect.js`.
 - Produces (bridge protocol, consumed by Task 4):
-  - Request: CustomEvent `"claudback:detect"` on `document`, `detail` is the nonce string; target element carries attribute `data-claudback-probe="<nonce>"`.
-  - Response: CustomEvent `"claudback:detect-result"` on `document`, `detail` is a JSON **string**: `{"nonce": string, "framework": string, "components": string[]}`. No reply is sent when nothing is detected.
+  - Request: CustomEvent `"pinback:detect"` on `document`, `detail` is the nonce string; target element carries attribute `data-pinback-probe="<nonce>"`.
+  - Response: CustomEvent `"pinback:detect-result"` on `document`, `detail` is a JSON **string**: `{"nonce": string, "framework": string, "components": string[]}`. No reply is sent when nothing is detected.
 
 No unit test for this task (it's chrome-API and event glue); verification is typecheck + build + the Task 6 manual matrix. Keep it thin — all logic lives in Task 2's module.
 
@@ -419,20 +419,20 @@ No unit test for this task (it's chrome-API and event glue); verification is typ
 
 import { detectComponents } from "./lib/component-detect.js";
 
-const FLAG = "__claudbackDetector";
+const FLAG = "__pinbackDetector";
 
 // Guard against double injection (enable + re-injection retry).
 if (!(window as unknown as Record<string, unknown>)[FLAG]) {
 	(window as unknown as Record<string, unknown>)[FLAG] = true;
 
-	document.addEventListener("claudback:detect", (event) => {
+	document.addEventListener("pinback:detect", (event) => {
 		const nonce = (event as CustomEvent<unknown>).detail;
 
 		if (typeof nonce !== "string" || nonce.length === 0 || nonce.length > 64) {
 			return;
 		}
 
-		const el = document.querySelector(`[data-claudback-probe="${CSS.escape(nonce)}"]`);
+		const el = document.querySelector(`[data-pinback-probe="${CSS.escape(nonce)}"]`);
 
 		if (!el) {
 			return;
@@ -445,7 +445,7 @@ if (!(window as unknown as Record<string, unknown>)[FLAG]) {
 		}
 
 		document.dispatchEvent(
-			new CustomEvent("claudback:detect-result", {
+			new CustomEvent("pinback:detect-result", {
 				// JSON string, not an object: cross-world structured clone of
 				// page-created objects is inconsistent across Chrome versions.
 				detail: JSON.stringify({ nonce, framework: result.framework, components: result.components }),
@@ -479,7 +479,7 @@ If the surrounding code wraps the content.js call in error handling (the retry p
 
 - [ ] **Step 4: Build and typecheck**
 
-Run: `npm run typecheck && npm run build --workspace=@claudback/extension && ls packages/extension/dist/detector.js`
+Run: `npm run typecheck && npm run build --workspace=@pinback/extension && ls packages/extension/dist/detector.js`
 Expected: typecheck passes; `detector.js` exists in dist.
 
 - [ ] **Step 5: Commit**
@@ -548,7 +548,7 @@ describe("parseDetectReply", () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `npm test --workspace=@claudback/extension`
+Run: `npm test --workspace=@pinback/extension`
 Expected: FAIL — module `./detect-reply.js` not found.
 
 - [ ] **Step 3: Implement `packages/extension/src/lib/detect-reply.ts`**
@@ -560,7 +560,7 @@ Expected: FAIL — module `./detect-reply.js` not found.
 // data.
 
 import { z } from "zod";
-import { COMPONENT_NAME_MAX_LENGTH, COMPONENT_PATH_MAX_DEPTH } from "@claudback/shared";
+import { COMPONENT_NAME_MAX_LENGTH, COMPONENT_PATH_MAX_DEPTH } from "@pinback/shared";
 
 const replySchema = z.object({
 	nonce: z.string().min(1),
@@ -597,11 +597,11 @@ export function parseDetectReply(
 }
 ```
 
-Check `packages/extension/package.json`: if `zod` is not already a dependency (content.ts currently only imports from `@claudback/shared`, which depends on zod), add it explicitly rather than relying on hoisting: `npm install zod --workspace=@claudback/extension` matching the version in `packages/shared/package.json`.
+Check `packages/extension/package.json`: if `zod` is not already a dependency (content.ts currently only imports from `@pinback/shared`, which depends on zod), add it explicitly rather than relying on hoisting: `npm install zod --workspace=@pinback/extension` matching the version in `packages/shared/package.json`.
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `npm test --workspace=@claudback/extension`
+Run: `npm test --workspace=@pinback/extension`
 Expected: PASS.
 
 - [ ] **Step 5: Wire the bridge into `content.ts`**
@@ -618,8 +618,8 @@ Add near the other helpers (imports at top: `import { parseDetectReply } from ".
 			const nonce = crypto.randomUUID();
 
 			const finish = (value: { framework: string; components: string[] } | null): void => {
-				document.removeEventListener("claudback:detect-result", onResult);
-				el.removeAttribute("data-claudback-probe");
+				document.removeEventListener("pinback:detect-result", onResult);
+				el.removeAttribute("data-pinback-probe");
 				clearTimeout(timer);
 				resolve(value);
 			};
@@ -635,9 +635,9 @@ Add near the other helpers (imports at top: `import { parseDetectReply } from ".
 
 			const timer = setTimeout(() => finish(null), DETECT_TIMEOUT_MS);
 
-			document.addEventListener("claudback:detect-result", onResult);
-			el.setAttribute("data-claudback-probe", nonce);
-			document.dispatchEvent(new CustomEvent("claudback:detect", { detail: nonce }));
+			document.addEventListener("pinback:detect-result", onResult);
+			el.setAttribute("data-pinback-probe", nonce);
+			document.dispatchEvent(new CustomEvent("pinback:detect", { detail: nonce }));
 		});
 	}
 ```
@@ -781,7 +781,7 @@ In the overlay stylesheet inside `content.ts`, next to the `.tagchip` rule, add 
 
 - [ ] **Step 5: Build and typecheck**
 
-Run: `npm run typecheck && npm run build --workspace=@claudback/extension`
+Run: `npm run typecheck && npm run build --workspace=@pinback/extension`
 Expected: PASS.
 
 - [ ] **Step 6: Commit**
@@ -832,7 +832,7 @@ In `packages/mcp-server/src/collector.test.ts`, find the existing POST-comment t
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `npm test --workspace=claudback-mcp`
+Run: `npm test --workspace=pinback-mcp`
 Expected: FAIL — component fields missing from envelope; sanitize not applied to array.
 
 - [ ] **Step 3: Implement**
@@ -884,7 +884,7 @@ git commit -m "feat(mcp-server): surface component chain in get_comments"
 
 - [ ] **Step 6: Manual verification matrix (from the spec)**
 
-Build (`npm run build --workspace=@claudback/extension`, `npm run build --workspace=claudback-mcp`), load the unpacked extension, run the server from source, then verify:
+Build (`npm run build --workspace=@pinback/extension`, `npm run build --workspace=pinback-mcp`), load the unpacked extension, run the server from source, then verify:
 
 1. **Vite React dev app** (`npm create vite@latest -- --template react-ts` in the scratchpad, add a named `SubmitButton` inside a `CheckoutForm`): pin a comment on the button → chip shows `⚛ <SubmitButton>`, tooltip shows the chain; `get_comments` shows `component`/`framework`.
 2. **Vue 3 dev app** (`--template vue-ts`): same expectations with the Vue mark.
@@ -907,7 +907,7 @@ Record results in the PR description. Any failure: stop and fix before Task 7.
 
 In the security-model section, add a short paragraph:
 
-> **Component detection.** When the page runs React or Vue, comments also carry the owning component names (e.g. `SubmitButton < CheckoutForm`), read from the framework's runtime by a main-world detector script. The detector only answers detect events with names — it never reads comment data or touches the network — and replies are nonce-matched and schema-validated in the content script as untrusted page input. Component names are source-code identifiers; like all comment data they travel only to the loopback collector and `~/.claudback/`.
+> **Component detection.** When the page runs React or Vue, comments also carry the owning component names (e.g. `SubmitButton < CheckoutForm`), read from the framework's runtime by a main-world detector script. The detector only answers detect events with names — it never reads comment data or touches the network — and replies are nonce-matched and schema-validated in the content script as untrusted page input. Component names are source-code identifiers; like all comment data they travel only to the loopback collector and `~/.pinback/`.
 
 - [ ] **Step 2: README.md**
 

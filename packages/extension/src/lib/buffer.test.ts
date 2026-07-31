@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import type { NewCommentInput } from "@claudback/shared";
+import type { NewCommentInput } from "@pinback/shared";
 
 import { flushBuffer } from "./buffer.js";
 import { CollectorHttpError } from "./collector.js";

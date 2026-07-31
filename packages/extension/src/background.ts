@@ -1,7 +1,8 @@
-import type { Comment, NewCommentInput, Store, StoreMode } from "@claudback/shared";
+import type { Comment, NewCommentInput, Store, StoreMode } from "@pinback/shared";
 
 import { flushBuffer } from "./lib/buffer.js";
 import { originMatches } from "./lib/origin.js";
+import { readToken, writeToken } from "./lib/token-storage.js";
 import {
 	clearComments,
 	CollectorHttpError,
@@ -28,16 +29,15 @@ import type {
 	TestConnectionResponse,
 } from "./messages.js";
 
-const TOKEN_KEY = "claudback_token";
-const BUFFER_KEY = "claudback_buffer";
-const FLUSH_ALARM = "claudback-flush";
+const BUFFER_KEY = "pinback_buffer";
+const FLUSH_ALARM = "pinback-flush";
 
 // Tabs the user has explicitly enabled this session (tabId → origin pattern).
 // The overlay is injected on demand — never auto-registered — so nothing runs
 // on a page until asked. Kept in storage.session rather than memory so the
 // enable survives MV3 service-worker restarts; it still clears when the
 // browser closes.
-const ENABLED_TABS_KEY = "claudback_enabled_tabs";
+const ENABLED_TABS_KEY = "pinback_enabled_tabs";
 
 async function readEnabledTabs(): Promise<Record<string, string>> {
 	const result = await chrome.storage.session.get(ENABLED_TABS_KEY);
@@ -48,7 +48,7 @@ async function readEnabledTabs(): Promise<Record<string, string>> {
 	}
 
 	if (tabs !== undefined) {
-		console.warn("[claudback] enabled-tabs state was malformed, resetting:", tabs);
+		console.warn("[pinback] enabled-tabs state was malformed, resetting:", tabs);
 	}
 
 	return {};
@@ -81,10 +81,7 @@ async function setTabDisabled(tabId: number): Promise<void> {
 const pendingEnables = new Map<number, string>();
 
 async function getToken(): Promise<string | null> {
-	const result = await chrome.storage.local.get(TOKEN_KEY);
-	const token = result[TOKEN_KEY];
-
-	return typeof token === "string" && token.length > 0 ? token : null;
+	return readToken();
 }
 
 interface BufferedComment {
@@ -173,7 +170,7 @@ async function computeStatus(): Promise<StatusReport> {
 	try {
 		await listComments(config, "");
 	} catch (error) {
-		console.debug("[claudback] status check failed:", error);
+		console.debug("[pinback] status check failed:", error);
 		const buffer = await readBuffer();
 
 		return { state: failureState(error), pending: buffer.length };
@@ -213,7 +210,7 @@ async function handleList(origin: string): Promise<ListResponse> {
 
 		return { ok: true, state, mode: store.mode, comments: [...store.comments, ...locals] };
 	} catch (error) {
-		console.debug("[claudback] list failed:", error);
+		console.debug("[pinback] list failed:", error);
 
 		return { ok: true, state: failureState(error), mode: "clear", comments: await localsForOrigin(origin) };
 	}
@@ -235,7 +232,7 @@ async function handleCreate(payload: NewCommentInput): Promise<CreateResponse> {
 
 		return { ok: true, buffered: false, comment, state: "synced" };
 	} catch (error) {
-		console.error("[claudback] create failed, buffering comment:", error);
+		console.error("[pinback] create failed, buffering comment:", error);
 		const item = await appendBuffer(payload);
 
 		return { ok: true, buffered: true, comment: localComment(item), state: failureState(error) };
@@ -264,7 +261,7 @@ async function withToken(label: string, action: (token: string) => Promise<unkno
 
 		return { ok: true, state: "synced" };
 	} catch (error) {
-		console.error(`[claudback] ${label} failed:`, error);
+		console.error(`[pinback] ${label} failed:`, error);
 
 		return { ok: false, state: failureState(error) };
 	}
@@ -391,7 +388,7 @@ async function handleArmEnable(tabId: number): Promise<void> {
 }
 
 // Called when the user denies the permission dialog, so a later unrelated
-// grant for the same origin (e.g. enabling Claudback on another tab of the
+// grant for the same origin (e.g. enabling Pinback on another tab of the
 // same site) doesn't cause the onAdded listener to silently enable this tab
 // too, which the user never asked for.
 function handleDisarmEnable(tabId: number): void {
@@ -460,12 +457,12 @@ async function handlePairWithCode(code: string): Promise<PairResponse> {
 		// Not just "offline": a 500, 404, or malformed body lands here too, and
 		// pairing is the only way in — the cause must survive at a level
 		// DevTools shows by default.
-		console.warn("[claudback] pairing exchange failed:", error);
+		console.warn("[pinback] pairing exchange failed:", error);
 
 		return { ok: false, state: "offline", error: "offline" };
 	}
 
-	await chrome.storage.local.set({ [TOKEN_KEY]: token });
+	await writeToken(token);
 	const status = await computeStatus();
 
 	return { ok: true, state: status.state };
@@ -535,7 +532,7 @@ chrome.runtime.onMessage.addListener((message: ExtensionRequest, _sender, sendRe
 	dispatch(message)
 		.then(sendResponse)
 		.catch((error) => {
-			console.error("[claudback] background error:", error);
+			console.error("[pinback] background error:", error);
 			sendResponse({ ok: false, state: "offline" });
 		});
 
@@ -564,14 +561,14 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 chrome.runtime.onInstalled.addListener(({ reason }) => {
 	if (reason === "install") {
 		chrome.tabs.create({ url: chrome.runtime.getURL("onboarding.html") }).catch((error: unknown) => {
-			console.error("[claudback] failed to open onboarding:", error);
+			console.error("[pinback] failed to open onboarding:", error);
 		});
 	}
 });
 
 chrome.tabs.onRemoved.addListener((tabId) => {
 	setTabDisabled(tabId).catch((error: unknown) => {
-		console.error("[claudback] failed to clear closed tab's enabled state:", error);
+		console.error("[pinback] failed to clear closed tab's enabled state:", error);
 	});
 	pendingEnables.delete(tabId);
 });
@@ -617,9 +614,9 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 		} catch (error) {
 			// Dev-server reloads can navigate the tab again mid-injection,
 			// making executeScript reject transiently ("Frames were removed").
-			// That isn't the user turning Claudback off — retry once before
+			// That isn't the user turning Pinback off — retry once before
 			// treating the failure as real.
-			console.warn("[claudback] overlay injection failed, retrying:", error);
+			console.warn("[pinback] overlay injection failed, retrying:", error);
 		}
 
 		await new Promise((resolve) => setTimeout(resolve, 500));
@@ -641,7 +638,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 	})().catch((error: unknown) => {
 		// Injection failed twice — the tab must not stay marked enabled, or
 		// the popup would claim it's on while nothing is running.
-		console.error("[claudback] failed to re-inject overlay:", error);
+		console.error("[pinback] failed to re-inject overlay:", error);
 		setTabDisabled(tabId).catch(() => {});
 	});
 });

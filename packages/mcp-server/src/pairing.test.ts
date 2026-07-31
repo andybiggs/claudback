@@ -2,7 +2,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { PAIRING_CODE_ALPHABET, PAIRING_CODE_TTL_MS, PAIRING_MAX_ATTEMPTS } from "@claudback/shared";
+import { PAIRING_CODE_ALPHABET, PAIRING_CODE_TTL_MS, PAIRING_MAX_ATTEMPTS } from "@pinback/shared";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { createPairingManager, formatPairingCode } from "./pairing.js";
@@ -13,7 +13,7 @@ let dir: string;
 let pairingFile: string;
 
 beforeEach(async () => {
-	dir = await mkdtemp(join(tmpdir(), "claudback-pairing-"));
+	dir = await mkdtemp(join(tmpdir(), "pinback-pairing-"));
 	pairingFile = join(dir, "pairing.json");
 });
 
@@ -97,7 +97,7 @@ describe("createPairingManager", () => {
 	});
 
 	it("exchanges a code minted by a different instance sharing the file", async () => {
-		// The session that mints the code (any Claude Code session) is usually
+		// The session that mints the code (any agent session) is usually
 		// not the one that owns the collector and redeems it. Both point at the
 		// same pairing file, so the code still works.
 		const minter = manager();

@@ -2,11 +2,11 @@
 
 **Date:** 2026-07-13
 **Branch:** `feature/react-component-mapping`
-**Origin:** Chrome Web Store feature request (Anthony Suarez-McGrath, Jul 13 2026): map selected elements to their owning React components instead of only the DOM hierarchy (`div>div>div>button`), so Claude can find the right component without manual codebase searches.
+**Origin:** Chrome Web Store feature request (Anthony Suarez-McGrath, Jul 13 2026): map selected elements to their owning React components instead of only the DOM hierarchy (`div>div>div>button`), so the agent can find the right component without manual codebase searches.
 
 ## Goal
 
-When a user pins a comment, Claudback detects the framework component that rendered the element (React or Vue in v1; architecture is framework-agnostic) and attaches a capped component-ancestry chain to the comment. Claude reads it via `get_comments` and can grep straight to the component source.
+When a user pins a comment, Pinback detects the framework component that rendered the element (React or Vue in v1; architecture is framework-agnostic) and attaches a capped component-ancestry chain to the comment. Claude reads it via `get_comments` and can grep straight to the component source.
 
 Detection is **best-effort and silent**: on any failure (no framework, minified prod build, injection failure, timeout), the comment saves exactly as today.
 
@@ -35,8 +35,8 @@ Chain is capped at **5** named components. The detector bundle never touches com
 
 ### Bridge (isolated world ↔ main world)
 
-1. On element pick, the content script sets a one-shot `data-claudback-probe="<nonce>"` attribute on the element and dispatches a `claudback:detect` CustomEvent on `document` carrying the nonce.
-2. The detector finds the element by attribute (both worlds share the DOM), runs the registry, and dispatches `claudback:detect-result` with `{ nonce, framework, components }` serialized as a JSON string (avoids cross-world structured-clone quirks).
+1. On element pick, the content script sets a one-shot `data-pinback-probe="<nonce>"` attribute on the element and dispatches a `pinback:detect` CustomEvent on `document` carrying the nonce.
+2. The detector finds the element by attribute (both worlds share the DOM), runs the registry, and dispatches `pinback:detect-result` with `{ nonce, framework, components }` serialized as a JSON string (avoids cross-world structured-clone quirks).
 3. The content script matches the nonce, validates the reply, and resolves. Timeout ~100 ms; on timeout/absence the flow proceeds without component data. The probe attribute is removed in a `finally`.
 
 **Trust boundary:** the reply is page-controlled input. Nonce mismatch, junk JSON, oversized names, or >5 entries → dropped before the payload is built.
@@ -69,7 +69,7 @@ Tool descriptions/prompts updated to mention comments may include the owning com
 
 ## Privacy
 
-Component names are source-code identifiers read from the page's own runtime. Like all comment data they travel only to the loopback collector and `~/.claudback/`. Consistent with the existing "names only, no attribute values" stance. PLAN.md security model gets a short note.
+Component names are source-code identifiers read from the page's own runtime. Like all comment data they travel only to the loopback collector and `~/.pinback/`. Consistent with the existing "names only, no attribute values" stance. PLAN.md security model gets a short note.
 
 ## Error handling summary
 

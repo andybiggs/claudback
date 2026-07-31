@@ -10,7 +10,7 @@ function send<T>(message: PopupRequest | { type: "status" } | { type: "list"; or
 	return chrome.runtime.sendMessage(message) as Promise<T>;
 }
 
-import { CLAUDE_RESTART_PROMPT } from "./prompts.js";
+import { RESTART_PROMPT } from "./prompts.js";
 
 function statusText(state: SyncState): string {
 	switch (state) {
@@ -42,13 +42,13 @@ function statusClass(state: SyncState): string {
 function statusHint(state: SyncState): string | null {
 	switch (state) {
 		case "offline": {
-			return "Can't reach the local Claudback server.";
+			return "Can't reach the local Pinback server.";
 		}
 		case "unpaired": {
-			return "Claudback isn't set up on this computer yet.";
+			return "Pinback isn't set up on this computer yet.";
 		}
 		case "unauthorized": {
-			return "The collector rejected the pairing token — ask Claude for a pairing code and re-pair via the gear icon above.";
+			return "The collector rejected the pairing token — ask your agent for a pairing code and re-pair via the gear icon above.";
 		}
 		default: {
 			return null;
@@ -136,16 +136,16 @@ async function render(): Promise<void> {
 	copyBtn.hidden = status.state !== "offline";
 	copyBtn.onclick = async () => {
 		try {
-			await navigator.clipboard.writeText(CLAUDE_RESTART_PROMPT);
+			await navigator.clipboard.writeText(RESTART_PROMPT);
 			copyBtn.textContent = "Copied!";
 		} catch (error) {
 			// writeText rejects if the popup loses focus mid-write — carry the
 			// failure on the button itself; the popup has no toast machinery.
-			console.error("[claudback] clipboard write failed:", error);
+			console.error("[pinback] clipboard write failed:", error);
 			copyBtn.textContent = "Couldn't copy — try again";
 		}
 		setTimeout(() => {
-			copyBtn.textContent = "Copy restart prompt for Claude";
+			copyBtn.textContent = "Copy restart prompt";
 		}, 1500);
 	};
 
@@ -164,7 +164,7 @@ document.getElementById("options")?.addEventListener("click", () => {
 });
 
 document.getElementById("feedback")?.addEventListener("click", () => {
-	chrome.tabs.create({ url: "https://andybiggs.github.io/claudback/" });
+	chrome.tabs.create({ url: "https://andybiggs.github.io/pinback/" });
 	window.close();
 });
 

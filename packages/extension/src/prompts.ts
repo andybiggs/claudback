@@ -1,7 +1,8 @@
-// The prompt a user pastes into Claude to bring the collector back up. Shared
-// by the popup and the in-page panel so both surfaces copy the same text.
-export const CLAUDE_RESTART_PROMPT =
-	"My Claudback collector is offline — can you get it running again? Try the " +
-	"list_origins tool. (If Claudback isn't registered with this client: " +
-	"claude mcp add --scope user claudback -- npx -y claudback-mcp, then tell " +
-	"me to restart the session.)";
+// The prompt a user pastes into their coding agent to bring the collector back
+// up. Shared by the popup and the in-page panel so both surfaces copy the same
+// text. Deliberately names no specific client: the registration command differs
+// per agent, so it points at the setup guide instead of guessing wrong.
+export const RESTART_PROMPT =
+	"My Pinback collector is offline — can you get it running again? Try the " +
+	"list_origins tool. (If Pinback isn't registered with this client, add the " +
+	"MCP server `npx -y pinback-mcp`, then tell me to restart the session.)";

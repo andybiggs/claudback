@@ -1,10 +1,10 @@
 {
-	"name": "claudback-mcp",
-	"version": "0.2.1",
-	"description": "Local MCP server that lets Claude read visual-feedback comments pinned to web pages with the Claudback Chrome extension.",
+	"name": "pinback-mcp",
+	"version": "0.3.0",
+	"description": "Local MCP server that lets your coding agent read visual-feedback comments pinned to web pages with the Pinback Chrome extension.",
 	"type": "module",
 	"bin": {
-		"claudback-mcp": "dist/bin.js"
+		"pinback-mcp": "dist/bin.js"
 	},
 	"files": [
 		"dist",
@@ -13,13 +13,15 @@
 	],
 	"scripts": {
 		"build": "node esbuild.mjs",
-		"prepack": "node esbuild.mjs"
+		"prepack": "node esbuild.mjs",
+		"publish-alias": "node scripts/publish-alias.mjs"
 	},
 	"keywords": [
 		"mcp",
 		"model-context-protocol",
-		"claude",
 		"claude-code",
+		"codex",
+		"coding-agent",
 		"feedback",
 		"annotations",
 		"chrome-extension"
@@ -27,12 +29,12 @@
 	"license": "SEE LICENSE IN LICENSE",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/andybiggs/claudback.git",
+		"url": "git+https://github.com/andybiggs/pinback.git",
 		"directory": "packages/mcp-server"
 	},
-	"homepage": "https://andybiggs.github.io/claudback/",
+	"homepage": "https://andybiggs.github.io/pinback/",
 	"bugs": {
-		"url": "https://github.com/andybiggs/claudback/issues"
+		"url": "https://github.com/andybiggs/pinback/issues"
 	},
 	"engines": {
 		"node": ">=20"
@@ -42,6 +44,6 @@
 		"zod": "^3.25.76"
 	},
 	"devDependencies": {
-		"@claudback/shared": "*"
+		"@pinback/shared": "*"
 	}
 }

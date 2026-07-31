@@ -1,6 +1,6 @@
+import { readToken } from "./lib/token-storage.js";
 import type { PairResponse, TestConnectionResponse } from "./messages.js";
 
-const TOKEN_KEY = "claudback_token";
 const STEP_COUNT = 4;
 const PAIR_STEP = 2;
 const POLL_INTERVAL_MS = 2000;
@@ -27,10 +27,7 @@ function setStatus(text: string, ok = false): void {
 }
 
 async function loadToken(): Promise<string> {
-	const result = await chrome.storage.local.get(TOKEN_KEY);
-	const token = result[TOKEN_KEY];
-
-	return typeof token === "string" ? token : "";
+	return (await readToken()) ?? "";
 }
 
 async function testConnection(): Promise<TestConnectionResponse> {
@@ -40,7 +37,7 @@ async function testConnection(): Promise<TestConnectionResponse> {
 function reportState(state: TestConnectionResponse["state"]): boolean {
 	switch (state) {
 		case "unpaired": {
-			setStatus("Not paired yet — ask Claude for a pairing code.");
+			setStatus("Not paired yet — ask your agent for a pairing code.");
 
 			return false;
 		}
@@ -50,7 +47,7 @@ function reportState(state: TestConnectionResponse["state"]): boolean {
 			return false;
 		}
 		case "unauthorized": {
-			setStatus("Token rejected by the collector — ask Claude for a fresh pairing code.");
+			setStatus("Token rejected by the collector — ask your agent for a fresh pairing code.");
 
 			return false;
 		}
@@ -92,7 +89,7 @@ function pollTick(): void {
 		// A rejected sendMessage here means the extension context is gone
 		// (reloaded/updated), so further ticks can never succeed.
 		stopPolling();
-		console.error("[claudback] onboarding poll failed:", error);
+		console.error("[pinback] onboarding poll failed:", error);
 		setStatus("Lost contact with the extension — reload this page.");
 	});
 }
@@ -182,7 +179,7 @@ function initCopyButtons(): void {
 }
 
 function pairingError(error: unknown): void {
-	console.error("[claudback] onboarding pairing failed:", error);
+	console.error("[pinback] onboarding pairing failed:", error);
 	setStatus("Something went wrong — reload this page and try again.");
 }
 
@@ -190,7 +187,7 @@ async function pairWithCode(input: HTMLInputElement): Promise<void> {
 	const code = input.value.trim();
 
 	if (!code) {
-		setStatus("Enter the pairing code Claude gave you.");
+		setStatus("Enter the pairing code your agent gave you.");
 
 		return;
 	}
@@ -207,7 +204,7 @@ async function pairWithCode(input: HTMLInputElement): Promise<void> {
 	}
 
 	if (response.error === "invalid_code") {
-		setStatus("That code didn't work — it may have expired. Ask Claude for a fresh one.");
+		setStatus("That code didn't work — it may have expired. Ask your agent for a fresh one.");
 
 		return;
 	}

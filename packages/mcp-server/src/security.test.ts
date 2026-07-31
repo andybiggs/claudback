@@ -7,7 +7,7 @@ const DEV_ID = "abcdefghijklmnopabcdefghijklmnop";
 
 describe("originAllowed", () => {
 	afterEach(() => {
-		delete process.env.CLAUDBACK_DEV_EXTENSION_ID;
+		delete process.env.PINBACK_DEV_EXTENSION_ID;
 	});
 
 	const cases: Array<[string, string, boolean]> = [
@@ -28,14 +28,14 @@ describe("originAllowed", () => {
 		expect(originAllowed(undefined)).toBe(true);
 	});
 
-	it("allows a dev extension ID opted in via CLAUDBACK_DEV_EXTENSION_ID", () => {
-		process.env.CLAUDBACK_DEV_EXTENSION_ID = DEV_ID;
+	it("allows a dev extension ID opted in via PINBACK_DEV_EXTENSION_ID", () => {
+		process.env.PINBACK_DEV_EXTENSION_ID = DEV_ID;
 		expect(originAllowed(`chrome-extension://${DEV_ID}`)).toBe(true);
 		expect(originAllowed(PUBLISHED_ORIGIN)).toBe(true);
 	});
 
-	it("ignores a malformed CLAUDBACK_DEV_EXTENSION_ID", () => {
-		process.env.CLAUDBACK_DEV_EXTENSION_ID = "not-a-valid-id";
+	it("ignores a malformed PINBACK_DEV_EXTENSION_ID", () => {
+		process.env.PINBACK_DEV_EXTENSION_ID = "not-a-valid-id";
 		expect(originAllowed("chrome-extension://not-a-valid-id")).toBe(false);
 	});
 });

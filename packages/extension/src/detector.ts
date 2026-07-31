@@ -5,20 +5,20 @@
 
 import { detectComponents } from "./lib/component-detect.js";
 
-const FLAG = "__claudbackDetector";
+const FLAG = "__pinbackDetector";
 
 // Guard against double injection (enable + re-injection retry).
 if (!(window as unknown as Record<string, unknown>)[FLAG]) {
 	(window as unknown as Record<string, unknown>)[FLAG] = true;
 
-	document.addEventListener("claudback:detect", (event) => {
+	document.addEventListener("pinback:detect", (event) => {
 		const nonce = (event as CustomEvent<unknown>).detail;
 
 		if (typeof nonce !== "string" || nonce.length === 0 || nonce.length > 64) {
 			return;
 		}
 
-		const el = document.querySelector(`[data-claudback-probe="${CSS.escape(nonce)}"]`);
+		const el = document.querySelector(`[data-pinback-probe="${CSS.escape(nonce)}"]`);
 
 		if (!el) {
 			return;
@@ -31,7 +31,7 @@ if (!(window as unknown as Record<string, unknown>)[FLAG]) {
 		}
 
 		document.dispatchEvent(
-			new CustomEvent("claudback:detect-result", {
+			new CustomEvent("pinback:detect-result", {
 				// JSON string, not an object: cross-world structured clone of
 				// page-created objects is inconsistent across Chrome versions.
 				detail: JSON.stringify({ nonce, framework: result.framework, components: result.components }),

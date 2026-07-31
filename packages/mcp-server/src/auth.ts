@@ -1,7 +1,7 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 
-import { CLAUDBACK_DIR, TOKEN_FILE } from "./paths.js";
+import { PINBACK_DIR, TOKEN_FILE } from "./paths.js";
 
 // The pairing token is the collector's only authentication. It is generated
 // once per machine and pasted into the extension's options page by the user.
@@ -18,11 +18,11 @@ export async function loadOrCreateToken(): Promise<string> {
 
 	const token = randomBytes(32).toString("hex");
 
-	await mkdir(CLAUDBACK_DIR, { recursive: true, mode: 0o700 });
+	await mkdir(PINBACK_DIR, { recursive: true, mode: 0o700 });
 	// 0600: the token gates writes to the store, so only this user may read it.
 	await writeFile(TOKEN_FILE, `${token}\n`, { encoding: "utf8", mode: 0o600 });
 	console.error(
-		`[claudback] pairing token generated at ${TOKEN_FILE} — ask Claude for a pairing code (get_pairing_code), or paste the token into the Claudback extension options page.`,
+		`[pinback] pairing token generated at ${TOKEN_FILE} — ask your agent for a pairing code (get_pairing_code), or paste the token into the Pinback extension options page.`,
 	);
 
 	return token;

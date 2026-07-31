@@ -6,9 +6,15 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { loadOrCreateToken } from "./auth.js";
 import { startCollector } from "./collector.js";
 import { createPairingManager } from "./pairing.js";
-import { STORE_FILE } from "./paths.js";
+import { LEGACY_DIR, PINBACK_DIR, STORE_FILE, migrateLegacyDir } from "./paths.js";
 import { createStore } from "./store.js";
 import { registerTools } from "./tools.js";
+
+// Replaced by esbuild with the real package version at build time. Under
+// vitest there is no define step, hence the guard.
+declare const __PINBACK_VERSION__: string | undefined;
+
+const SERVER_VERSION = typeof __PINBACK_VERSION__ === "string" ? __PINBACK_VERSION__ : "0.0.0-dev";
 
 // Keep trying to bind so the extension always has a live collector: when the
 // owning session exits, the first surviving process wins the port and service
@@ -31,7 +37,7 @@ export function retryTakeover(
 				// EADDRINUSE resolves undefined; anything that rejects here is
 				// unexpected (EACCES, EPERM, …) and must not vanish, or the
 				// loop spins silently forever while the extension shows offline.
-				console.error("[claudback] collector takeover attempt failed:", error);
+				console.error("[pinback] collector takeover attempt failed:", error);
 			});
 	}, intervalMs);
 
@@ -41,6 +47,13 @@ export function retryTakeover(
 }
 
 export async function main(): Promise<void> {
+	// Must run before the token is read: the pairing token lives in the state
+	// directory, so migrating it forward is what keeps a pre-rename install
+	// paired instead of silently generating a new token.
+	if (await migrateLegacyDir()) {
+		console.error(`[pinback] migrated ${LEGACY_DIR} to ${PINBACK_DIR} — your existing pairing still works`);
+	}
+
 	const token = await loadOrCreateToken();
 	const pairing = createPairingManager(token);
 	const store = createStore(STORE_FILE);
@@ -48,19 +61,19 @@ export async function main(): Promise<void> {
 
 	// stdout carries the MCP protocol; all human-facing logging goes to stderr.
 	if (collector) {
-		console.error(`[claudback] collector listening on http://127.0.0.1:${collector.port}`);
+		console.error(`[pinback] collector listening on http://127.0.0.1:${collector.port}`);
 	} else {
-		console.error("[claudback] another instance owns the collector port; will take over if it frees up");
+		console.error("[pinback] another instance owns the collector port; will take over if it frees up");
 		retryTakeover(() => startCollector(store, token, pairing), 2_000, (port) => {
-			console.error(`[claudback] took over collector on http://127.0.0.1:${port}`);
+			console.error(`[pinback] took over collector on http://127.0.0.1:${port}`);
 		});
 	}
 
-	const server = new McpServer({ name: "claudback", version: "0.0.1" });
+	const server = new McpServer({ name: "pinback", version: SERVER_VERSION });
 
 	registerTools(server, store, pairing);
 	await server.connect(new StdioServerTransport());
-	console.error("[claudback] MCP server connected on stdio");
+	console.error("[pinback] MCP server connected on stdio");
 
 	// When the parent session goes away, stdin closes. Exit instead of
 	// lingering as an orphan — this also frees the collector port so a

@@ -1,4 +1,4 @@
-// Builds a stable, human-readable CSS selector for an element so Claude can
+// Builds a stable, human-readable CSS selector for an element so the agent can
 // locate it in source. Prefers ids and data-testids; otherwise walks up the
 // tree building an `:nth-of-type` path. Dependency-free.
 

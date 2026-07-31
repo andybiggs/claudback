@@ -1,6 +1,6 @@
 ---
 name: Feedback
-about: Bugs, ideas, or anything else about Claudback
+about: Bugs, ideas, or anything else about Pinback
 title: ""
 labels: feedback
 assignees: ""
@@ -14,4 +14,4 @@ What happened, or what would you like to see?
 **Setup (if relevant)**
 - Extension version (`chrome://extensions`):
 - OS:
-- Claude client (Claude Code CLI / Desktop App):
+- MCP client (Claude Code / Codex / other):

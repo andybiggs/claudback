@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { TOKEN_HEADER, type NewCommentInput } from "@claudback/shared";
+import { LEGACY_TOKEN_HEADER, TOKEN_HEADER, type NewCommentInput } from "@pinback/shared";
 
 import { CollectorHttpError, createComment, exchangePairingCode, listComments, ping, setMode, updateComment } from "./collector.js";
 
@@ -41,7 +41,12 @@ describe("collector client", () => {
 
 		expect(url).toBe("http://127.0.0.1:57463/comments?origin=https%3A%2F%2Fexample.com");
 		expect(init?.method).toBe("GET");
-		expect(init?.headers).toMatchObject({ [TOKEN_HEADER]: "secret-token" });
+		// Pinned deliberately: the client stays on the pre-rename header for one
+		// release so it can still reach collectors installed under the old npm
+		// name, whose CORS preflight rejects the new one. Flipping this to
+		// TOKEN_HEADER is the reminder that the compat window has closed.
+		expect(init?.headers).toMatchObject({ [LEGACY_TOKEN_HEADER]: "secret-token" });
+		expect(init?.headers).not.toHaveProperty(TOKEN_HEADER);
 	});
 
 	it("posts a new comment to /comments", async () => {

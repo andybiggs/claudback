@@ -3,10 +3,10 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>Claudback: comment on your page, Claude reads it</title>
+		<title>Pinback: comment on your page, your agent reads it</title>
 		<meta
 			name="description"
-			content="Comment on elements of any web page. Claude reads them via a local MCP server and makes the changes. Nothing leaves your machine."
+			content="Comment on elements of any web page. Your coding agent reads them via a local MCP server and makes the changes. Nothing leaves your machine."
 		/>
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -429,27 +429,27 @@
 		<main>
 			<header>
 				<span class="mark"></span>
-				<span class="name brand-font">Claudback</span>
+				<span class="name brand-font">Pinback</span>
 				<nav>
 					<a href="#how">How it works</a>
 					<a href="#start">Quick start</a>
 					<a href="changelog.html">Changelog</a>
-					<a href="https://github.com/andybiggs/claudback">GitHub</a>
+					<a href="https://github.com/andybiggs/pinback">GitHub</a>
 				</nav>
 			</header>
 
 			<section class="hero">
-				<h1 class="brand-font">Comment on your page.<br />Claude reads it.</h1>
+				<h1 class="brand-font">Comment on your page.<br />Your agent reads it.</h1>
 				<p>
-					Claudback is a Chrome extension that lets you pin comments to elements on any web
-					page, plus a local MCP server that lets Claude read them and make the changes.
+					Pinback is a Chrome extension that lets you pin comments to elements on any web
+					page, plus a local MCP server that lets your coding agent read them and make the changes.
 				</p>
 				<div class="cta-row">
-					<a class="btn primary" href="https://chromewebstore.google.com/detail/claudback/dbnmlcmmgnchigedlglfmchkendlcfgc">Get the extension</a>
+					<a class="btn primary" href="https://chromewebstore.google.com/detail/pinback/dbnmlcmmgnchigedlglfmchkendlcfgc">Get the extension</a>
 				</div>
 
 				<div class="hero-illus-wrap">
-					<svg class="hero-illus" viewBox="0 0 960 460" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A comment pinned to a button in the browser flows into Claude, which reads it and resolves it">
+					<svg class="hero-illus" viewBox="0 0 960 460" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A comment pinned to a button in the browser flows into your coding agent, which reads it and resolves it">
 						<defs>
 							<filter id="win-shadow" x="-20%" y="-20%" width="140%" height="150%">
 								<feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#0b2416" flood-opacity="0.16" />
@@ -518,10 +518,10 @@
 						<circle cx="628" cy="104" r="5" fill="#F26D5F" />
 						<circle cx="646" cy="104" r="5" fill="#F2BE4C" />
 						<circle cx="664" cy="104" r="5" fill="#57C25B" />
-						<text x="756" y="108" font-size="11.5" text-anchor="middle" fill="#6e757c" class="brand">Claude Code</text>
+						<text x="756" y="108" font-size="11.5" text-anchor="middle" fill="#6e757c" class="brand">your agent</text>
 
-						<text x="630" y="154" font-size="12.5" class="mono" fill="#9aa1a8">&gt; Hey Claude, check my</text>
-						<text x="630" y="172" font-size="12.5" class="mono" fill="#9aa1a8">  claudback comments</text>
+						<text x="630" y="154" font-size="12.5" class="mono" fill="#9aa1a8">&gt; Hey, check my</text>
+						<text x="630" y="172" font-size="12.5" class="mono" fill="#9aa1a8">  pinback comments</text>
 						<text x="630" y="204" font-size="12.5" class="mono" fill="#f0913a">● get_comments</text>
 						<text x="630" y="234" font-size="12.5" class="mono" fill="#e9ecee">1 · “Make this bigger”</text>
 						<text x="630" y="252" font-size="11.5" class="mono" fill="#6e757c">#app › div › button</text>
@@ -538,15 +538,15 @@
 				<h2 class="brand-font">Iterate on your build without describing it</h2>
 				<p>
 					If you're anything like me when you're building a site or prototype locally and
-					iterating with Claude, you find yourself screenshotting, or typing "the second
+					iterating with an agent, you find yourself screenshotting, or typing "the second
 					button in the header, no, the other one". It can be slow and frustrating. That's
-					where Claudback comes in: you click the exact thing on the page and say what you
-					want. Each comment carries the exact element, so Claude knows precisely what you
+					where Pinback comes in: you click the exact thing on the page and say what you
+					want. Each comment carries the exact element, so your agent knows precisely what you
 					mean.
 				</p>
 				<ol class="walkthrough">
 					<li>
-						<strong>Run your app locally</strong> and open it in Chrome. Click the Claudback
+						<strong>Run your app locally</strong> and open it in Chrome. Click the Pinback
 						icon and enable it for the tab.
 					</li>
 					<li>
@@ -554,17 +554,17 @@
 						green", "this overlaps on mobile".
 					</li>
 					<li>
-						<strong>Ask Claude Code</strong>: <code>Grab my Claudback comments</code>.
-						Claude reads each comment, with its element selector, through the MCP server.
+						<strong>Ask your agent</strong>: <code>Grab my Pinback comments</code>.
+						It reads each comment, with its element selector, through the MCP server.
 					</li>
 					<li>
-						<strong>Comments resolve as Claude works</strong> through them. Reload, look at
+						<strong>Comments resolve as your agent works</strong> through them. Reload, look at
 						the result, drop the next round of comments.
 					</li>
 				</ol>
 				<p>
 					<strong>It's not just for local builds.</strong> Annotate any site to collect
-					structured, element-anchored notes for Claude to work from. Useful for competitor
+					structured, element-anchored notes for your agent to work from. Useful for competitor
 					teardowns, PRDs, design reviews and content audits.
 				</p>
 			</section>
@@ -583,14 +583,16 @@
 					</div>
 					<div class="arrow">→</div>
 					<div class="node">
-						<span class="t">Claude</span>
+						<span class="t">Your agent</span>
 						<span class="d">MCP tools</span>
 					</div>
 				</div>
 				<p>
-					The <code>claudback-mcp</code> server runs on your machine, started and stopped by
-					Claude itself. It embeds a small HTTP collector that only listens on localhost. The
-					extension syncs your comments to it; Claude reads them through MCP tools
+					The <code>pinback-mcp</code> server runs on your machine, started and stopped by
+					your agent itself. It's a plain stdio MCP server, so it works with Claude Code,
+					Codex, or anything else that speaks MCP. It embeds a small HTTP collector that
+					only listens on localhost. The extension syncs your comments to it; your agent
+					reads them through MCP tools
 					(<code>get_comments</code>, <code>list_origins</code>, <code>resolve_comment</code>,
 					<code>clear_comments</code>).
 				</p>
@@ -599,19 +601,23 @@
 			<section id="start">
 				<h2 class="brand-font">Quick start</h2>
 				<p>
-					<strong><a href="https://chromewebstore.google.com/detail/claudback/dbnmlcmmgnchigedlglfmchkendlcfgc">Install the extension</a></strong>
+					<strong><a href="https://chromewebstore.google.com/detail/pinback/dbnmlcmmgnchigedlglfmchkendlcfgc">Install the extension</a></strong>
 					from the Chrome Web Store. A setup guide opens automatically and walks you
 					through the following:
 				</p>
 				<ol class="walkthrough">
 					<li>
 						<strong>Register the MCP server</strong>, one command that the guide has you run
-						in a terminal, or paste straight into a Claude Code chat if you use the desktop
-						app:
-						<pre><code>claude mcp add --scope user claudback -- npx -y claudback-mcp</code></pre>
+						in a terminal, or paste straight into a chat if you use a desktop app. Claude
+						Code:
+						<pre><code>claude mcp add --scope user pinback -- npx -y pinback-mcp</code></pre>
+						Codex:
+						<pre><code>codex mcp add pinback -- npx -y pinback-mcp</code></pre>
+						Any other MCP client: register <code>npx -y pinback-mcp</code> as a stdio
+						server named <code>pinback</code>.
 					</li>
 					<li>
-						<strong>Pair the extension.</strong> Ask Claude for a pairing code and enter it
+						<strong>Pair the extension.</strong> Ask your agent for a pairing code and enter it
 						on the setup page. You'll be commenting in a couple of minutes.
 					</li>
 				</ol>
@@ -623,7 +629,7 @@
 					<span class="tag">Local only</span>
 					<p>
 						The collector binds to <code>127.0.0.1</code>, so it is never reachable from the
-						network. Your comments live in <code>~/.claudback/</code> on your own machine. No
+						network. Your comments live in <code>~/.pinback/</code> on your own machine. No
 						remote servers, no accounts, no analytics.
 					</p>
 				</div>
@@ -640,7 +646,7 @@
 				<div class="card">
 					<span class="tag">Pull, not push</span>
 					<p>
-						Comments never enter Claude's context automatically. Claude reads them only when
+						Comments never enter your agent's context automatically. It reads them only when
 						you ask it to call the tools, and each comment is wrapped in an untrusted-data
 						envelope.
 					</p>
@@ -650,13 +656,13 @@
 			<footer>
 				<span class="footer-brand">
 					<span class="mark" style="width: 18px; height: 18px; border-radius: 50% 50% 50% 2px"></span>
-					<span>Claudback <span class="note">by <a href="https://www.andybiggs.net">Andy Biggs</a> (NZ)</span></span>
+					<span>Pinback <span class="note">by <a href="https://www.andybiggs.net">Andy Biggs</a> (NZ)</span></span>
 				</span>
 				<span class="footer-links">
-					<a href="https://github.com/andybiggs/claudback">GitHub</a>
+					<a href="https://github.com/andybiggs/pinback">GitHub</a>
 					<a href="changelog.html">Changelog</a>
-					<a href="https://github.com/andybiggs/claudback/issues/new/choose">Feedback</a>
-					<a href="https://www.npmjs.com/package/claudback-mcp">Npm</a>
+					<a href="https://github.com/andybiggs/pinback/issues/new/choose">Feedback</a>
+					<a href="https://www.npmjs.com/package/pinback-mcp">Npm</a>
 					<a href="privacy.html">Privacy</a>
 				</span>
 			</footer>

@@ -1,7 +1,7 @@
 // Inline edit: an in-place textarea inside a list row, used when the commented
 // element isn't on the current page (so there's nothing to anchor a popover to).
 
-import type { Comment } from "@claudback/shared";
+import type { Comment } from "@pinback/shared";
 
 import type { SimpleResponse } from "../../messages.js";
 import { escapeHtml } from "../../ui/html.js";

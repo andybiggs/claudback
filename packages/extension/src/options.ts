@@ -1,13 +1,10 @@
+import { readToken } from "./lib/token-storage.js";
 import type { PairResponse, TestConnectionResponse } from "./messages.js";
 
-const TOKEN_KEY = "claudback_token";
 const CONVERT_KEY = "convertComponents";
 
 async function hasToken(): Promise<boolean> {
-	const result = await chrome.storage.local.get(TOKEN_KEY);
-	const token = result[TOKEN_KEY];
-
-	return typeof token === "string" && token.length > 0;
+	return (await readToken()) !== null;
 }
 
 function setStatus(text: string, ok = false): void {
@@ -21,7 +18,7 @@ function setStatus(text: string, ok = false): void {
 function reportState(state: TestConnectionResponse["state"]): void {
 	switch (state) {
 		case "unpaired": {
-			setStatus("Not paired yet — ask Claude for a pairing code.");
+			setStatus("Not paired yet — ask your agent for a pairing code.");
 
 			return;
 		}
@@ -31,7 +28,7 @@ function reportState(state: TestConnectionResponse["state"]): void {
 			return;
 		}
 		case "unauthorized": {
-			setStatus("Token rejected by the collector — ask Claude for a fresh pairing code.");
+			setStatus("Token rejected by the collector — ask your agent for a fresh pairing code.");
 
 			return;
 		}
@@ -51,7 +48,7 @@ async function pairWithCode(input: HTMLInputElement): Promise<void> {
 	const code = input.value.trim();
 
 	if (!code) {
-		setStatus("Enter the pairing code Claude gave you.");
+		setStatus("Enter the pairing code your agent gave you.");
 
 		return;
 	}
@@ -68,7 +65,7 @@ async function pairWithCode(input: HTMLInputElement): Promise<void> {
 	}
 
 	if (response.error === "invalid_code") {
-		setStatus("That code didn't work — it may have expired. Ask Claude for a fresh one.");
+		setStatus("That code didn't work — it may have expired. Ask your agent for a fresh one.");
 
 		return;
 	}
@@ -145,7 +142,7 @@ async function init(): Promise<void> {
 }
 
 function reportError(error: unknown): void {
-	console.error("[claudback] options error:", error);
+	console.error("[pinback] options error:", error);
 	setStatus("Something went wrong — reload this page and try again.");
 }
 

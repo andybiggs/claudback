@@ -4,7 +4,7 @@
 // data.
 
 import { z } from "zod";
-import { COMPONENT_NAME_MAX_LENGTH, COMPONENT_PATH_MAX_DEPTH } from "@claudback/shared";
+import { COMPONENT_NAME_MAX_LENGTH, COMPONENT_PATH_MAX_DEPTH } from "@pinback/shared";
 
 const replySchema = z.object({
 	nonce: z.string().min(1),

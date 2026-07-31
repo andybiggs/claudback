@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import type { NewCommentInput } from "@claudback/shared";
+import type { NewCommentInput } from "@pinback/shared";
 
 import { createPairingManager } from "./pairing.js";
 import { createStore } from "./store.js";
@@ -38,7 +38,7 @@ describe("tools", () => {
 	let store: StoreApi;
 
 	beforeEach(async () => {
-		dir = await mkdtemp(join(tmpdir(), "claudback-tools-"));
+		dir = await mkdtemp(join(tmpdir(), "pinback-tools-"));
 		store = createStore(join(dir, "comments.json"));
 	});
 

@@ -1,4 +1,4 @@
-import type { Comment, NewCommentInput, StoreMode } from "@claudback/shared";
+import type { Comment, NewCommentInput, StoreMode } from "@pinback/shared";
 
 // Wire protocol between the content script and the background worker. The
 // content script never talks to the collector directly — it only sends these

@@ -1,57 +1,57 @@
-# Chrome Web Store listing — Claudback
+# Chrome Web Store listing — Pinback
 
 Draft copy for the Web Store submission form. Not shipped in the extension zip.
 
 ## Basics
 
-- **Name**: Claudback
+- **Name**: Pinback
 - **Category**: Developer Tools
 - **Language**: English
-- **Homepage URL**: https://andybiggs.github.io/claudback/
-- **Privacy policy URL**: https://andybiggs.github.io/claudback/privacy.html
+- **Homepage URL**: https://andybiggs.github.io/pinback/
+- **Privacy policy URL**: https://andybiggs.github.io/pinback/privacy.html
 
 ## Short description (max 132 chars)
 
-> Pin comments to elements on any page. Claude reads them via a local MCP server and makes the changes. Nothing leaves your machine.
+> Pin comments to elements on any page. Your agent reads them via a local MCP server and makes the edits. Nothing leaves your machine.
 
-(130 characters)
+(132 characters)
 
 ## Full description
 
-> **Comment on your page. Claude reads it.**
+> **Comment on your page. Your agent reads it.**
 >
-> Claudback lets you pin visual-feedback comments to elements on any web page, a button that's the wrong colour, a layout that breaks on mobile, copy that needs a rewrite. Claude reads your comments through a local MCP server and makes the changes. Claudback gives Claude all the details it needs to know exactly what your comment was on.
+> Pinback lets you pin visual-feedback comments to elements on any web page, a button that's the wrong colour, a layout that breaks on mobile, copy that needs a rewrite. Your coding agent reads your comments through a local MCP server and makes the changes. Pinback gives it all the details it needs to know exactly what your comment was on.
 >
-> **The main use case:** you're iterating on a local build or prototype with Claude Code. Instead of screenshotting and describing where things are, enable Claudback on the Chrome tab where your site is, click the elements you want changed, and say why. Each comment carries the exact element selector. Then ask Claude: "Grab my Claudback comments."
+> **The main use case:** you're iterating on a local build or prototype with a coding agent. Instead of screenshotting and describing where things are, enable Pinback on the Chrome tab where your site is, click the elements you want changed, and say why. Each comment carries the exact element selector. Then ask your agent: "Grab my Pinback comments."
 >
-> It's not just for code changes. You can pin comments while browsing any site (a competitor's product, a reference design, a client's current site) you can then ask Claude to turn them into a doc: A competitor teardown, a PRD, a slide deck, whatever your needs are.
+> It's not just for code changes. You can pin comments while browsing any site (a competitor's product, a reference design, a client's current site) you can then ask your agent to turn them into a doc: A competitor teardown, a PRD, a slide deck, whatever your needs are.
 >
 > **How it works**
 > - The extension is off by default and you enable it per tab.
-> - Comments sync to a local collector on 127.0.0.1 run by the `claudback-mcp` server (installed via `npx` the first-run guide walks you through it).
-> - Claude reads the comments via MCP tools (`get_comments`, `list_origins`, `resolve_comment`, `clear_comments`), plus `get_pairing_code` for setup.
+> - Comments sync to a local collector on 127.0.0.1 run by the `pinback-mcp` server (installed via `npx` the first-run guide walks you through it).
+> - Your agent reads the comments via MCP tools (`get_comments`, `list_origins`, `resolve_comment`, `clear_comments`), plus `get_pairing_code` for setup.
 >
 > **Private and secure**
 > - There are no remote servers, no accounts, no analytics.
 > - The collector binds to localhost only and requires a pairing token.
-> - Your comments live in `~/.claudback/` on your own machine.
+> - Your comments live in `~/.pinback/` on your own machine.
 > - I've no interest in commercialising this, it's just a helpful tool for the people.
 >
-> Requires the free `claudback-mcp` npm package (Node 20+) and Claude Code (CLI or Desktop App). Setup guide opens on install.
+> **Works with any MCP-capable agent** — Claude Code, Codex, and others. Requires the free `pinback-mcp` npm package (Node 20+). Setup guide opens on install.
 >
 > Made by Andy Biggs (NZ) — www.andybiggs.net
 
 ## Single-purpose statement
 
-> Claudback's single purpose is to let users pin feedback comments to elements on web pages and sync them to a local server on the user's own machine, where Claude (via MCP) can read and act on them.
+> Pinback's single purpose is to let users pin feedback comments to elements on web pages and sync them to a local server on the user's own machine, where the user's own coding agent (via MCP) can read and act on them.
 
 ## Permission justifications
 
 - **storage** — Stores the pairing token for the local collector and buffers unsent comments locally so annotating works offline.
 - **activeTab** — Reads the current tab's URL/origin when the user clicks the extension, so commenting can be enabled for that specific site only.
-- **scripting** — Injects the comment overlay content script into a tab, only after the user explicitly enables Claudback for that tab.
+- **scripting** — Injects the comment overlay content script into a tab, only after the user explicitly enables Pinback for that tab.
 - **alarms** — Runs a periodic retry that flushes locally buffered comments to the local collector once it's reachable.
-- **Optional host permissions (`*://*/*`)** — Requested per-site at the moment the user enables Claudback on a tab; never granted broadly up front. Needed so the overlay and comment sync work on the sites the user chooses.
+- **Optional host permissions (`*://*/*`)** — Requested per-site at the moment the user enables Pinback on a tab; never granted broadly up front. Needed so the overlay and comment sync work on the sites the user chooses.
 
 ## Remote code / data use disclosures
 
@@ -60,12 +60,12 @@ Draft copy for the Web Store submission form. Not shipped in the extension zip.
 
 ## Assets (manual task)
 
-- **Store icon (128×128)** — `design/Listing Images/claudback-icon.png`. Uploaded separately in the dashboard's Store Listing tab; distinct from the icons packaged in the extension zip.
+- **Store icon (128×128)** — `design/Listing Images/pinback-icon.png`. Uploaded separately in the dashboard's Store Listing tab; distinct from the icons packaged in the extension zip.
 - **Screenshots (1280×800, at least 1, up to 5)** — suggested shots:
   1. Overlay + composer pinned to an element on a localhost app.
   2. The comment list panel with a few comments.
   3. Popup with the enable toggle and sync status.
   4. Onboarding step 2 (the npx install tabs).
-  5. A Claude Code session reading the comments via `get_comments`.
+  5. An agent session reading the comments via `get_comments`.
 - **Small promo tile (440×280)** — optional; Waypoint mark + wordmark on green.
 - **Marquee promo (1400×560)** — optional.
