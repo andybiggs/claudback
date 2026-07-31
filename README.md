@@ -2,17 +2,19 @@
 
 **Comment on your page. Claude reads it.**
 
+![Claudback demo: pinning comments to page elements and Claude Code reading them](docs/demo.gif)
+
 Claudback is a Chrome extension for pinning visual-feedback comments to elements on any web page, plus a local MCP server (`claudback-mcp`) that lets Claude read them and make the changes. The main use case: iterate on a local build or prototype with Claude Code without screenshots or "the third button in the sidebar" descriptions — click the thing, say what you want, ask Claude to check your comments. On React and Vue apps, comments also name the component that rendered the element, so Claude can jump straight to the source.
 
 Everything stays on your machine: comments sync to a loopback-only collector and live in `~/.claudback/`.
 
-**Docs & 101:** https://andybiggs.github.io/claudback/ · **Status:** pre-v1. See [PLAN.md](./PLAN.md) for architecture and the security model, [RELEASING.md](./RELEASING.md) for the release process.
+**Docs & 101:** https://andybiggs.github.io/claudback/ · **Changelog:** https://andybiggs.github.io/claudback/changelog.html · **Status:** pre-v1.
 
 Made by [Andy Biggs](https://www.andybiggs.net) (NZ).
 
 ## Quick start
 
-1. **Install the extension** — from the Chrome Web Store (link coming soon — until then, see [Load the extension from source](#load-the-extension-from-source) below). A setup guide opens on install.
+1. **Install the extension** — [get Claudback on the Chrome Web Store](https://chromewebstore.google.com/detail/claudback/dbnmlcmmgnchigedlglfmchkendlcfgc). A setup guide opens on install.
 2. **Register the MCP server** — run this once for Claude Code (CLI):
 
    ```sh
@@ -25,79 +27,20 @@ Made by [Andy Biggs](https://www.andybiggs.net) (NZ).
 4. **Annotate** — click the Claudback icon on any tab → **Enable**, grant the per-site permission, and pin comments with the floating button.
 5. **Ask Claude** — "Grab my Claudback comments." Claude reads them via the `get_comments` tool; `list_origins`, `resolve_comment`, and `clear_comments` are also available.
 
+## Why Claudback
+
+- **No more screenshot-and-describe.** Each comment carries the exact element selector, tag, and a page excerpt — Claude knows precisely what you clicked.
+- **Component mapping on React and Vue apps.** Comments name the component that rendered the element (unwrapping UI-library wrappers to surface *your* component), so Claude can jump straight to the source file.
+- **Local-only by design.** No remote servers, no accounts, no analytics. The collector binds to 127.0.0.1, requires a pairing token, and comments never auto-enter Claude's context — Claude pulls them when you ask, each wrapped in an untrusted-data envelope.
+- **Works offline.** Annotate with Claude closed; comments buffer in the extension and sync when a collector appears.
+
+Not just for code changes: pin comments on any live site — a competitor's product, a reference design, a client's current site — and ask Claude to turn them into a teardown, a PRD, or a design review.
+
+Enjoying Claudback? [A short review on the Chrome Web Store](https://chromewebstore.google.com/detail/claudback/dbnmlcmmgnchigedlglfmchkendlcfgc/reviews) helps other Claude Code users find it. Feedback and bug reports are welcome via [GitHub issues](https://github.com/andybiggs/claudback/issues/new/choose).
+
 ## Development
 
-```sh
-npm install
-npm run typecheck   # tsc -b across all packages
-npm test            # vitest across all packages
-```
-
-Repo layout (npm workspaces):
-
-```
-packages/
-  shared/       zod comment schema, constants, selector capture
-  extension/    MV3 extension
-  mcp-server/   stdio MCP server + embedded collector
-```
-
-Each package builds via `npm run build --workspace=<name>`. `npm run zip --workspace=@claudback/extension` produces the Web Store zip.
-
-### Load the extension from source
-
-```sh
-npm run build --workspace=@claudback/extension
-```
-
-Open `chrome://extensions`, enable Developer mode, click **Load unpacked**, select `packages/extension/dist/`. The setup guide opens automatically on first install (or via **Pairing & options → Open setup guide**).
-
-Disable the Web Store copy of Claudback while testing an unpacked build — they're separate extensions and would both inject overlays. Note the unpacked copy's ID from `chrome://extensions` (it stays stable as long as you load it from the same directory); you'll need it to allowlist the extension with the server below.
-
-### Allowlist an unpacked extension (`CLAUDBACK_DEV_EXTENSION_ID`)
-
-The collector's CORS allowlist is pinned to the published extension ID, so an unpacked build's requests are rejected with a 403/CORS preflight error (`No 'Access-Control-Allow-Origin' header`) — including pairing. Opt your dev extension in by registering the server with the `CLAUDBACK_DEV_EXTENSION_ID` environment variable set to the unpacked copy's ID:
-
-```sh
-claude mcp remove --scope user claudback
-claude mcp add --scope user claudback \
-  --env CLAUDBACK_DEV_EXTENSION_ID=<your-unpacked-extension-id> \
-  -- node /absolute/path/to/Claudback/packages/mcp-server/dist/bin.js
-```
-
-Restart your Claude Code session afterwards so it launches the re-registered server, then pair the unpacked extension as normal. To go back to production, re-register without the variable: `claude mcp add --scope user claudback -- npx -y claudback-mcp`.
-
-Still blocked? Another Claude session's server may be holding the collector port — only one server can bind 57463, and the extension talks to whichever got there first, regardless of what you just registered. Find it with `lsof -nP -i :57463`, kill the stale process, and the right server takes the port over within a couple of seconds.
-
-### Run the server from source
-
-```sh
-npm run build --workspace=claudback-mcp
-claude mcp add --scope user claudback -- node /absolute/path/to/Claudback/packages/mcp-server/dist/bin.js
-```
-
-Pairing normally happens by asking Claude for a code, but to grab the long-lived token manually without an MCP client, run the server directly once and stop it:
-
-```sh
-node packages/mcp-server/dist/bin.js
-# ^C once you see "collector listening on http://127.0.0.1:57463"
-cat ~/.claudback/token
-```
-
-<details>
-<summary><strong>Advanced: annotating while Claude isn't running</strong></summary>
-
-You don't need the server running to annotate: the extension buffers comments in `chrome.storage.local` and flushes them automatically once a collector is reachable, so nothing is lost between Claude sessions.
-
-If you want *live* sync to `~/.claudback/` while Claude is closed, you can run the server standalone — the collector is a plain HTTP server in the same process:
-
-```sh
-node packages/mcp-server/dist/bin.js
-```
-
-The collector binds port 57463 exclusively, so while a standalone instance is running, a Claude session's own process runs in shared-store mode instead — its MCP tools (including `get_pairing_code`) keep working against `~/.claudback/`, it just doesn't serve the extension itself. When the standalone instance stops, a running session takes over the port automatically within a couple of seconds.
-
-</details>
+See [DEVELOPMENT.md](./DEVELOPMENT.md) for building from source, loading an unpacked extension, dev-extension allowlisting, and running the server standalone. Architecture and the security model live in [PLAN.md](./PLAN.md); the release process in [RELEASING.md](./RELEASING.md).
 
 ## License
 
