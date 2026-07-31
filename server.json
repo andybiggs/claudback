@@ -1,0 +1,20 @@
+{
+	"$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+	"name": "io.github.andybiggs/claudback",
+	"description": "Local MCP server that lets Claude read visual-feedback comments pinned to web pages with the Claudback Chrome extension.",
+	"repository": {
+		"url": "https://github.com/andybiggs/claudback",
+		"source": "github"
+	},
+	"version": "0.2.2",
+	"packages": [
+		{
+			"registryType": "npm",
+			"identifier": "claudback-mcp",
+			"version": "0.2.2",
+			"transport": {
+				"type": "stdio"
+			}
+		}
+	]
+}

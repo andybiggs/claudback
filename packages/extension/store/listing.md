@@ -12,9 +12,9 @@ Draft copy for the Web Store submission form. Not shipped in the extension zip.
 
 ## Short description (max 132 chars)
 
-> Pin comments to elements on any page. Claude reads them via a local MCP server and makes the changes. Nothing leaves your machine.
+> Pin comments to page elements. Claude Code reads them via a local MCP server and makes the changes. Nothing leaves your machine.
 
-(130 characters)
+(128 characters — "Claude Code" and "MCP" are the two search terms people actually type; keep both in this field.)
 
 ## Full description
 

@@ -150,10 +150,11 @@ export function createStore(filePath: string): StoreApi {
 		return store.comments.filter((comment) => matchesFilter(comment, filter));
 	}
 
-	async function consumeComments(filter?: CommentFilter): Promise<{ mode: StoreMode; comments: Comment[] }> {
+	async function consumeComments(filter?: CommentFilter): Promise<{ mode: StoreMode; comments: Comment[]; actioned: number }> {
 		const store = await read();
 		const matched: Comment[] = [];
 		const now = new Date().toISOString();
+		let actioned = 0;
 
 		if (store.mode === "clear") {
 			const remaining: Comment[] = [];
@@ -161,6 +162,7 @@ export function createStore(filePath: string): StoreApi {
 			for (const comment of store.comments) {
 				if (matchesFilter(comment, filter)) {
 					matched.push(comment);
+					actioned += 1;
 				} else {
 					remaining.push(comment);
 				}
@@ -170,6 +172,10 @@ export function createStore(filePath: string): StoreApi {
 		} else {
 			for (const comment of store.comments) {
 				if (matchesFilter(comment, filter)) {
+					if (!comment.resolved) {
+						actioned += 1;
+					}
+
 					comment.resolved = true;
 					comment.updatedAt = now;
 					matched.push(comment);
@@ -179,7 +185,7 @@ export function createStore(filePath: string): StoreApi {
 
 		await write(store);
 
-		return { mode: store.mode, comments: matched };
+		return { mode: store.mode, comments: matched, actioned };
 	}
 
 	async function resolveComment(id: string): Promise<ResolveOutcome> {

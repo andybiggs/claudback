@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type { NewCommentInput } from "@claudback/shared";
 
+import { createFeedbackTracker, FEEDBACK_ASK_TEXT } from "./feedback.js";
 import { createPairingManager } from "./pairing.js";
 import { createStore } from "./store.js";
 import type { StoreApi } from "./store-api.js";
@@ -13,6 +14,7 @@ import {
 	getCommentsHandler,
 	getPairingCodeHandler,
 	listOriginsHandler,
+	recordFeedbackOutcomeHandler,
 	resolveCommentHandler,
 } from "./tools.js";
 
@@ -144,6 +146,98 @@ describe("tools", () => {
 
 			expect(code).toBeTruthy();
 			expect(await pairing.exchange(code as string)).toBe(TOKEN);
+		});
+	});
+
+	describe("feedback ask", () => {
+		it("appends the ask once when resolve_comment crosses the threshold", async () => {
+			const feedback = createFeedbackTracker({ filePath: join(dir, "feedback.json"), threshold: 2 });
+			const a = await store.addComment(newCommentInput());
+			const b = await store.addComment(newCommentInput());
+			const c = await store.addComment(newCommentInput());
+
+			const first = await resolveCommentHandler(store, { id: a.id }, feedback);
+
+			expect(first.content[0].text).not.toContain(FEEDBACK_ASK_TEXT);
+
+			const second = await resolveCommentHandler(store, { id: b.id }, feedback);
+
+			expect(second.content[0].text).toContain(FEEDBACK_ASK_TEXT);
+
+			const third = await resolveCommentHandler(store, { id: c.id }, feedback);
+
+			expect(third.content[0].text).not.toContain(FEEDBACK_ASK_TEXT);
+		});
+
+		it("counts consumed comments from get_comments and appends outside the envelope", async () => {
+			const feedback = createFeedbackTracker({ filePath: join(dir, "feedback.json"), threshold: 2 });
+
+			await store.addComment(newCommentInput());
+			await store.addComment(newCommentInput());
+
+			const result = await getCommentsHandler(store, { consume: true }, feedback);
+			const text = result.content[0].text;
+
+			expect(text).toContain(FEEDBACK_ASK_TEXT);
+			expect(text.indexOf(FEEDBACK_ASK_TEXT)).toBeGreaterThan(text.lastIndexOf("</untrusted-claudback-comments"));
+		});
+
+		it("does not count a non-consuming get_comments", async () => {
+			const feedback = createFeedbackTracker({ filePath: join(dir, "feedback.json"), threshold: 1 });
+
+			await store.addComment(newCommentInput());
+
+			const result = await getCommentsHandler(store, {}, feedback);
+
+			expect(result.content[0].text).not.toContain(FEEDBACK_ASK_TEXT);
+		});
+
+		it("does not count a resolve of a missing comment", async () => {
+			const feedback = createFeedbackTracker({ filePath: join(dir, "feedback.json"), threshold: 1 });
+
+			await resolveCommentHandler(store, { id: "missing-id" }, feedback);
+			const added = await store.addComment(newCommentInput());
+			const result = await resolveCommentHandler(store, { id: added.id }, feedback);
+
+			expect(result.content[0].text).toContain(FEEDBACK_ASK_TEXT);
+		});
+
+		it("a done outcome stops the ask permanently", async () => {
+			const feedback = createFeedbackTracker({
+				filePath: join(dir, "feedback.json"),
+				threshold: 1,
+				reaskIntervalMs: 0,
+			});
+			const a = await store.addComment(newCommentInput());
+			const b = await store.addComment(newCommentInput());
+
+			const first = await resolveCommentHandler(store, { id: a.id }, feedback);
+
+			expect(first.content[0].text).toContain(FEEDBACK_ASK_TEXT);
+
+			const outcome = await recordFeedbackOutcomeHandler(feedback, { outcome: "done" });
+
+			expect(outcome.content[0].text).toContain("not be asked");
+
+			const second = await resolveCommentHandler(store, { id: b.id }, feedback);
+
+			expect(second.content[0].text).not.toContain(FEEDBACK_ASK_TEXT);
+		});
+
+		it("a later outcome defers and reports so", async () => {
+			const feedback = createFeedbackTracker({ filePath: join(dir, "feedback.json"), threshold: 1 });
+			const added = await store.addComment(newCommentInput());
+
+			await resolveCommentHandler(store, { id: added.id }, feedback);
+			const outcome = await recordFeedbackOutcomeHandler(feedback, { outcome: "later" });
+
+			expect(outcome.content[0].text).toContain("deferred");
+		});
+
+		it("reports when feedback tracking is not enabled", async () => {
+			const result = await recordFeedbackOutcomeHandler(undefined, { outcome: "done" });
+
+			expect(result.content[0].text).toContain("not enabled");
 		});
 	});
 

@@ -166,6 +166,7 @@ describe("store", () => {
 
 		expect(result.mode).toBe("clear");
 		expect(result.comments.map((c) => c.id)).toEqual([a.id]);
+		expect(result.actioned).toBe(1);
 
 		const remaining = await store.getComments();
 
@@ -195,6 +196,22 @@ describe("store", () => {
 
 		expect(remainingA?.resolved).toBe(true);
 		expect(remainingB?.resolved).toBe(false);
+	});
+
+	it("consumeComments counts only newly resolved comments as actioned in keep mode", async () => {
+		const store = createStore(filePath);
+
+		await store.setMode("keep");
+		await store.addComment(newCommentInput());
+
+		const first = await store.consumeComments();
+
+		expect(first.actioned).toBe(1);
+
+		const second = await store.consumeComments();
+
+		expect(second.comments).toHaveLength(1);
+		expect(second.actioned).toBe(0);
 	});
 
 	it("resolveComment in clear mode removes the comment", async () => {
