@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
 	createFeedbackTracker,
 	FEEDBACK_ASK_THRESHOLD,
+	FEEDBACK_MAX_ASKS,
 	FEEDBACK_REASK_INTERVAL_MS,
 	type FeedbackTracker,
 } from "./feedback.js";
@@ -71,6 +72,21 @@ describe("feedback tracker", () => {
 
 		clock += 1;
 		expect(await t.recordActioned(1)).toBe(true);
+	});
+
+	it("goes quiet for good after the maximum number of asks", async () => {
+		const t = tracker({ threshold: 1, reaskIntervalMs: 1000 });
+
+		for (let ask = 0; ask < FEEDBACK_MAX_ASKS; ask += 1) {
+			expect(await t.recordActioned(1)).toBe(true);
+			await t.recordOutcome("later");
+			clock += 2000;
+		}
+
+		expect(await t.recordActioned(100)).toBe(false);
+
+		clock += FEEDBACK_REASK_INTERVAL_MS * 10;
+		expect(await t.recordActioned(1)).toBe(false);
 	});
 
 	it("never asks again after a done outcome, even after the interval", async () => {

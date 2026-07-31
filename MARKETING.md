@@ -66,7 +66,8 @@ Remaining hands-on steps live in [marketing/submissions.md](./marketing/submissi
       docs-site footer; *(Andy — the personal asks.)* Never gate or nag in-product —
       the one exception is the ask the MCP server surfaces through Claude after 50
       actioned comments: Claude records the response via `record_feedback_outcome`,
-      "done" ends the asks forever, anything else defers ~4 months before one retry.
+      "done" ends the asks forever, anything else defers ~4 months — and after three
+      asks total it goes quiet for good.
 
 ## Phase 1 — Passive discovery (compounds while you sleep)
 

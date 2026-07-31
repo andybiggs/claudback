@@ -5,6 +5,7 @@ import { FEEDBACK_FILE } from "./paths.js";
 
 export const FEEDBACK_ASK_THRESHOLD = 50;
 export const FEEDBACK_REASK_INTERVAL_MS = 120 * 24 * 60 * 60 * 1000;
+export const FEEDBACK_MAX_ASKS = 3;
 
 // Static, compile-time text with no interpolated store data: server-authored
 // tool-result text must never be constructed from comment-derived strings, so
@@ -34,13 +35,15 @@ type FeedbackOutcome = "done" | "later";
 interface FeedbackState {
 	actionedTotal: number;
 	lastAskedAt: string | null;
+	askCount: number;
 	done: boolean;
 }
 
 export interface FeedbackTracker {
 	// Adds `count` actioned comments to the lifetime total. Resolves true when
 	// the ask should be emitted with this tool result: total at or past the
-	// threshold, not marked done, and no ask within the re-ask interval.
+	// threshold, not marked done, no ask within the re-ask interval, and fewer
+	// than FEEDBACK_MAX_ASKS asks emitted so far.
 	recordActioned(count: number): Promise<boolean>;
 	// Records the user's response to an ask: "done" ends the asks permanently;
 	// "later" restarts the re-ask interval from now.
@@ -58,6 +61,8 @@ function isFeedbackState(value: unknown): value is FeedbackState {
 		typeof candidate.actionedTotal === "number" &&
 		Number.isFinite(candidate.actionedTotal) &&
 		(candidate.lastAskedAt === null || typeof candidate.lastAskedAt === "string") &&
+		typeof candidate.askCount === "number" &&
+		Number.isFinite(candidate.askCount) &&
 		typeof candidate.done === "boolean"
 	);
 }
@@ -78,15 +83,15 @@ export function createFeedbackTracker(
 		} catch {
 			// Missing or unreadable file: start counting from zero. Losing the
 			// counter is harmless; losing ask history merely allows an early ask.
-			return { actionedTotal: 0, lastAskedAt: null, done: false };
+			return { actionedTotal: 0, lastAskedAt: null, askCount: 0, done: false };
 		}
 
 		try {
 			const parsed: unknown = JSON.parse(raw);
 
-			return isFeedbackState(parsed) ? parsed : { actionedTotal: 0, lastAskedAt: null, done: false };
+			return isFeedbackState(parsed) ? parsed : { actionedTotal: 0, lastAskedAt: null, askCount: 0, done: false };
 		} catch {
-			return { actionedTotal: 0, lastAskedAt: null, done: false };
+			return { actionedTotal: 0, lastAskedAt: null, askCount: 0, done: false };
 		}
 	}
 
@@ -100,7 +105,7 @@ export function createFeedbackTracker(
 	}
 
 	function askIsDue(state: FeedbackState): boolean {
-		if (state.done || state.actionedTotal < threshold) {
+		if (state.done || state.askCount >= FEEDBACK_MAX_ASKS || state.actionedTotal < threshold) {
 			return false;
 		}
 
@@ -149,6 +154,7 @@ export function createFeedbackTracker(
 
 				if (shouldAsk) {
 					state.lastAskedAt = new Date(now()).toISOString();
+					state.askCount += 1;
 				}
 
 				await writeState(state);
