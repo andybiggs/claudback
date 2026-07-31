@@ -14,6 +14,7 @@ import {
 	getCommentsHandler,
 	getPairingCodeHandler,
 	listOriginsHandler,
+	recordFeedbackOutcomeHandler,
 	resolveCommentHandler,
 } from "./tools.js";
 
@@ -199,6 +200,44 @@ describe("tools", () => {
 			const result = await resolveCommentHandler(store, { id: added.id }, feedback);
 
 			expect(result.content[0].text).toContain(FEEDBACK_ASK_TEXT);
+		});
+
+		it("a done outcome stops the ask permanently", async () => {
+			const feedback = createFeedbackTracker({
+				filePath: join(dir, "feedback.json"),
+				threshold: 1,
+				reaskIntervalMs: 0,
+			});
+			const a = await store.addComment(newCommentInput());
+			const b = await store.addComment(newCommentInput());
+
+			const first = await resolveCommentHandler(store, { id: a.id }, feedback);
+
+			expect(first.content[0].text).toContain(FEEDBACK_ASK_TEXT);
+
+			const outcome = await recordFeedbackOutcomeHandler(feedback, { outcome: "done" });
+
+			expect(outcome.content[0].text).toContain("not be asked");
+
+			const second = await resolveCommentHandler(store, { id: b.id }, feedback);
+
+			expect(second.content[0].text).not.toContain(FEEDBACK_ASK_TEXT);
+		});
+
+		it("a later outcome defers and reports so", async () => {
+			const feedback = createFeedbackTracker({ filePath: join(dir, "feedback.json"), threshold: 1 });
+			const added = await store.addComment(newCommentInput());
+
+			await resolveCommentHandler(store, { id: added.id }, feedback);
+			const outcome = await recordFeedbackOutcomeHandler(feedback, { outcome: "later" });
+
+			expect(outcome.content[0].text).toContain("deferred");
+		});
+
+		it("reports when feedback tracking is not enabled", async () => {
+			const result = await recordFeedbackOutcomeHandler(undefined, { outcome: "done" });
+
+			expect(result.content[0].text).toContain("not enabled");
 		});
 	});
 

@@ -106,6 +106,23 @@ export async function clearCommentsHandler(
 	return textResult(`Removed ${removed} comment(s).`);
 }
 
+export async function recordFeedbackOutcomeHandler(
+	feedback: FeedbackTracker | undefined,
+	args: { outcome: "done" | "later" },
+): Promise<ToolResult> {
+	if (feedback === undefined) {
+		return textResult("Feedback tracking is not enabled.");
+	}
+
+	await feedback.recordOutcome(args.outcome);
+
+	if (args.outcome === "done") {
+		return textResult("Recorded. The user will not be asked for feedback again.");
+	}
+
+	return textResult("Recorded. The feedback ask is deferred for a few months.");
+}
+
 export async function getPairingCodeHandler(pairing: PairingManager): Promise<ToolResult> {
 	const { code, ttlMinutes } = await pairing.mint();
 
@@ -179,6 +196,23 @@ export function registerTools(
 			inputSchema: {},
 		},
 		() => guarded("get_pairing_code", () => getPairingCodeHandler(pairing)),
+	);
+
+	server.registerTool(
+		"record_feedback_outcome",
+		{
+			description: [
+				"Record the user's response after Claudback's feedback ask has been shown to them.",
+				'Use "done" when the user says they have left (or will leave) a review or feedback,',
+				'or asks not to be asked again — the ask is then never repeated. Use "later" when',
+				"they decline for now or give no clear answer — the ask is deferred for a few months.",
+				"Only call this after the user has actually responded to the ask.",
+			].join(" "),
+			inputSchema: {
+				outcome: z.enum(["done", "later"]),
+			},
+		},
+		(args) => guarded("record_feedback_outcome", () => recordFeedbackOutcomeHandler(feedback, args)),
 	);
 
 	server.registerTool(

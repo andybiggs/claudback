@@ -39,6 +39,7 @@ Prefer doing it by hand? The server also generates a long-lived token on first r
 | `resolve_comment` | Mark a comment resolved (removed or kept, per store mode) |
 | `get_pairing_code` | Mint a short-lived, single-use code for pairing the extension |
 | `clear_comments` | Wipe the store, optionally per origin |
+| `record_feedback_outcome` | Record the response to Claudback's occasional feedback ask (locally, in `~/.claudback/`) |
 
 ## Security
 

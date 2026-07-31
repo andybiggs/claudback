@@ -3,15 +3,31 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { createFeedbackTracker, FEEDBACK_ASK_THRESHOLD } from "./feedback.js";
+import {
+	createFeedbackTracker,
+	FEEDBACK_ASK_THRESHOLD,
+	FEEDBACK_REASK_INTERVAL_MS,
+	type FeedbackTracker,
+} from "./feedback.js";
 
 describe("feedback tracker", () => {
 	let dir: string;
 	let filePath: string;
+	let clock: number;
+
+	function tracker(opts?: { threshold?: number; reaskIntervalMs?: number }): FeedbackTracker {
+		return createFeedbackTracker({
+			filePath,
+			now: () => clock,
+			threshold: opts?.threshold,
+			reaskIntervalMs: opts?.reaskIntervalMs,
+		});
+	}
 
 	beforeEach(async () => {
 		dir = await mkdtemp(join(tmpdir(), "claudback-feedback-"));
 		filePath = join(dir, "feedback.json");
+		clock = 1_753_920_000_000;
 	});
 
 	afterEach(async () => {
@@ -19,45 +35,90 @@ describe("feedback tracker", () => {
 	});
 
 	it("stays silent below the threshold", async () => {
-		const tracker = createFeedbackTracker({ filePath, threshold: 3 });
+		const t = tracker({ threshold: 3 });
 
-		expect(await tracker.recordActioned(1)).toBe(false);
-		expect(await tracker.recordActioned(1)).toBe(false);
+		expect(await t.recordActioned(1)).toBe(false);
+		expect(await t.recordActioned(1)).toBe(false);
 	});
 
-	it("asks exactly once, on the call that crosses the threshold", async () => {
-		const tracker = createFeedbackTracker({ filePath, threshold: 3 });
+	it("asks on the call that crosses the threshold and not within the interval", async () => {
+		const t = tracker({ threshold: 3 });
 
-		expect(await tracker.recordActioned(2)).toBe(false);
-		expect(await tracker.recordActioned(2)).toBe(true);
-		expect(await tracker.recordActioned(50)).toBe(false);
+		expect(await t.recordActioned(2)).toBe(false);
+		expect(await t.recordActioned(2)).toBe(true);
+		expect(await t.recordActioned(50)).toBe(false);
 	});
 
-	it("never asks again in a fresh process once asked", async () => {
-		const first = createFeedbackTracker({ filePath, threshold: 1 });
+	it("asks again once the re-ask interval has elapsed", async () => {
+		const t = tracker({ threshold: 1, reaskIntervalMs: 1000 });
 
-		expect(await first.recordActioned(1)).toBe(true);
+		expect(await t.recordActioned(1)).toBe(true);
 
-		const second = createFeedbackTracker({ filePath, threshold: 1 });
+		clock += 999;
+		expect(await t.recordActioned(1)).toBe(false);
 
-		expect(await second.recordActioned(100)).toBe(false);
+		clock += 1;
+		expect(await t.recordActioned(1)).toBe(true);
 	});
 
-	it("accumulates the count across tracker instances", async () => {
-		const first = createFeedbackTracker({ filePath, threshold: 4 });
+	it("uses the shipped four-month default interval", async () => {
+		const t = tracker({ threshold: 1 });
+
+		expect(await t.recordActioned(1)).toBe(true);
+
+		clock += FEEDBACK_REASK_INTERVAL_MS - 1;
+		expect(await t.recordActioned(1)).toBe(false);
+
+		clock += 1;
+		expect(await t.recordActioned(1)).toBe(true);
+	});
+
+	it("never asks again after a done outcome, even after the interval", async () => {
+		const t = tracker({ threshold: 1, reaskIntervalMs: 1000 });
+
+		expect(await t.recordActioned(1)).toBe(true);
+		await t.recordOutcome("done");
+
+		clock += 10_000;
+		expect(await t.recordActioned(100)).toBe(false);
+	});
+
+	it("a later outcome restarts the interval from the response, not the ask", async () => {
+		const t = tracker({ threshold: 1, reaskIntervalMs: 1000 });
+
+		expect(await t.recordActioned(1)).toBe(true);
+
+		clock += 600;
+		await t.recordOutcome("later");
+
+		clock += 999;
+		expect(await t.recordActioned(1)).toBe(false);
+
+		clock += 1;
+		expect(await t.recordActioned(1)).toBe(true);
+	});
+
+	it("persists state across tracker instances", async () => {
+		const first = tracker({ threshold: 4 });
 
 		expect(await first.recordActioned(3)).toBe(false);
 
-		const second = createFeedbackTracker({ filePath, threshold: 4 });
+		const second = tracker({ threshold: 4 });
 
 		expect(await second.recordActioned(1)).toBe(true);
+		await second.recordOutcome("done");
+
+		const third = tracker({ threshold: 4 });
+
+		clock += FEEDBACK_REASK_INTERVAL_MS * 2;
+		expect(await third.recordActioned(10)).toBe(false);
 	});
 
 	it("ignores zero and negative counts", async () => {
-		const tracker = createFeedbackTracker({ filePath, threshold: 1 });
+		const t = tracker({ threshold: 1 });
 
-		expect(await tracker.recordActioned(0)).toBe(false);
-		expect(await tracker.recordActioned(-5)).toBe(false);
+		expect(await t.recordActioned(0)).toBe(false);
+		expect(await t.recordActioned(-5)).toBe(false);
 
 		const raw = await readFile(filePath, "utf8").catch(() => null);
 
@@ -67,44 +128,45 @@ describe("feedback tracker", () => {
 	it("treats a corrupt file as a fresh start", async () => {
 		await writeFile(filePath, "not json", "utf8");
 
-		const tracker = createFeedbackTracker({ filePath, threshold: 2 });
+		const t = tracker({ threshold: 2 });
 
-		expect(await tracker.recordActioned(1)).toBe(false);
-		expect(await tracker.recordActioned(1)).toBe(true);
+		expect(await t.recordActioned(1)).toBe(false);
+		expect(await t.recordActioned(1)).toBe(true);
 	});
 
 	it("treats a schema-invalid file as a fresh start", async () => {
 		await writeFile(filePath, JSON.stringify({ actionedTotal: "many", askedAt: 7 }), "utf8");
 
-		const tracker = createFeedbackTracker({ filePath, threshold: 2 });
+		const t = tracker({ threshold: 2 });
 
-		expect(await tracker.recordActioned(2)).toBe(true);
+		expect(await t.recordActioned(2)).toBe(true);
 	});
 
 	it("does not double-ask under concurrent calls in one process", async () => {
-		const tracker = createFeedbackTracker({ filePath, threshold: 5 });
+		const t = tracker({ threshold: 5, reaskIntervalMs: 60_000 });
 
 		const results = await Promise.all(
-			Array.from({ length: 10 }, () => tracker.recordActioned(1)),
+			Array.from({ length: 10 }, () => t.recordActioned(1)),
 		);
 
 		expect(results.filter(Boolean)).toHaveLength(1);
 	});
 
-	it("persists the asked timestamp from the injected clock", async () => {
-		const tracker = createFeedbackTracker({ filePath, threshold: 1, now: () => 1_753_920_000_000 });
+	it("persists the ask timestamp from the injected clock", async () => {
+		const t = tracker({ threshold: 1 });
 
-		expect(await tracker.recordActioned(1)).toBe(true);
+		expect(await t.recordActioned(1)).toBe(true);
 
-		const state = JSON.parse(await readFile(filePath, "utf8")) as { askedAt: string };
+		const state = JSON.parse(await readFile(filePath, "utf8")) as { lastAskedAt: string; done: boolean };
 
-		expect(state.askedAt).toBe(new Date(1_753_920_000_000).toISOString());
+		expect(state.lastAskedAt).toBe(new Date(clock).toISOString());
+		expect(state.done).toBe(false);
 	});
 
 	it("defaults to the shipped threshold", async () => {
-		const tracker = createFeedbackTracker({ filePath });
+		const t = tracker();
 
-		expect(await tracker.recordActioned(FEEDBACK_ASK_THRESHOLD - 1)).toBe(false);
-		expect(await tracker.recordActioned(1)).toBe(true);
+		expect(await t.recordActioned(FEEDBACK_ASK_THRESHOLD - 1)).toBe(false);
+		expect(await t.recordActioned(1)).toBe(true);
 	});
 });
