@@ -78,7 +78,13 @@ Three compat mechanisms carry existing installs across. Ship them in this order:
    npm deprecate claudback-mcp "Renamed to pinback-mcp — please re-register the MCP server as: npx -y pinback-mcp"
    ```
 
-3. **Then update the store listing**: upload the new zip, change the title to Pinback, replace the description from `listing.md`, and re-upload screenshots and promo images that carry the old wordmark. The privacy-policy URL moves with the repo rename — update it to `https://andybiggs.github.io/pinback/privacy.html`.
+3. **Then update the store listing**: upload the new zip and submit for review.
+
+   The listing title is **not** a dashboard field — it comes from `name` in `manifest.json`, which is what's shown in the install dialog, `chrome://extensions`, and the store. Uploading the zip renames the item; there is nothing to type. (Manifest `name` is capped at 75 characters.)
+
+   What does need editing by hand: the short and full descriptions from `listing.md`, the privacy-policy URL (it moves with the repo rename — `https://andybiggs.github.io/pinback/privacy.html`), the store icon, and any screenshots or promo images carrying the old wordmark.
+
+   The item's ID is a hash of its public key, assigned at item creation and unrelated to the name, so renaming keeps `dbnmlcmmgnchigedlglfmchkendlcfgc` and existing users auto-update on the same channel. The store URL's slug changes; the ID segment still resolves. Renaming an item in place is the only option that preserves the install base — creating a new item mints a new ID and strands every existing user.
 
 Repo rename (`andybiggs/claudback` → `andybiggs/pinback`) is a GitHub Settings change. GitHub permanently redirects the old clone and web URLs, but update the Pages URL in the Web Store listing since that is the registered privacy-policy link.
 
