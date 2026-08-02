@@ -7,7 +7,7 @@ Pinback is a visual-feedback overlay for pinning comments to elements on any web
 ## Decisions
 
 - **Visibility**: ✅ security audit passed 2026-07-08 (full-repo review + security-auditor pass; findings fixed in [PR #9](https://github.com/andybiggs/pinback/pull/9)). Verdict: GO for open-sourcing the code. Public *distribution* (Web Store publish / npx promotion) has one remaining gate: pin the published extension ID in the origin allowlist at listing time (`packages/mcp-server/src/security.ts`). Publication steps live in [RELEASING.md](./RELEASING.md).
-- **Pairing**: ask-your-agent-for-a-code — the `get_pairing_code` tool mints a short-lived, single-use code the user types into the extension, which exchanges it at `POST /pair` for the long-lived token (server generates `~/.claudback/token`; manual paste into extension options remains the fallback).
+- **Pairing**: ask-your-agent-for-a-code — the `get_pairing_code` tool mints a short-lived, single-use code the user types into the extension, which exchanges it at `POST /pair` for the long-lived token (server generates `~/.claudback/token`). A code is the only route in: the options page has no token field, so the token is never handled by the user.
 - **`resolve_comment` is in v1**, and its behaviour follows the store's clear/keep mode: in **clear** mode (the default) resolving a comment removes it; in **keep** mode resolved comments are retained and the extension renders them as resolved on next sync. The mode is toggleable from the extension popup.
 - **Distribution**: run the MCP server from the local clone first; publish `pinback-mcp` to npm at the end of Phase 3.
 

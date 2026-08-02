@@ -27,7 +27,7 @@ Made by [Andy Biggs](https://www.andybiggs.net) (NZ).
 
    Any other MCP client: register `npx -y pinback-mcp` as a stdio server named `pinback`. `--scope user` registers Pinback for every project on your machine, so you only do it once. Using a desktop app rather than a terminal? Paste the command into a chat and ask the agent to run it.
 
-3. **Pair** — ask your agent for a pairing code ("Give me a Pinback pairing code") and type it into the extension's setup page. Codes expire in 10 minutes and work once. Fallback: paste the long-lived token from `~/.claudback/token` (saved on the server's first run, also printed to stderr) instead.
+3. **Pair** — ask your agent for a pairing code ("Give me a Pinback pairing code") and type it into the extension's setup page. Codes expire in 10 minutes and work once. The setup page takes a code, not a token: the long-lived token it exchanges for is written to `~/.claudback/token` and never needs handling by hand.
 4. **Annotate** — click the Pinback icon on any tab → **Enable**, grant the per-site permission, and pin comments with the floating button.
 5. **Ask your agent** — "Grab my Pinback comments." It reads them via the `get_comments` tool; `list_origins`, `resolve_comment`, and `clear_comments` are also available.
 
@@ -82,13 +82,7 @@ npm run build --workspace=pinback-mcp
 claude mcp add --scope user pinback -- node /absolute/path/to/Pinback/packages/mcp-server/dist/bin.js
 ```
 
-Pairing normally happens by asking your agent for a code, but to grab the long-lived token manually without an MCP client, run the server directly once and stop it:
-
-```sh
-node packages/mcp-server/dist/bin.js
-# ^C once you see "collector listening on http://127.0.0.1:57463"
-cat ~/.claudback/token
-```
+Pair by asking your agent for a code, as usual — the setup page has no token field, so there's nothing to copy out of `~/.claudback/` by hand. To rotate the token, delete `~/.claudback/token` and restart the server; it mints a fresh one on startup and you re-pair with a new code.
 
 <details>
 <summary><strong>Advanced: annotating while your agent isn't running</strong></summary>

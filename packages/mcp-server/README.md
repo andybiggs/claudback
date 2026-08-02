@@ -53,7 +53,7 @@ Using a desktop app rather than a terminal? Paste the relevant command into a ch
 
 Ask your agent for a pairing code — *"Give me a Pinback pairing code"* — and type it into the Pinback extension's setup page (it opens automatically when you install the [extension](https://github.com/andybiggs/pinback#readme)). Codes expire in 10 minutes and work once.
 
-Prefer doing it by hand? The server also generates a long-lived token on first run, printed to stderr and stored at `~/.claudback/token` — paste that into the setup page instead.
+A pairing code is the only way in — the setup page takes a code, not a token. The long-lived token the code exchanges for lives at `~/.claudback/token`; it never needs to be handled by hand.
 
 ## Tools
 

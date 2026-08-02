@@ -22,7 +22,7 @@ export async function loadOrCreateToken(): Promise<string> {
 	// 0600: the token gates writes to the store, so only this user may read it.
 	await writeFile(TOKEN_FILE, `${token}\n`, { encoding: "utf8", mode: 0o600 });
 	console.error(
-		`[pinback] pairing token generated at ${TOKEN_FILE} — ask your agent for a pairing code (get_pairing_code), or paste the token into the Pinback extension options page.`,
+		`[pinback] pairing token generated at ${TOKEN_FILE} — ask your agent for a pairing code (get_pairing_code) and enter it in the Pinback extension's setup page.`,
 	);
 
 	return token;
