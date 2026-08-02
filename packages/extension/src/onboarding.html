@@ -475,15 +475,17 @@
 				<button class="tab" data-tab="other">Other MCP clients</button>
 			</div>
 			<div class="tab-panel active" data-panel="code">
-				<p>Run this in your terminal:</p>
+				<p>Run this in a Claude Code session — terminal or desktop app, either works:</p>
 				<div class="code-block">
-					<pre id="cmd-code">claude mcp add --scope user pinback -- npx -y pinback-mcp</pre>
-					<button class="copy" data-copy="cmd-code">Copy</button>
+					<pre id="cmd-code">Can you run this for me:
+
+claude mcp add --scope user pinback -- npx -y pinback-mcp</pre>
+					<button class="copy corner" data-copy="cmd-code">Copy</button>
 				</div>
 				<p>
-					The <code>--scope user</code> flag registers Pinback for every project on
-					your machine, so you only have to do this once. Using the desktop app rather
-					than the terminal? Ask it to run that command for you.
+					Already at a terminal? Run the <code>claude mcp add</code> line on its own
+					instead. Either way, the <code>--scope user</code> flag registers Pinback for
+					every project on your machine, so you only have to do this once.
 				</p>
 			</div>
 			<div class="tab-panel" data-panel="codex">
@@ -525,8 +527,11 @@ args = ["-y", "pinback-mcp"]</pre>
 				</p>
 			</div>
 			<p>
-				Pinback needs Node 20 or later. That's it for installation — in the next step
-				you'll ask your agent for a pairing code to connect this extension.
+				Pinback needs Node 20 or later. If you registered it from inside an agent
+				session, restart that session before carrying on — agents load their MCP
+				servers at startup, so one added mid-session won't show up until then. That's
+				it for installation — in the next step you'll ask your agent for a pairing code
+				to connect this extension.
 			</p>
 		</section>
 

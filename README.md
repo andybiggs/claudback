@@ -25,7 +25,7 @@ Made by [Andy Biggs](https://www.andybiggs.net) (NZ).
    codex mcp add pinback -- npx -y pinback-mcp
    ```
 
-   Any other MCP client: register `npx -y pinback-mcp` as a stdio server named `pinback`. `--scope user` registers Pinback for every project on your machine, so you only do it once. Using a desktop app rather than a terminal? Paste the command into a chat and ask the agent to run it.
+   Any other MCP client: register `npx -y pinback-mcp` as a stdio server named `pinback`. `--scope user` registers Pinback for every project on your machine, so you only do it once. Using a desktop app rather than a terminal? Paste the command into a chat and ask the agent to run it — then restart that session, since agents load their MCP servers at startup and won't see one added mid-session.
 
 3. **Pair** — ask your agent for a pairing code ("Give me a Pinback pairing code") and type it into the extension's setup page. Codes expire in 10 minutes and work once. The setup page takes a code, not a token: the long-lived token it exchanges for is written to `~/.claudback/token` and never needs handling by hand.
 4. **Annotate** — click the Pinback icon on any tab → **Enable**, grant the per-site permission, and pin comments with the floating button.
