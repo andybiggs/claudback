@@ -5,7 +5,7 @@ import type { AddressInfo } from "node:net";
 import { createServer as createHttpServer, type Server } from "node:http";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { TOKEN_HEADER } from "@claudback/shared";
+import { LEGACY_TOKEN_HEADER, TOKEN_HEADER } from "@pinback/shared";
 
 import { createCollector, startCollector } from "./collector.js";
 import { createPairingManager, type PairingManager } from "./pairing.js";
@@ -38,7 +38,7 @@ describe("collector", () => {
 	let pairing: PairingManager;
 
 	beforeEach(async () => {
-		dir = await mkdtemp(join(tmpdir(), "claudback-collector-"));
+		dir = await mkdtemp(join(tmpdir(), "pinback-collector-"));
 		store = createStore(join(dir, "comments.json"));
 		pairing = createPairingManager(TOKEN, { delayMs: 0, filePath: join(dir, "pairing.json") });
 		server = createCollector(store, TOKEN, pairing);
@@ -77,6 +77,38 @@ describe("collector", () => {
 		});
 
 		expect(res.status).toBe(200);
+	});
+
+	// Extensions built before the Pinback rename — and the current one, which
+	// stays a release behind on purpose — only ever send the legacy header.
+	it("accepts a valid token sent under the pre-rename header", async () => {
+		const res = await fetch(`${baseUrl}/comments`, {
+			headers: { [LEGACY_TOKEN_HEADER]: TOKEN },
+		});
+
+		expect(res.status).toBe(200);
+	});
+
+	it("rejects a wrong token sent under the pre-rename header", async () => {
+		const res = await fetch(`${baseUrl}/comments`, {
+			headers: { [LEGACY_TOKEN_HEADER]: "wrong-token" },
+		});
+
+		expect(res.status).toBe(401);
+	});
+
+	// Both names must survive the preflight or the browser strips the header
+	// before the real request is sent.
+	it("advertises both token headers to CORS preflights", async () => {
+		const res = await fetch(`${baseUrl}/comments`, {
+			method: "OPTIONS",
+			headers: { origin: VALID_EXTENSION_ORIGIN },
+		});
+
+		const allowed = res.headers.get("access-control-allow-headers") ?? "";
+
+		expect(allowed).toContain(TOKEN_HEADER);
+		expect(allowed).toContain(LEGACY_TOKEN_HEADER);
 	});
 
 	it("rejects a disallowed Origin and sends no CORS header", async () => {
@@ -473,7 +505,7 @@ describe("startCollector", () => {
 	let servers: Server[];
 
 	beforeEach(async () => {
-		dir = await mkdtemp(join(tmpdir(), "claudback-collector-"));
+		dir = await mkdtemp(join(tmpdir(), "pinback-collector-"));
 		store = createStore(join(dir, "comments.json"));
 		pairing = createPairingManager(TOKEN, { delayMs: 0, filePath: join(dir, "pairing.json") });
 		servers = [];

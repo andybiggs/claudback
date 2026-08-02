@@ -32,7 +32,7 @@ export async function flushBuffer<T>(deps: BufferDeps<T>): Promise<FlushResult> 
 			flushed += 1;
 		} catch (error) {
 			if (error instanceof CollectorHttpError && error.status >= 400 && error.status < 500 && error.status !== 401) {
-				console.error("[claudback] collector rejected buffered comment, dropping it:", error.status);
+				console.error("[pinback] collector rejected buffered comment, dropping it:", error.status);
 				continue;
 			}
 

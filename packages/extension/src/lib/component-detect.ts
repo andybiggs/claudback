@@ -5,7 +5,7 @@
 
 // Constants come via the subpath export: the barrel index pulls in the zod
 // schemas, which would bloat the main-world detector bundle by ~125KB.
-import { COMPONENT_NAME_MAX_LENGTH, COMPONENT_PATH_MAX_DEPTH } from "@claudback/shared/constants";
+import { COMPONENT_NAME_MAX_LENGTH, COMPONENT_PATH_MAX_DEPTH } from "@pinback/shared/constants";
 
 export type Framework = "react" | "vue";
 
@@ -25,7 +25,7 @@ const RENDERABLE_FIBER_TAGS = new Set([
 
 function validName(candidate: unknown): string | null {
 	if (typeof candidate !== "string" || candidate.length < 3) {
-		// One- and two-letter names are minifier output — useless to Claude.
+		// One- and two-letter names are minifier output — useless to the agent.
 		return null;
 	}
 

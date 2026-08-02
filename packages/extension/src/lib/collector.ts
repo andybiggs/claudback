@@ -1,4 +1,4 @@
-import { DEFAULT_PORT, PAIR_PATH, TOKEN_HEADER, type Comment, type NewCommentInput, type Store, type StoreMode } from "@claudback/shared";
+import { DEFAULT_PORT, LEGACY_TOKEN_HEADER, PAIR_PATH, type Comment, type NewCommentInput, type Store, type StoreMode } from "@pinback/shared";
 
 // A thin typed client over the loopback collector. Every request carries the
 // pairing token; the worker constructs one of these once it has a token.
@@ -28,7 +28,13 @@ async function request<T>(config: CollectorConfig, path: string, init: RequestIn
 		...init,
 		headers: {
 			"content-type": "application/json",
-			[TOKEN_HEADER]: config.token,
+			// Deliberately still the pre-rename header, one release behind the
+			// server. A collector pinned to the old npm name only lists
+			// x-claudback-token in access-control-allow-headers, so sending
+			// x-pinback-token to it fails the preflight and the request never
+			// leaves the browser. Once the aliased release has aged those out,
+			// switch this to TOKEN_HEADER — the server already accepts both.
+			[LEGACY_TOKEN_HEADER]: config.token,
 		},
 	});
 

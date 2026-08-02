@@ -1,6 +1,6 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 
-import { COMMENT_TEXT_MAX_LENGTH, DEFAULT_PORT, PAIR_PATH, TOKEN_HEADER, newCommentInputSchema } from "@claudback/shared";
+import { COMMENT_TEXT_MAX_LENGTH, DEFAULT_PORT, LEGACY_TOKEN_HEADER, PAIR_PATH, TOKEN_HEADER, newCommentInputSchema } from "@pinback/shared";
 
 import { tokenMatches } from "./auth.js";
 import type { PairingManager } from "./pairing.js";
@@ -143,22 +143,24 @@ export function createCollector(store: StoreApi, token: string, pairing: Pairing
 			if (exchanged === null) {
 				// Never log the attempted code: a near-miss typo is one guess
 				// away from the real one.
-				console.error(`[claudback] rejected pairing attempt (origin: ${origin ?? "none"})`);
+				console.error(`[pinback] rejected pairing attempt (origin: ${origin ?? "none"})`);
 				send(res, 401, { error: "invalid or expired pairing code" });
 
 				return;
 			}
 
-			console.error("[claudback] extension paired via pairing code");
+			console.error("[pinback] extension paired via pairing code");
 			send(res, 200, { token: exchanged });
 
 			return;
 		}
 
-		const providedToken = req.headers[TOKEN_HEADER];
+		// Accept the pre-rename header too: extensions built before the Pinback
+		// rename only ever send that one.
+		const providedToken = req.headers[TOKEN_HEADER] ?? req.headers[LEGACY_TOKEN_HEADER];
 
 		if (!tokenMatches(typeof providedToken === "string" ? providedToken : undefined, token)) {
-			console.error(`[claudback] rejected unauthenticated ${method} ${path} (origin: ${origin ?? "none"})`);
+			console.error(`[pinback] rejected unauthenticated ${method} ${path} (origin: ${origin ?? "none"})`);
 			send(res, 401, { error: "missing or invalid pairing token" });
 
 			return;
@@ -297,7 +299,7 @@ export function createCollector(store: StoreApi, token: string, pairing: Pairing
 
 			send(res, 404, { error: "not found" });
 		} catch (error) {
-			console.error("[claudback] collector error:", error);
+			console.error("[pinback] collector error:", error);
 			send(res, 500, { error: "internal error" });
 		}
 	});
@@ -322,7 +324,7 @@ export async function startCollector(
 	const port = await new Promise<number | undefined>((resolve, reject) => {
 		server.once("error", (error: NodeJS.ErrnoException) => {
 			if (error.code === "EADDRINUSE") {
-				// Every Claude Code session spawns its own claudback-mcp process,
+				// Every agent session spawns its own pinback-mcp process,
 				// but only one can own the collector port that the extension
 				// talks to. The store file on disk is shared, so this process
 				// can still serve its own MCP tools against it — it just won't

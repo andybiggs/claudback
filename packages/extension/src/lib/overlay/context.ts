@@ -3,7 +3,7 @@
 // single giant closure that used to hold all this state. Fields are mutated in
 // place (e.g. refresh reassigns `store`), so every helper sees live values.
 
-import type { Comment, StoreMode } from "@claudback/shared";
+import type { Comment, StoreMode } from "@pinback/shared";
 
 import type { SyncState } from "../../messages.js";
 
@@ -83,7 +83,7 @@ export const DEFAULT_HINT_POSITION: HintPosition = "top-center";
 // panel stores the comment id here before navigating, and the fresh overlay on
 // the destination page resumes the edit. sessionStorage is per-tab and
 // per-origin, so the intent can't leak to other tabs or sites.
-export const PENDING_EDIT_KEY = "claudback-pending-edit";
+export const PENDING_EDIT_KEY = "pinback-pending-edit";
 
 export function resolveLocalStore(): chrome.storage.StorageArea | null {
 	try {

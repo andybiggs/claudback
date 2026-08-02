@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { HTML_EXCERPT_MAX_LENGTH } from "@claudback/shared";
+import { HTML_EXCERPT_MAX_LENGTH } from "@pinback/shared";
 
 import { excerptFromNames } from "./excerpt.js";
 

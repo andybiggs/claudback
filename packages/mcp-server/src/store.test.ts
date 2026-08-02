@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import type { NewCommentInput } from "@claudback/shared";
+import type { NewCommentInput } from "@pinback/shared";
 
 import { createStore } from "./store.js";
 
@@ -29,7 +29,7 @@ describe("store", () => {
 	let filePath: string;
 
 	beforeEach(async () => {
-		dir = await mkdtemp(join(tmpdir(), "claudback-store-"));
+		dir = await mkdtemp(join(tmpdir(), "pinback-store-"));
 		filePath = join(dir, "nested", "comments.json");
 	});
 

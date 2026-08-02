@@ -1,7 +1,7 @@
 // New-comment composer: the popover shown when you click an element in comment
 // mode. Owns element-scoped component detection and payload assembly.
 
-import { buildSelector, type NewCommentInput } from "@claudback/shared";
+import { buildSelector, type NewCommentInput } from "@pinback/shared";
 
 import { excerptFromNames } from "../excerpt.js";
 import { parseDetectReply } from "../detect-reply.js";
@@ -28,8 +28,8 @@ function requestComponentInfo(
 			const nonce = generateNonce(crypto);
 
 			const finish = (value: { framework: string; components: string[] } | null): void => {
-				document.removeEventListener("claudback:detect-result", onResult);
-				el.removeAttribute("data-claudback-probe");
+				document.removeEventListener("pinback:detect-result", onResult);
+				el.removeAttribute("data-pinback-probe");
 				clearTimeout(timer);
 				resolve(value);
 			};
@@ -49,9 +49,9 @@ function requestComponentInfo(
 
 			const timer = setTimeout(() => finish(null), DETECT_TIMEOUT_MS);
 
-			document.addEventListener("claudback:detect-result", onResult);
-			el.setAttribute("data-claudback-probe", nonce);
-			document.dispatchEvent(new CustomEvent("claudback:detect", { detail: nonce }));
+			document.addEventListener("pinback:detect-result", onResult);
+			el.setAttribute("data-pinback-probe", nonce);
+			document.dispatchEvent(new CustomEvent("pinback:detect", { detail: nonce }));
 		} catch {
 			resolve(null);
 		}
@@ -127,7 +127,7 @@ export function openComposer(ctx: OverlayContext, el: Element, x: number, y: num
 		}
 	}).catch((error) => {
 		// The promise itself never rejects; this guards the render callback.
-		console.warn("[claudback] component render failed:", error);
+		console.warn("[pinback] component render failed:", error);
 	});
 
 	const textarea = pop.querySelector("textarea") as HTMLTextAreaElement;

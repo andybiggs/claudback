@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<meta charset="utf-8" />
-		<title>Welcome to Claudback</title>
+		<title>Welcome to Pinback</title>
 		<style>
 			@font-face {
 				font-family: "Space Grotesk";
@@ -389,7 +389,7 @@
 	<body>
 		<div class="brand">
 			<span class="mark"></span>
-			<h1>Welcome to Claudback</h1>
+			<h1>Welcome to Pinback</h1>
 		</div>
 
 		<div class="steps" id="step-dots">
@@ -400,14 +400,14 @@
 		</div>
 
 		<section class="step active" data-step="0">
-			<h2>Comment on your page. Claude reads it.</h2>
+			<h2>Comment on your page. Your agent reads it.</h2>
 			<p>
-				Claudback lets you pin comments to elements on any web page, a button that's the
-				wrong colour, a layout that breaks, copy that needs a rewrite. Claude reads them
+				Pinback lets you pin comments to elements on any web page, a button that's the
+				wrong colour, a layout that breaks, copy that needs a rewrite. Your agent reads them
 				through a local MCP server and if you are developing the page locally, makes the
 				changes.
 			</p>
-			<svg class="illus" viewBox="0 0 640 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A comment pinned to a button in the browser flows into Claude, which reads it and resolves it">
+			<svg class="illus" viewBox="0 0 640 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A comment pinned to a button in the browser flows into your coding agent, which reads it and resolves it">
 				<!-- wash backdrop -->
 				<rect x="0" y="0" width="640" height="240" rx="14" fill="var(--illus-wash)" />
 				<!-- browser window -->
@@ -439,15 +439,15 @@
 				<!-- flow arrow -->
 				<path class="flow" d="M 310 120 C 334 120, 340 120, 358 120" stroke="var(--green)" stroke-width="2" fill="none" />
 				<path d="M 356 113 L 368 120 L 356 127 Z" fill="var(--green)" />
-				<!-- claude terminal: dark in both modes -->
+				<!-- agent terminal: dark in both modes -->
 				<rect x="378" y="22" width="242" height="196" rx="12" fill="#191c1f" stroke="#2b3036" />
 				<line x1="378" y1="54" x2="620" y2="54" stroke="#2b3036" />
 				<circle cx="398" cy="38" r="4" fill="#3a3f44" />
 				<circle cx="412" cy="38" r="4" fill="#3a3f44" />
 				<circle cx="426" cy="38" r="4" fill="#3a3f44" />
-				<text x="499" y="42" font-size="10.5" text-anchor="middle" fill="#6e757c" class="brand-font">Claude Code</text>
-				<text x="398" y="84" font-size="12" class="mono" fill="#9aa1a8">&gt; Hey Claude, check my</text>
-				<text x="398" y="100" font-size="12" class="mono" fill="#9aa1a8">  Claudback comments</text>
+				<text x="499" y="42" font-size="10.5" text-anchor="middle" fill="#6e757c" class="brand-font">your agent</text>
+				<text x="398" y="84" font-size="12" class="mono" fill="#9aa1a8">&gt; Hey, check my</text>
+				<text x="398" y="100" font-size="12" class="mono" fill="#9aa1a8">  Pinback comments</text>
 				<text x="398" y="128" font-size="12" class="mono" fill="#3fc479">● get_comments</text>
 				<text x="398" y="152" font-size="12" class="mono" fill="#e9ecee">“Make this bigger”</text>
 				<text x="398" y="176" font-size="12" class="mono" fill="#9aa1a8">editing button.css…</text>
@@ -457,7 +457,7 @@
 				</rect>
 			</svg>
 			<p>
-				It shines when you're iterating on a local build with Claude Code. Click the things
+				It shines when you're iterating on a local build with a coding agent. Click the things
 				you want changed and say why, no screenshots, no describing where things are. The
 				comment carries the exact element.
 			</p>
@@ -466,57 +466,80 @@
 		<section class="step" data-step="1">
 			<h2>Install the server</h2>
 			<p>
-				Claude starts and stops the server itself, you just register it once. Pick your
-				client:
+				Pinback is a standard MCP server, so it works with any agent that speaks MCP.
+				Your agent starts and stops it, you just register it once. Pick your client:
 			</p>
 			<div class="tabs">
-				<button class="tab active" data-tab="code">Claude Code (CLI)</button>
-				<button class="tab" data-tab="desktop">Claude Code (Desktop App)</button>
+				<button class="tab active" data-tab="code">Claude Code</button>
+				<button class="tab" data-tab="codex">Codex</button>
+				<button class="tab" data-tab="other">Other MCP clients</button>
 			</div>
 			<div class="tab-panel active" data-panel="code">
 				<p>Run this in your terminal:</p>
 				<div class="code-block">
-					<pre id="cmd-code">claude mcp add --scope user claudback -- npx -y claudback-mcp</pre>
+					<pre id="cmd-code">claude mcp add --scope user pinback -- npx -y pinback-mcp</pre>
 					<button class="copy" data-copy="cmd-code">Copy</button>
 				</div>
 				<p>
-					The <code>--scope user</code> flag registers Claudback for every project on
-					your machine, so you only have to do this once.
+					The <code>--scope user</code> flag registers Pinback for every project on
+					your machine, so you only have to do this once. Using the desktop app rather
+					than the terminal? Ask it to run that command for you.
 				</p>
 			</div>
-			<div class="tab-panel" data-panel="desktop">
-				<p>
-					Claude will register the server for you. Paste this into Claude Code chat:
-				</p>
+			<div class="tab-panel" data-panel="codex">
+				<p>Run this in your terminal:</p>
 				<div class="code-block">
-					<pre id="cmd-desktop">Can you run this in the terminal for me:
-
-claude mcp add --scope user claudback -- npx -y claudback-mcp</pre>
-					<button class="copy corner" data-copy="cmd-desktop">Copy</button>
+					<pre id="cmd-codex">codex mcp add pinback -- npx -y pinback-mcp</pre>
+					<button class="copy" data-copy="cmd-codex">Copy</button>
 				</div>
 				<p>
-					Claudback needs Node 20 or later. If you don't have it, ask Claude to install
-					it first. The <code>--scope user</code> flag registers Claudback for every
-					project on your machine, so you only have to do this once.
+					That writes to <code>~/.codex/config.toml</code>. To add it by hand instead,
+					put this in that file:
+				</p>
+				<div class="code-block">
+					<pre id="cmd-codex-toml">[mcp_servers.pinback]
+command = "npx"
+args = ["-y", "pinback-mcp"]</pre>
+					<button class="copy corner" data-copy="cmd-codex-toml">Copy</button>
+				</div>
+			</div>
+			<div class="tab-panel" data-panel="other">
+				<p>
+					Any client that can launch a stdio MCP server works. Most take a JSON config
+					like this:
+				</p>
+				<div class="code-block">
+					<pre id="cmd-other">{
+  "mcpServers": {
+    "pinback": {
+      "command": "npx",
+      "args": ["-y", "pinback-mcp"]
+    }
+  }
+}</pre>
+					<button class="copy corner" data-copy="cmd-other">Copy</button>
+				</div>
+				<p>
+					Check your client's docs for where that file lives — the command and args are
+					the same wherever it goes.
 				</p>
 			</div>
 			<p>
-				That's it for installation, in the next step you'll ask Claude for a pairing
-				code to connect this extension.
+				Pinback needs Node 20 or later. That's it for installation — in the next step
+				you'll ask your agent for a pairing code to connect this extension.
 			</p>
 		</section>
 
 		<section class="step" data-step="2">
 			<h2>Pair the extension</h2>
 			<p>
-				Ask Claude for a pairing code, copy this prompt into any Claude Code or Claude
-				Desktop chat that has Claudback installed:
+				Copy this prompt into any agent chat that has Pinback installed:
 			</p>
 			<div class="code-block">
-				<pre id="pair-prompt">Give me a Claudback pairing code</pre>
+				<pre id="pair-prompt">Give me a Pinback pairing code</pre>
 				<button class="copy" data-copy="pair-prompt">Copy</button>
 			</div>
-			<p>Then enter the code Claude gives you:</p>
+			<p>Then enter the code it gives you:</p>
 			<div class="row">
 				<input
 					id="pair-code"
@@ -530,26 +553,26 @@ claude mcp add --scope user claudback -- npx -y claudback-mcp</pre>
 			</div>
 			<div class="status">
 				<span class="status-dot" id="status-dot"></span>
-				<span id="status-text">Ask Claude for a pairing code to connect.</span>
+				<span id="status-text">Ask your agent for a pairing code to connect.</span>
 			</div>
 		</section>
 
 		<section class="step" data-step="3">
 			<h2>You're set. Here's how it works.</h2>
 			<ol>
-				<li>Open the page you're working on and then click the Claudback Extension icon in Chrome → Toggle to <strong>Enabled</strong> to turn it on (grant the per-site permission when prompted).</li>
+				<li>Open the page you're working on and then click the Pinback Extension icon in Chrome → Toggle to <strong>Enabled</strong> to turn it on (grant the per-site permission when prompted).</li>
 				<li>Use the plus button in bottom right to pin comments to elements. Just click on page elements and add your comments.</li>
-				<li>Once you are done just ask Claude: <code>Grab my Claudback comments</code>.</li>
-				<li>Resolved comments clear automatically as Claude works through them.</li>
+				<li>Once you are done just ask your agent: <code>Grab my Pinback comments</code>.</li>
+				<li>Resolved comments clear automatically as your agent works through them.</li>
 			</ol>
 			<p>You can reopen this guide any time from the extension's options page.</p>
 			<div>
 				<h2 style="margin-top: 30px">Pin the extension to your toolbar</h2>
 				<p>
-					So Claudback is always one click away, just click the puzzle-piece icon next to the address
-					bar in Chrome, find Claudback, and click the pin.
+					So Pinback is always one click away, just click the puzzle-piece icon next to the address
+					bar in Chrome, find Pinback, and click the pin.
 				</p>
-				<svg class="illus" viewBox="0 0 640 224" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Chrome's toolbar with the puzzle-piece extensions menu open, showing the pin next to Claudback">
+				<svg class="illus" viewBox="0 0 640 224" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Chrome's toolbar with the puzzle-piece extensions menu open, showing the pin next to Pinback">
 					<defs>
 						<filter id="standoff" x="-20%" y="-20%" width="140%" height="150%">
 							<feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0b2416" flood-opacity="0.10" />
@@ -576,13 +599,13 @@ claude mcp add --scope user claudback -- npx -y claudback-mcp</pre>
 					</g>
 					<path d="M 474 96 L 480 86 L 486 96 Z" fill="var(--border)" />
 					<text x="356" y="122" font-size="10.5" font-weight="700" fill="var(--faint-text)" letter-spacing="0.5">EXTENSIONS</text>
-					<!-- Claudback row, highlighted -->
+					<!-- Pinback row, highlighted -->
 					<rect x="350" y="132" width="254" height="44" rx="10" fill="var(--green-tint)" />
 					<g transform="translate(378, 154)">
 						<path d="M 0 -10 A 10 10 0 0 1 10 0 A 10 10 0 0 1 0 10 L -8 10 Q -10 10 -10 8 L -10 0 A 10 10 0 0 1 0 -10 Z" fill="var(--mark-bg)" />
 						<circle cx="0" cy="0" r="3" fill="var(--mark-dot)" />
 					</g>
-					<text x="400" y="159" font-size="13" font-weight="600" fill="var(--ink)" class="brand-font">Claudback</text>
+					<text x="400" y="159" font-size="13" font-weight="600" fill="var(--ink)" class="brand-font">Pinback</text>
 					<!-- pin control -->
 					<g transform="translate(562, 140)">
 						<circle cx="14" cy="14" r="14" fill="var(--green)" />

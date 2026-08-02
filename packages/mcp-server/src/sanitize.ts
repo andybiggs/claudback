@@ -1,5 +1,5 @@
 // Control and invisible-direction characters are stripped at ingest so comment
-// text can't smuggle terminal escapes or bidi-reordering tricks into Claude's
+// text can't smuggle terminal escapes or bidi-reordering tricks into the agent's
 // context. Newline (0x0A), carriage return (0x0D), and tab (0x09) are kept —
 // they're legitimate in comment text.
 const DISALLOWED_RANGES: Array<[number, number]> = [

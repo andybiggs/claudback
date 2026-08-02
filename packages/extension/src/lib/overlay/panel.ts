@@ -1,13 +1,13 @@
 // The comment list panel: header (identity, settings cog, clear-all), sync
 // strip, scrollable comment list, and the "grab my comments" footer.
 
-import type { StoreMode } from "@claudback/shared";
+import type { StoreMode } from "@pinback/shared";
 
 import type { SimpleResponse } from "../../messages.js";
 import { COG_ICON } from "../../ui/icons.js";
 import { escapeHtml, shortUrl } from "../../ui/html.js";
 import { componentNameHtml, componentTreeHtml, pathTipText } from "../../ui/component-pills.js";
-import { CLAUDE_RESTART_PROMPT } from "../../prompts.js";
+import { RESTART_PROMPT } from "../../prompts.js";
 import { PENDING_EDIT_KEY, type OverlayContext } from "./context.js";
 import { copyToClipboard, isContextInvalidated, send, sendGuarded } from "./messaging.js";
 import { refresh, render, showError } from "./render.js";
@@ -18,10 +18,10 @@ import { openInlineEdit } from "./inline-edit.js";
 function statusLabel(ctx: OverlayContext): string | null {
 	switch (ctx.syncState) {
 		case "unpaired": {
-			return "Claudback isn't set up on this computer yet.";
+			return "Pinback isn't set up on this computer yet.";
 		}
 		case "offline": {
-			return "Can't reach the local Claudback server.";
+			return "Can't reach the local Pinback server.";
 		}
 		case "unauthorized": {
 			return "Pairing token rejected — re-pair from the extension options page.";
@@ -53,7 +53,7 @@ export function renderPanel(ctx: OverlayContext): void {
 		<div class="identity">
 			<span class="mark"></span>
 			<div class="text">
-				<span class="brand-name">Claudback</span>
+				<span class="brand-name">Pinback</span>
 				<span class="hostname mono" title="${escapeHtml(ctx.label)}">${escapeHtml(ctx.label)}</span>
 			</div>
 		</div>`;
@@ -77,7 +77,7 @@ export function renderPanel(ctx: OverlayContext): void {
 				return;
 			}
 
-			console.error("[claudback] clear failed:", error);
+			console.error("[pinback] clear failed:", error);
 			showError(ctx, "Couldn't clear — comments not removed.");
 		}
 	});
@@ -95,13 +95,13 @@ export function renderPanel(ctx: OverlayContext): void {
 
 	if (ctx.settingsOpen) {
 		// Absolute popover anchored to the header — floats over the list instead
-		// of pushing it down. Holds the "after Claude reads" mode + view toggle.
+		// of pushing it down. Holds the "after your agent reads" mode + view toggle.
 		const menu = document.createElement("div");
 		menu.className = "settings-menu";
 
 		const modeRow = document.createElement("label");
 		modeRow.className = "settings-row";
-		modeRow.innerHTML = "<span>After Claude reads</span>";
+		modeRow.innerHTML = "<span>After your agent reads</span>";
 		const modeSelect = document.createElement("select");
 		modeSelect.innerHTML = `
 			<option value="clear">Clear comments</option>
@@ -123,7 +123,7 @@ export function renderPanel(ctx: OverlayContext): void {
 					return;
 				}
 
-				console.error("[claudback] setMode failed:", error);
+				console.error("[pinback] setMode failed:", error);
 				showError(ctx, "Couldn't change mode — change not stored.");
 			}
 		});
@@ -161,12 +161,12 @@ export function renderPanel(ctx: OverlayContext): void {
 		if (ctx.syncState === "offline") {
 			const action = document.createElement("button");
 			action.className = "sync-action";
-			action.textContent = "Copy restart prompt for Claude";
+			action.textContent = "Copy restart prompt";
 			action.addEventListener("click", async () => {
-				if (await copyToClipboard(CLAUDE_RESTART_PROMPT)) {
+				if (await copyToClipboard(RESTART_PROMPT)) {
 					action.textContent = "Copied!";
 					setTimeout(() => {
-						action.textContent = "Copy restart prompt for Claude";
+						action.textContent = "Copy restart prompt";
 					}, 1500);
 				} else {
 					showError(ctx, "Couldn't copy — this page blocks clipboard access.");
@@ -242,7 +242,7 @@ export function renderPanel(ctx: OverlayContext): void {
 						return;
 					}
 
-					console.error("[claudback] delete failed:", error);
+					console.error("[pinback] delete failed:", error);
 					showError(ctx, "Couldn't delete — change not stored.");
 				}
 			}
@@ -263,7 +263,7 @@ export function renderPanel(ctx: OverlayContext): void {
 						return;
 					}
 
-					console.error("[claudback] unresolve failed:", error);
+					console.error("[pinback] unresolve failed:", error);
 					showError(ctx, "Couldn't unresolve — change not stored.");
 				}
 			}
@@ -284,7 +284,7 @@ export function renderPanel(ctx: OverlayContext): void {
 					} catch (error) {
 						// Storage unavailable (e.g. blocked) — fall back to editing
 						// in place rather than losing the click.
-						console.error("[claudback] sessionStorage unavailable:", error);
+						console.error("[pinback] sessionStorage unavailable:", error);
 						openInlineEdit(ctx, item, comment);
 
 						return;
@@ -301,11 +301,11 @@ export function renderPanel(ctx: OverlayContext): void {
 	});
 
 	if (ctx.store.comments.length > 0) {
-		const PROMPT = "Grab my Claudback comments";
+		const PROMPT = "Grab my Pinback comments";
 		const footer = document.createElement("div");
 		footer.className = "prompt-footer";
 		footer.innerHTML = `
-			<div class="label">Got your comments sorted? Ask Claude:</div>
+			<div class="label">Got your comments sorted? Ask your agent:</div>
 			<div class="prompt-row">
 				<span class="prompt-text">${escapeHtml(PROMPT)}</span>
 				<button class="copy-prompt">

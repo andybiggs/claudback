@@ -2,7 +2,7 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { randomUUID } from "node:crypto";
 
-import { storeSchema, type Comment, type NewCommentInput, type Store, type StoreMode } from "@claudback/shared";
+import { storeSchema, type Comment, type NewCommentInput, type Store, type StoreMode } from "@pinback/shared";
 
 import type { CommentFilter, OriginSummary, ResolveOutcome, StoreApi } from "./store-api.js";
 
@@ -32,12 +32,12 @@ export function createStore(filePath: string): StoreApi {
 	async function quarantine(reason: string): Promise<Store> {
 		const corruptPath = `${filePath}.corrupt-${new Date().toISOString()}`;
 
-		console.error(`[claudback] store file ${filePath} is unreadable (${reason}); moving it to ${corruptPath}`);
+		console.error(`[pinback] store file ${filePath} is unreadable (${reason}); moving it to ${corruptPath}`);
 
 		try {
 			await rename(filePath, corruptPath);
 		} catch (error) {
-			console.error("[claudback] failed to set aside corrupt store file:", error);
+			console.error("[pinback] failed to set aside corrupt store file:", error);
 		}
 
 		return emptyStore();

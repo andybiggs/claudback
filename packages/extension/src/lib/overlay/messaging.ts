@@ -48,7 +48,7 @@ export async function sendGuarded<T extends OkResponse>(
 			return false;
 		}
 
-		console.error(`[claudback] ${label} failed:`, error);
+		console.error(`[pinback] ${label} failed:`, error);
 		onError(errorMessage);
 
 		return false;

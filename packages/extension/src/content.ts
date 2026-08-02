@@ -1,4 +1,4 @@
-// Claudback overlay content script — composition root.
+// Pinback overlay content script — composition root.
 //
 // A framework-agnostic, dependency-free visual-feedback overlay. Mounts into a
 // Shadow DOM so the host page's CSS can neither leak in nor be affected. Lets
@@ -28,19 +28,19 @@ import { renderPins } from "./lib/overlay/pins.js";
 import { openComposer } from "./lib/overlay/composer.js";
 import { openPinPopover } from "./lib/overlay/pin-popover.js";
 
-function mountClaudback(): void {
+function mountPinback(): void {
 	if (typeof window === "undefined" || typeof document === "undefined") {
 		return;
 	}
 
-	if (document.getElementById("claudback-root")) {
+	if (document.getElementById("pinback-root")) {
 		return;
 	}
 
 	const label = window.location.hostname;
 
 	const host = document.createElement("div");
-	host.id = "claudback-root";
+	host.id = "pinback-root";
 	const shadow = host.attachShadow({ mode: "open" });
 	const style = document.createElement("style");
 	style.textContent = STYLES;
@@ -188,7 +188,7 @@ function mountClaudback(): void {
 		});
 	};
 
-	// The store can change out-of-band (Claude reads and clears, or the file is
+	// The store can change out-of-band (the agent reads and clears, or the file is
 	// edited directly). We aren't notified, so re-sync when the tab regains
 	// focus — but not while a composer is open, since render() tears down every
 	// shadow node except <style>, which would close it mid-edit.
@@ -279,7 +279,7 @@ function mountClaudback(): void {
 				sessionStorage.removeItem(PENDING_EDIT_KEY);
 			}
 		} catch (error) {
-			console.error("[claudback] sessionStorage unavailable:", error);
+			console.error("[pinback] sessionStorage unavailable:", error);
 
 			return;
 		}
@@ -291,10 +291,10 @@ function mountClaudback(): void {
 		const comment = ctx.store.comments.find((candidate) => candidate.id === id);
 
 		if (!comment) {
-			// Cleared out-of-band during the navigation (e.g. Claude read and
+			// Cleared out-of-band during the navigation (e.g. the agent read and
 			// cleared it) — say so rather than landing the user on a page with no
 			// acknowledgment of their click.
-			showError(ctx, "That comment is gone — it may have been cleared after Claude read it.");
+			showError(ctx, "That comment is gone — it may have been cleared after your agent read it.");
 
 			return;
 		}
@@ -352,4 +352,4 @@ function mountClaudback(): void {
 	}
 }
 
-mountClaudback();
+mountPinback();

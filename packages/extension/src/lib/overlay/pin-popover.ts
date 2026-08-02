@@ -1,6 +1,6 @@
 // Pin popover: edit/delete an existing comment, opened from its pin or list row.
 
-import type { Comment } from "@claudback/shared";
+import type { Comment } from "@pinback/shared";
 
 import type { SimpleResponse } from "../../messages.js";
 import { escapeHtml } from "../../ui/html.js";

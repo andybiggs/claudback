@@ -8,18 +8,18 @@ import {
 	PAIRING_CODE_TTL_MS,
 	PAIRING_MAX_ATTEMPTS,
 	normalizePairingCode,
-} from "@claudback/shared";
+} from "@pinback/shared";
 
 import { tokenMatches } from "./auth.js";
 import { PAIRING_FILE } from "./paths.js";
 
 // A pairing code lets the extension bootstrap the real bearer token without
-// the user digging ~/.claudback/token out of a hidden directory: Claude mints
+// the user digging ~/.pinback/token out of a hidden directory: the agent mints
 // a code via the get_pairing_code tool, the user types it into the extension,
 // and the collector's /pair endpoint exchanges it for the token.
 //
-// The active code is persisted to ~/.claudback/pairing.json rather than kept
-// in process memory. Every Claude Code session spawns its own claudback-mcp
+// The active code is persisted to ~/.pinback/pairing.json rather than kept
+// in process memory. Every agent session spawns its own pinback-mcp
 // process, but only one owns the collector that serves /pair — so the session
 // that mints a code is usually not the one that redeems it. A shared file lets
 // a code minted in any session be exchanged by whichever session owns the

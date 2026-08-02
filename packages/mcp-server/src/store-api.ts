@@ -1,4 +1,4 @@
-import type { Comment, NewCommentInput, Store, StoreMode } from "@claudback/shared";
+import type { Comment, NewCommentInput, Store, StoreMode } from "@pinback/shared";
 
 export interface CommentFilter {
 	origin?: string;

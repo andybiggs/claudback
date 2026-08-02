@@ -1,12 +1,12 @@
-# Handoff: Claudback branding & UI refresh
+# Handoff: Pinback branding & UI refresh
 
 ## Overview
-A brand identity and conservative UI polish pass for **Claudback** — the Chrome extension + local MCP server that lets users pin comments on any web page for Claude to read and act on. This handoff covers: a new logo mark, a refined color palette, brand typography, and token-level restyling of every extension surface (toolbar icon, popup, pairing/options page, on-page overlay: FABs, pin, composer, comment panel) in light and dark modes.
+A brand identity and conservative UI polish pass for **Pinback** — the Chrome extension + local MCP server that lets users pin comments on any web page for a coding agent to read and act on. This handoff covers: a new logo mark, a refined color palette, brand typography, and token-level restyling of every extension surface (toolbar icon, popup, pairing/options page, on-page overlay: FABs, pin, composer, comment panel) in light and dark modes.
 
-**Target codebase:** the Claudback monorepo (`packages/extension`). The surfaces to change are `src/popup.html`, `src/options.html`, and the `STYLES` constant + icon constants in `src/content.ts`, plus new icon files referenced from `manifest.json`.
+**Target codebase:** the Pinback monorepo (`packages/extension`). The surfaces to change are `src/popup.html`, `src/options.html`, and the `STYLES` constant + icon constants in `src/content.ts`, plus new icon files referenced from `manifest.json`.
 
 ## About the Design Files
-`Claudback Branding.dc.html` in this bundle is a **design reference created in HTML** — a mockup canvas, not production code. The task is to **recreate these designs in the extension's existing plain-HTML/CSS/TS environment**, editing the existing files rather than copying markup from the mock. Layouts are intentionally identical to the current implementation; only tokens, icons, and small structural details change (listed below).
+`Pinback Branding.dc.html` in this bundle is a **design reference created in HTML** — a mockup canvas, not production code. The task is to **recreate these designs in the extension's existing plain-HTML/CSS/TS environment**, editing the existing files rather than copying markup from the mock. Layouts are intentionally identical to the current implementation; only tokens, icons, and small structural details change (listed below).
 
 ## Fidelity
 **High-fidelity.** Colors, sizes, radii, and typography are final. Match them exactly. The relevant designs are in card **1c** of the canvas (card 1b defines the chosen logo; 1a is a rejected alternative — ignore it).
@@ -22,7 +22,7 @@ The product's existing comment-pin shape promoted to logo: **a circle with one s
 Generate PNGs at 16, 32, 48, 128 px of the mark on a transparent background. At 16px use a 5px dot and 2px sharp corner so it stays legible.
 
 ### Wordmark
-"Claudback" set in **Space Grotesk 600**, letter-spacing `-0.02em`, ink `#191C1F` (light) / `#E9ECEE` (dark). Mark sits left of the wordmark at cap-height scale with ~12px gap. Space Grotesk is only needed where the brand name is displayed (popup h1, options h1, panel header); load via Google Fonts or bundle the woff2 — body UI stays on the system stack.
+"Pinback" set in **Space Grotesk 600**, letter-spacing `-0.02em`, ink `#191C1F` (light) / `#E9ECEE` (dark). Mark sits left of the wordmark at cap-height scale with ~12px gap. Space Grotesk is only needed where the brand name is displayed (popup h1, options h1, panel header); load via Google Fonts or bundle the woff2 — body UI stays on the system stack.
 
 ## Design Tokens
 
@@ -70,7 +70,7 @@ Apply via `@media (prefers-color-scheme: dark)` in popup/options, and a `:host`-
 ### Typography
 - Brand: Space Grotesk 600, -0.02em — popup h1 15px, options h1 19px, panel header 13.5px
 - UI body: `ui-sans-serif, system-ui, -apple-system, sans-serif` — 13px rows/buttons, 12px minor
-- Mono (NEW): `ui-monospace, SFMono-Regular, Menlo, monospace` — all selector paths (10.5–11px), tag chips, `~/.claudback/token` code spans
+- Mono (NEW): `ui-monospace, SFMono-Regular, Menlo, monospace` — all selector paths (10.5–11px), tag chips, `~/.pinback/token` code spans
 
 ### Shadows (unchanged from current)
 - FABs: `0 4px 14px rgba(0,0,0,.25)`
@@ -81,7 +81,7 @@ Apply via `@media (prefers-color-scheme: dark)` in popup/options, and a `:host`-
 
 ### 1. Popup (260px wide, 14px padding)
 Same rows as today (Enabled / Comments / Status + secondary button), plus:
-- **Header**: mark (18px) + "Claudback" Space Grotesk 600 15px, with a `#EFF1F2` hairline below (10px padding-bottom)
+- **Header**: mark (18px) + "Pinback" Space Grotesk 600 15px, with a `#EFF1F2` hairline below (10px padding-bottom)
 - **Comments count**: green tint pill — `#EAF5EE` bg, `#0C6E38` text, 12px/700, radius 999px, `1px 6px` padding
 - **Status**: 7px green dot + "Synced" in `#0F8A46` 600. Status colors: synced green, pending `#2563EB` (keep), offline `#C0271B`, unpaired `#9CA3AF`
 - **"Pairing & options" button**: `#EAF5EE` bg, `#0C6E38` text, weight 600, radius 8px, `9px 12px` padding (replaces grey `#f0f0f0`)
@@ -89,8 +89,8 @@ Same rows as today (Enabled / Comments / Status + secondary button), plus:
 - Dark mode per dark tokens
 
 ### 2. Pairing / options page (max-width 520px)
-- **h1**: mark (22px) + "Claudback pairing" Space Grotesk 600 19px, flex row gap 10px
-- Body copy 13px `#5C6167`, line-height 1.55; `~/.claudback/token` in mono 12px on `#F3F4F4`, radius 4px
+- **h1**: mark (22px) + "Pinback pairing" Space Grotesk 600 19px, flex row gap 10px
+- Body copy 13px `#5C6167`, line-height 1.55; `~/.pinback/token` in mono 12px on `#F3F4F4`, radius 4px
 - **Input**: border `#D9DCDE`, radius 8px, `9px 12px` padding, placeholder `#8B9096`
 - **Save token**: `#0F8A46` bg, white 600 text, radius 8px, `9px 16px`
 - **Test connection**: `#EAF5EE` bg, `#0C6E38` 600 text (replaces grey ghost)
@@ -111,11 +111,11 @@ Same rows as today (Enabled / Comments / Status + secondary button), plus:
 - Dark mode per dark tokens (textarea bg `#141619`, focus border `#3FC479`)
 
 ### 5. Comment panel (330px, radius 12px)
-- **Header restructured**: 30px mark left, spanning a two-line text column — "Claudback" (Space Grotesk 600 13.5px) over the hostname (mono 11px `#8B9096`, ellipsized, full origin in `title`). This is the long-hostname strategy: brand never truncates, hostname does. "Clear all" becomes a danger chip: `#FBE9E7` bg, `#C0271B` 600 12px text, radius 6px, `4px 10px`, `flex-shrink: 0`
+- **Header restructured**: 30px mark left, spanning a two-line text column — "Pinback" (Space Grotesk 600 13.5px) over the hostname (mono 11px `#8B9096`, ellipsized, full origin in `title`). This is the long-hostname strategy: brand never truncates, hostname does. "Clear all" becomes a danger chip: `#FBE9E7` bg, `#C0271B` 600 12px text, radius 6px, `4px 10px`, `flex-shrink: 0`
 - **Sync status strip REMOVED when healthy.** Show a strip under the header **only** when not synced:
   - Offline: `#FBF3E0` bg, `1px solid #F2E4C4` bottom border, 7px `#C88A04` dot, 12px 600 `#8A5A00` text — "Collector offline — comments saved locally, retrying"
   - Same pattern for pending/unpaired with appropriate copy
-- **Mode row** ("After Claude reads:" + select): unchanged layout; select border `#D9DCDE`, radius 6px
+- **Mode row** ("After your agent reads:" + select): unchanged layout; select border `#D9DCDE`, radius 6px
 - **Items**: number dot 18px `#0F8A46` pill (resolved `#9CA3AF`); meta line = element tag in mono + "· this page" 11px `#8B9096`; comment text 13px; selector path mono 10.5px `#9BA0A5`, **single line ellipsized** (was multi-line wrap; full path in `title`); Edit link `#0F8A46` 600, Delete `#C0271B` 600, 12px, 12px gap
 - Dividers `#F3F4F4`; empty state copy unchanged, 13px `#8B9096` centered
 - Dark mode per dark tokens
@@ -135,5 +135,5 @@ No new state. The offline strip consumes the existing sync-status value already 
 - All other iconography stays as the existing inline stroke SVGs (list, X), recolored only
 
 ## Files
-- `Claudback Branding.dc.html` — the design canvas. Card **1b** = chosen logo (Waypoint); card **1c** = full brand system + every screen mock in light and dark, including the offline-state panel
+- `Pinback Branding.dc.html` — the design canvas. Card **1b** = chosen logo (Waypoint); card **1c** = full brand system + every screen mock in light and dark, including the offline-state panel
 - Ignore card 1a (rejected logo direction)
