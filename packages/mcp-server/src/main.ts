@@ -6,7 +6,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { loadOrCreateToken } from "./auth.js";
 import { startCollector } from "./collector.js";
 import { createPairingManager } from "./pairing.js";
-import { LEGACY_DIR, PINBACK_DIR, STORE_FILE, migrateLegacyDir } from "./paths.js";
+import { STORE_FILE } from "./paths.js";
 import { createStore } from "./store.js";
 import { registerTools } from "./tools.js";
 
@@ -47,13 +47,6 @@ export function retryTakeover(
 }
 
 export async function main(): Promise<void> {
-	// Must run before the token is read: the pairing token lives in the state
-	// directory, so migrating it forward is what keeps a pre-rename install
-	// paired instead of silently generating a new token.
-	if (await migrateLegacyDir()) {
-		console.error(`[pinback] migrated ${LEGACY_DIR} to ${PINBACK_DIR} — your existing pairing still works`);
-	}
-
 	const token = await loadOrCreateToken();
 	const pairing = createPairingManager(token);
 	const store = createStore(STORE_FILE);

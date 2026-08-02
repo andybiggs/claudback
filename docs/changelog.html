@@ -273,7 +273,7 @@
 					<ul>
 						<li><strong>Claudback is now Pinback.</strong> Same tool, clearer name — it was never Claude-specific.</li>
 						<li><strong>Works with any MCP-capable agent.</strong> Setup now covers Claude Code, Codex, and any other client that speaks stdio MCP; it always worked with them, the instructions just didn't say so.</li>
-						<li><strong>Nothing to redo.</strong> The extension updates in place, and the server moves <code>~/.claudback</code> to <code>~/.pinback</code> on its first run, so your pairing carries over.</li>
+						<li><strong>Nothing to redo.</strong> The extension updates in place and your pairing carries over — comments and token stay where they are, in <code>~/.claudback/</code>. The folder keeps its old name on purpose, so a session still running the previous server shares the same store instead of quietly writing somewhere else.</li>
 						<li>The npm package is now <code>pinback-mcp</code>. <code>claudback-mcp</code> still resolves to the same server for now, but re-register when convenient: <code>npx -y pinback-mcp</code>.</li>
 					</ul>
 				</div>

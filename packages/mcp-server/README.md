@@ -53,7 +53,7 @@ Using a desktop app rather than a terminal? Paste the relevant command into a ch
 
 Ask your agent for a pairing code — *"Give me a Pinback pairing code"* — and type it into the Pinback extension's setup page (it opens automatically when you install the [extension](https://github.com/andybiggs/pinback#readme)). Codes expire in 10 minutes and work once.
 
-Prefer doing it by hand? The server also generates a long-lived token on first run, printed to stderr and stored at `~/.pinback/token` — paste that into the setup page instead.
+Prefer doing it by hand? The server also generates a long-lived token on first run, printed to stderr and stored at `~/.claudback/token` — paste that into the setup page instead.
 
 ## Tools
 
@@ -69,7 +69,7 @@ Prefer doing it by hand? The server also generates a long-lived token on first r
 
 - The collector the extension talks to binds to `127.0.0.1` only — never reachable from the network.
 - Every request requires the pairing token; only the extension's origin is allowed by CORS.
-- Comments never leave your machine; they live in `~/.pinback/comments.json`.
+- Comments never leave your machine; they live in `~/.claudback/comments.json`.
 
 Full architecture and threat model: [github.com/andybiggs/pinback](https://github.com/andybiggs/pinback).
 

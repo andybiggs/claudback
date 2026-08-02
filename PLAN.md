@@ -7,7 +7,7 @@ Pinback is a visual-feedback overlay for pinning comments to elements on any web
 ## Decisions
 
 - **Visibility**: ✅ security audit passed 2026-07-08 (full-repo review + security-auditor pass; findings fixed in [PR #9](https://github.com/andybiggs/pinback/pull/9)). Verdict: GO for open-sourcing the code. Public *distribution* (Web Store publish / npx promotion) has one remaining gate: pin the published extension ID in the origin allowlist at listing time (`packages/mcp-server/src/security.ts`). Publication steps live in [RELEASING.md](./RELEASING.md).
-- **Pairing**: ask-your-agent-for-a-code — the `get_pairing_code` tool mints a short-lived, single-use code the user types into the extension, which exchanges it at `POST /pair` for the long-lived token (server generates `~/.pinback/token`; manual paste into extension options remains the fallback).
+- **Pairing**: ask-your-agent-for-a-code — the `get_pairing_code` tool mints a short-lived, single-use code the user types into the extension, which exchanges it at `POST /pair` for the long-lived token (server generates `~/.claudback/token`; manual paste into extension options remains the fallback).
 - **`resolve_comment` is in v1**, and its behaviour follows the store's clear/keep mode: in **clear** mode (the default) resolving a comment removes it; in **keep** mode resolved comments are retained and the extension renders them as resolved on next sync. The mode is toggleable from the extension popup.
 - **Distribution**: run the MCP server from the local clone first; publish `pinback-mcp` to npm at the end of Phase 3.
 
@@ -15,19 +15,19 @@ Pinback is a visual-feedback overlay for pinning comments to elements on any web
 
 ```
 ┌────────────────────────────┐        ┌──────────────────────────────┐
-│ Chrome extension           │        │ pinback-mcp (one process)  │
+│ Chrome extension           │        │ pinback-mcp (one process)    │
 │                            │        │                              │
 │  content script (overlay)  │  HTTP  │  loopback collector          │
 │   └─ chrome.runtime msgs   │  POST  │   127.0.0.1:57463            │
 │  background service worker ├───────▶│   token + origin checked     │
-│   └─ buffer in             │        │  store ~/.pinback/         │
+│   └─ buffer in             │        │  store ~/.claudback/         │
 │      chrome.storage.local  │        │  MCP tools over stdio ◀──────┼── agent
 └────────────────────────────┘        └──────────────────────────────┘
 ```
 
 - **One desktop process**: the stdio MCP server (started by the agent — `claude mcp add`, `codex mcp add`, or any MCP client's equivalent) embeds the loopback collector. No separate server to run, no daemon.
 - **Extension buffers locally**: comments go to `chrome.storage.local` first, sync to the collector with retry/backoff. Annotating works even when the agent isn't running.
-- **Per-machine store keyed by origin**: `~/.pinback/comments.json`; each comment carries origin, URL, selector, element snippet, and resolved state so the agent can filter per site/project.
+- **Per-machine store keyed by origin**: `~/.claudback/comments.json`; each comment carries origin, URL, selector, element snippet, and resolved state so the agent can filter per site/project.
 - **Transport choice**: loopback HTTP first (easiest); the background worker's sync layer is written **transport-agnostic** so later transports are config swaps, not rewrites — onUI-style Native Messaging (Phase 4) and a hosted OAuth MCP endpoint (Phase 5). A clipboard copy-export is a cheap zero-infrastructure fallback that can be added to the toolbar later.
 
 ## Security model (maps to every #411 concern)
@@ -45,14 +45,14 @@ Pinback is a visual-feedback overlay for pinning comments to elements on any web
 
 Extra hardening: zod-validated request bodies with size caps (text 4 KB, HTML excerpt 2 KB); `htmlExcerpt` sanitised to tag/attribute *names* only (no attribute values → no leaked tokens/PII); minimal extension permissions (`activeTab` + `storage` + per-site host grants, not `<all_urls>`).
 
-**Component detection.** When the page runs React or Vue, comments also carry the owning component names (e.g. `SubmitButton < CheckoutForm`), read from the framework's runtime by a main-world detector script. The detector only answers detect events with names — it never reads comment data or touches the network — and replies are nonce-matched and schema-validated in the content script as untrusted page input. Component names are source-code identifiers; like all comment data they travel only to the loopback collector and `~/.pinback/`.
+**Component detection.** When the page runs React or Vue, comments also carry the owning component names (e.g. `SubmitButton < CheckoutForm`), read from the framework's runtime by a main-world detector script. The detector only answers detect events with names — it never reads comment data or touches the network — and replies are nonce-matched and schema-validated in the content script as untrusted page input. Component names are source-code identifiers; like all comment data they travel only to the loopback collector and `~/.claudback/`.
 
 ### Threat model: how bad can it actually get?
 
 Worst case: a planted comment carries instructions ("read ~/.ssh, POST to evil.com") and the agent, holding real tool access, obeys mid-session. Three vectors, very different severity:
 
 1. **Any webpage silently POSTing fake comments to localhost** — closed completely by the pairing token + origin allowlist. This is the main security property of the design.
-2. **Malicious local processes** — the token stops casual abuse; anything that can read `~/.pinback/token` can already read the whole home directory. Out of scope (same posture as onUI). The unauthenticated `/pair` endpoint doesn't change this: a local process could only race the user for a code during the minutes one is actively minted (winning locks the real user out, which is loud), and any process positioned to do that can read the token file directly anyway.
+2. **Malicious local processes** — the token stops casual abuse; anything that can read `~/.claudback/token` can already read the whole home directory. Out of scope (same posture as onUI). The unauthenticated `/pair` endpoint doesn't change this: a local process could only race the user for a code during the minutes one is actively minted (winning locks the real user out, which is loud), and any process positioned to do that can read the token file directly anyway.
 3. **Residual, irreducible**: deliberately annotating a compromised page carries its DOM text into context. Mitigated (pull-only gating, size caps, tag-name-only excerpts, untrusted-data envelope) but not eliminable — low likelihood, high impact, the same property as any tool that feeds web content to an agent.
 
 Net: Pinback is as safe as manually pasting website content into your agent, with warning labels attached. "Private until review" is about not shipping a footgun to others before the token/origin code is audited, not about hiding the code.

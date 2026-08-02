@@ -34,7 +34,7 @@ Draft copy for the Web Store submission form. Not shipped in the extension zip.
 > **Private and secure**
 > - There are no remote servers, no accounts, no analytics.
 > - The collector binds to localhost only and requires a pairing token.
-> - Your comments live in `~/.pinback/` on your own machine.
+> - Your comments live in `~/.claudback/` on your own machine.
 > - I've no interest in commercialising this, it's just a helpful tool for the people.
 >
 > **Works with any MCP-capable agent** — Claude Code, Codex, and others. Requires the free `pinback-mcp` npm package (Node 20+). Setup guide opens on install.

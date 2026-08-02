@@ -13,7 +13,7 @@ const dir = vi.hoisted(() => {
 });
 
 vi.mock("./paths.js", () => ({
-	PINBACK_DIR: dir,
+	STATE_DIR: dir,
 	STORE_FILE: join(dir, "comments.json"),
 	TOKEN_FILE: join(dir, "token"),
 }));

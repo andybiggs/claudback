@@ -4,7 +4,7 @@
 
 Pinback is a Chrome extension for pinning visual-feedback comments to elements on any web page, plus a local MCP server (`pinback-mcp`) that lets your coding agent read them and make the changes. It's a plain stdio MCP server, so it works with Claude Code, Codex, or anything else that speaks MCP. The main use case: iterate on a local build or prototype without screenshots or "the third button in the sidebar" descriptions — click the thing, say what you want, ask your agent to check your comments. On React and Vue apps, comments also name the component that rendered the element, so the agent can jump straight to the source.
 
-Everything stays on your machine: comments sync to a loopback-only collector and live in `~/.pinback/`.
+Everything stays on your machine: comments sync to a loopback-only collector and live in `~/.claudback/`.
 
 **Docs & 101:** https://andybiggs.github.io/pinback/ · **Status:** pre-v1. See [PLAN.md](./PLAN.md) for architecture and the security model, [RELEASING.md](./RELEASING.md) for the release process.
 
@@ -27,7 +27,7 @@ Made by [Andy Biggs](https://www.andybiggs.net) (NZ).
 
    Any other MCP client: register `npx -y pinback-mcp` as a stdio server named `pinback`. `--scope user` registers Pinback for every project on your machine, so you only do it once. Using a desktop app rather than a terminal? Paste the command into a chat and ask the agent to run it.
 
-3. **Pair** — ask your agent for a pairing code ("Give me a Pinback pairing code") and type it into the extension's setup page. Codes expire in 10 minutes and work once. Fallback: paste the long-lived token from `~/.pinback/token` (saved on the server's first run, also printed to stderr) instead.
+3. **Pair** — ask your agent for a pairing code ("Give me a Pinback pairing code") and type it into the extension's setup page. Codes expire in 10 minutes and work once. Fallback: paste the long-lived token from `~/.claudback/token` (saved on the server's first run, also printed to stderr) instead.
 4. **Annotate** — click the Pinback icon on any tab → **Enable**, grant the per-site permission, and pin comments with the floating button.
 5. **Ask your agent** — "Grab my Pinback comments." It reads them via the `get_comments` tool; `list_origins`, `resolve_comment`, and `clear_comments` are also available.
 
@@ -87,7 +87,7 @@ Pairing normally happens by asking your agent for a code, but to grab the long-l
 ```sh
 node packages/mcp-server/dist/bin.js
 # ^C once you see "collector listening on http://127.0.0.1:57463"
-cat ~/.pinback/token
+cat ~/.claudback/token
 ```
 
 <details>
@@ -95,13 +95,13 @@ cat ~/.pinback/token
 
 You don't need the server running to annotate: the extension buffers comments in `chrome.storage.local` and flushes them automatically once a collector is reachable, so nothing is lost between agent sessions.
 
-If you want *live* sync to `~/.pinback/` while your agent is closed, you can run the server standalone — the collector is a plain HTTP server in the same process:
+If you want *live* sync to `~/.claudback/` while your agent is closed, you can run the server standalone — the collector is a plain HTTP server in the same process:
 
 ```sh
 node packages/mcp-server/dist/bin.js
 ```
 
-The collector binds port 57463 exclusively, so while a standalone instance is running, an agent session's own process runs in shared-store mode instead — its MCP tools (including `get_pairing_code`) keep working against `~/.pinback/`, it just doesn't serve the extension itself. When the standalone instance stops, a running session takes over the port automatically within a couple of seconds.
+The collector binds port 57463 exclusively, so while a standalone instance is running, an agent session's own process runs in shared-store mode instead — its MCP tools (including `get_pairing_code`) keep working against `~/.claudback/`, it just doesn't serve the extension itself. When the standalone instance stops, a running session takes over the port automatically within a couple of seconds.
 
 </details>
 

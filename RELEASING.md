@@ -12,7 +12,7 @@ That condition — pinning the published extension ID in the origin allowlist (`
 
 ## 1. Make the repo public
 
-GitHub → Settings → change visibility. Check first that no secrets or personal paths are committed (`git log -p` spot check, `~/.pinback` is never referenced with real tokens).
+GitHub → Settings → change visibility. Check first that no secrets or personal paths are committed (`git log -p` spot check, `~/.claudback` is never referenced with real tokens).
 
 ## 2. Enable GitHub Pages
 
@@ -90,11 +90,13 @@ Repo rename (`andybiggs/claudback` → `andybiggs/pinback`) is a GitHub Settings
 
 ### Closing the compat window
 
-Three mechanisms exist only for the transition. Retire them together, no earlier than three releases after v0.3.0:
+These mechanisms exist only for the transition. Retire them together, no earlier than three releases after v0.3.0:
 
 - `packages/extension/src/lib/collector.ts` still sends `LEGACY_TOKEN_HEADER`. It cannot send the new header while collectors pinned to the old npm name are still out there — their CORS preflight rejects it. **Flip this to `TOKEN_HEADER` first**, one release before removing anything else; `packages/extension/src/lib/collector.test.ts` asserts the current behaviour and will fail as the reminder.
-- `LEGACY_TOKEN_HEADER` acceptance in `collector.ts`/`security.ts`, the `CLAUDBACK_DEV_EXTENSION_ID` fallback in `security.ts`, and `migrateLegacyDir()` in `paths.ts` can go once the header flip has shipped.
+- `LEGACY_TOKEN_HEADER` acceptance in `collector.ts`/`security.ts` and the `CLAUDBACK_DEV_EXTENSION_ID` fallback in `security.ts` can go once the header flip has shipped.
 - `packages/mcp-server/scripts/publish-alias.mjs` and the `claudback_token` fallback in `packages/extension/src/lib/token-storage.ts` go last.
+
+**Renaming the state directory is part of closing this window, not part of the rename release.** `STATE_DIR` in `packages/mcp-server/src/paths.ts` deliberately stays `~/.claudback`; `paths.test.ts` pins it and explains why. A v0.2.x server reached through the `claudback-mcp` alias has that path compiled in, and agent sessions keep one resident for hours — so while the alias is live, two servers can run at once. Moving the directory under a running old server is silently destructive: its next write recreates `~/.claudback` via `mkdir(recursive)`, the extension keeps getting `201`s from whichever server owns port 57463, and the agent reads the other directory and reports no comments. Once both directories exist nothing can tell which is authoritative. Rename it — if at all — only after the alias is retired and old servers have aged out. The directory name is never typed by a user; the npm package, server, tools, and extension all carry the new name.
 
 ## 7. Future releases
 
