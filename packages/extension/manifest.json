@@ -1,7 +1,7 @@
 {
 	"manifest_version": 3,
 	"name": "Pinback",
-	"version": "0.3.0",
+	"version": "0.3.1",
 	"homepage_url": "https://andybiggs.github.io/pinback/",
 	"description": "Add comments on any webpage. Your coding agent reads them, with pixel-perfect context it can act on.",
 	"permissions": ["storage", "activeTab", "scripting", "alarms"],
